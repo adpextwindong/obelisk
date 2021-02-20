@@ -28,8 +28,8 @@ drawDistanceRange = 100.0
 -- I want to decouple the map Inspection
 rayPath :: Float -> DDAStep -> Float -> [DDAStep]
 rayPath _ NoWall _ = undefined --Should be unreachable because nextStep is guarenteed to pick a non NoWall step
-rayPath angle origin@(Step x y) acc = if walkedDistance > drawDistanceRange
-                    then [origin]
+rayPath angle origin@(Step x y) acc = if sqrt (lengthStep origin) > drawDistanceRange
+                    then []
                     else origin : rayPath angle nextStep walkedDistance
                 where stepX = step (sin angle) (cos angle) x y False
                       stepY = step (cos angle) (sin angle) y x True
