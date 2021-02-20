@@ -23,15 +23,20 @@ step rise run x y inverted
 
 drawDistanceRange = 100.0
 
+--rayCast :: Player -> 
 -- Generates the path it takes through the scene
 -- I want to decouple the map Inspection
-rayPath :: Float -> (Float, Float) -> [DDAStep]
-rayPath angle origin@(x,y) = if lengthStep nextStep > drawDistanceRange -- fix this if statement, the dda.js does weird stuff
-                    then [uncurry Step origin]
-                    else uncurry Step origin : rayPath angle nextStep
-                where nextStep = undefined
-                      stepX = step (sin angle) (cos angle) x y False
+rayPath :: Float -> DDAStep -> Float -> [DDAStep]
+rayPath _ NoWall _ = undefined --Should be unreachable because nextStep is guarenteed to pick a non NoWall step
+rayPath angle origin@(Step x y) acc = if walkedDistance > drawDistanceRange
+                    then [origin]
+                    else origin : rayPath angle nextStep walkedDistance
+                where stepX = step (sin angle) (cos angle) x y False
                       stepY = step (cos angle) (sin angle) y x True
+                      nextStep = if lengthStep stepX < lengthStep stepY
+                                    then stepX
+                                    else stepY
+                      walkedDistance = acc + sqrt (lengthStep nextStep)
 
 type Map = [[Bool]]
 
