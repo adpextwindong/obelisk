@@ -1,14 +1,9 @@
 data DDAStep = NoWall | Step Float Float
     deriving Show
---TODO refactor Step to include distance from the origin
-
 
 lengthStep :: DDAStep -> Float
 lengthStep NoWall = read "Infinity"
 lengthStep (Step x y) = x * x + y * y
-
-l2d :: (Float, Float) -> Float
-l2d (x,y) = x * x + y * y
 
 step :: Float -> Float -> Float -> Float -> Bool -> DDAStep
 step rise run x y inverted
@@ -21,8 +16,6 @@ step rise run x y inverted
                           nX = if inverted then y + dy else x + dx
                           nY = if inverted then x + dx else y + dy
 
-
---rayCast :: Player -> 
 -- Generates the path it takes through the scene
 -- I want to decouple the map Inspection
 rayPath :: Float -> DDAStep -> [DDAStep]
@@ -39,6 +32,7 @@ rayPathDrawDistanceLimited drawDistance xs = takeWhile (\step -> sqrt (lengthSte
 
 type Map = [[Bool]]
 
+--rayCast :: Player -> 
 -- Maybe we should just support heights
 getMap :: (Float, Float) -> Map -> Maybe Bool 
 getMap = undefined 
