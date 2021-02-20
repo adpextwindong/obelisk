@@ -21,22 +21,21 @@ step rise run x y inverted
                           nX = if inverted then y + dy else x + dx
                           nY = if inverted then x + dx else y + dy
 
-drawDistanceRange = 100.0
 
 --rayCast :: Player -> 
 -- Generates the path it takes through the scene
 -- I want to decouple the map Inspection
-rayPath :: Float -> DDAStep -> Float -> [DDAStep]
-rayPath _ NoWall _ = undefined --Should be unreachable because nextStep is guarenteed to pick a non NoWall step
-rayPath angle origin@(Step x y) acc = if sqrt (lengthStep origin) > drawDistanceRange
-                    then []
-                    else origin : rayPath angle nextStep walkedDistance
-                where stepX = step (sin angle) (cos angle) x y False
-                      stepY = step (cos angle) (sin angle) y x True
-                      nextStep = if lengthStep stepX < lengthStep stepY
-                                    then stepX
-                                    else stepY
-                      walkedDistance = acc + sqrt (lengthStep nextStep)
+rayPath :: Float -> DDAStep -> [DDAStep]
+rayPath _ NoWall = undefined --Should be unreachable because nextStep is guarenteed to pick a non NoWall step
+rayPath angle origin@(Step x y) = origin : rayPath angle nextStep
+                                    where   stepX = step (sin angle) (cos angle) x y False
+                                            stepY = step (cos angle) (sin angle) y x True
+                                            nextStep = if lengthStep stepX < lengthStep stepY
+                                                        then stepX
+                                                        else stepY
+
+rayPathDrawDistanceLimited :: Float -> [DDAStep] -> [DDAStep]
+rayPathDrawDistanceLimited drawDistance xs = takeWhile (\step -> sqrt (lengthStep step) < drawDistance) xs
 
 type Map = [[Bool]]
 
