@@ -27,9 +27,11 @@ rayPath angle origin@(Step x y) = origin : rayPath angle nextStep
                                                         then stepX
                                                         else stepY
 
-rayPathDrawDistanceLimited :: Float -> [DDAStep] -> [DDAStep]
-rayPathDrawDistanceLimited drawDistance xs = takeWhile (\step -> sqrt (lengthStep step) < drawDistance) xs
+limitDrawDistance :: Float -> [DDAStep] -> [DDAStep]
+limitDrawDistance drawDistance xs = takeWhile (\step -> sqrt (lengthStep step) < drawDistance) xs
 
+cmpOutput :: Float -> Float -> [String]
+cmpOutput drawDist angle = fmap show $ limitDrawDistance drawDist $ rayPath angle (Step 0 0)
 type Map = [[Bool]]
 
 --rayCast :: Player -> 
