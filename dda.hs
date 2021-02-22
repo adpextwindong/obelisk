@@ -31,7 +31,7 @@ limitDrawDistance :: Float -> [DDAStep] -> [DDAStep]
 limitDrawDistance drawDistance xs = takeWhile (\step -> sqrt (lengthStep step) < drawDistance) xs
 
 cmpOutput :: Float -> Float -> [String]
-cmpOutput drawDist angle = fmap show $ limitDrawDistance drawDist $ rayPath angle (Step 0 0)
+cmpOutput drawDist angle = show <$> limitDrawDistance drawDist (rayPath angle (Step 0 0))
 type Map = [[Bool]]
 
 --rayCast :: Player -> 
