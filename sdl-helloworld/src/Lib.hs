@@ -31,15 +31,22 @@ pWalk _ = undefined
 --We need some sort of update function for controls using elapsed time, map and control state for the frame
 
 data Map = Map {
-                 size :: Int -- we could drop this and use the array bounds fn
+                 msize :: Int -- we could drop this and use the array bounds fn
                , wallGrid :: Array (Int,Int) Float
                -- , light :: Int
                }
 
 getMapLoc :: Map -> (Int,Int) -> Maybe Float
-getMapLoc map (x,y) = undefined
+getMapLoc m ind@(x,y) = if inBounds m ind
+                        then Just $ wallGrid m ! ind
+                        else Nothing
 
-generateMap seed size = Map size $ listArray ((1,1) , (size, size)) $ take (size * size) $ rolls pureGen
+inBounds m (x,y) = x > -1 && x < s &&
+                   y > -1 && y < s
+    where
+        s = msize m
+
+generateMap seed size = Map size $ listArray ((0,0) , (size - 1, size - 1)) $ take (size * size) $ rolls pureGen
     where
         pureGen = mkStdGen seed
         roll = uniformR (0.0 :: Float, 1.0 :: Float)
