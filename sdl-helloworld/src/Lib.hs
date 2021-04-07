@@ -39,7 +39,7 @@ data Map = Map {
 getMapLoc :: Map -> (Int,Int) -> Maybe Float
 getMapLoc map (x,y) = undefined
 
-generateMap seed size = Map size $ listArray ((1,1) , (1 + size, 1+ size)) $ take (size * size) $ rolls pureGen
+generateMap seed size = Map size $ listArray ((1,1) , (size, size)) $ take (size * size) $ rolls pureGen
     where
         pureGen = mkStdGen seed
         roll = uniformR (0.0 :: Float, 1.0 :: Float)
