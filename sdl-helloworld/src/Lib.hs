@@ -1,13 +1,10 @@
-module Lib
-    ( someFunc
-    ) where
+module Raycaster where
 
+import Control.Monad
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Data.Array
 import Data.List
 import System.Random
-
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
 
 -- Types we need
 -- Bitmap type
@@ -64,8 +61,39 @@ data Camera = Camera {
                      }
 -- TODO find a bitmap type the SDL one can probably work
 
+cameraResolution = 320
+drawDistLimitRange = 10000.0 --This is range in the original code
+
+drawColumns :: (MonadIO m) => Player -> Map -> Camera -> m ()
+drawColumns player map camera = forM_ columns
+            (\colIndex -> do
+                              let screenX = (fromIntegral colIndex / fromIntegral cameraResolution) - 0.5 :: Float
+                              let rayAngle = atan2 screenX cameraFocalLength
+                              --TODO RENDER COL
+                              let raySteps = rayCast (pX player, pY player) (direction player + rayAngle)
+                              drawColumn colIndex raySteps rayAngle map)
+    where
+        cameraResolution = resolution camera
+        cameraFocalLength = focalLength camera
+        columns = [0..cameraResolution - 1]
 
 
-main :: IO ()
-main = do
-    return ()
+data RayStep = RayStep {
+                    rayHeight :: Float,
+                    rayDistance :: Float,
+                    rayOffset :: Float
+               }
+
+
+rayCast :: (Float, Float) -> Float -> [RayStep]
+rayCast originPoint angle = undefined --TODO pull from previous code
+
+drawColumn :: (MonadIO m) => Int -> [RayStep] -> Float -> Map -> m ()
+drawColumn = undefined --TODO
+
+projectWallHeight :: Float -> Float -> Float -> Float -> (Float, Float)
+projectWallHeight canvasHeight wallheight angle distance = (bottom - wallHeight, wallHeight)
+    where
+        z = distance * cos angle
+        wallHeight = canvasHeight * wallHeight / z
+        bottom = canvasHeight / 2 * (1 + 1 / z)

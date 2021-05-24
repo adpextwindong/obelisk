@@ -12,7 +12,7 @@ build-type:     Simple
 
 library
   exposed-modules:
-      Lib
+      Raycaster
   other-modules:
       Paths_sdl_helloworld
   hs-source-dirs:
