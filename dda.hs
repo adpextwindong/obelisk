@@ -1,3 +1,6 @@
+module DDA (rayPath', limitDrawDistance, limitDrawDistance')
+    where
+
 data DDAStep = NoWall | Step {
                             distX :: Float, -- Distance away from Ray Origin
                             distY :: Float
@@ -37,20 +40,13 @@ rayPath angle origin@(Step x y) = (origin,offset) : rayPath angle nextStep
                                                         then offSetClip (distY stepX)
                                                         else offSetClip (distX stepY)
 
+rayPath' :: Float -> [(DDAStep, Float)]
+rayPath' angle = rayPath angle startingStep
+
 offSetClip :: Float -> Float
 offSetClip x = x - (fromIntegral (floor x))
 
 limitDrawDistance :: Float -> [DDAStep] -> [DDAStep]
-limitDrawDistance drawDistance xs = takeWhile (\step -> sqrt (lengthStep step) < drawDistance) xs
+limitDrawDistance drawDistance = takeWhile (\step -> sqrt (lengthStep step) < drawDistance)
 
-cmpOutput :: Float -> Float -> [String]
-cmpOutput = undefined
---cmpOutput drawDist angle = show <$> limitDrawDistance drawDist (rayPath angle (Step 0 0))
-type Map = [[Bool]]
-
---rayCast :: Player ->
--- Maybe we should just support heights
-getMap :: (Float, Float) -> Map -> Maybe Bool
-getMap = undefined
-inspectMap :: [[Bool]] -> (Float, Float) -> Bool
-inspectMap = undefined
+limitDrawDistance' drawDistance = takeWhile (\(step, _) -> sqrt (lengthStep step) < drawDistance)
