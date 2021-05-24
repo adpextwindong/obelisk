@@ -83,17 +83,17 @@ drawColumns player map camera = forM_ columns
         columns = [0..cameraResolution - 1]
 
 
-data RayStep = RayStep {
+data RayStepSample = RayStepSample {
                     rayHeight :: Float,
                     rayDistance :: Float,
                     rayOffset :: Float
                }
 
 
-rayCast :: (Float, Float) -> Float -> [RayStep]
+rayCast :: (Float, Float) -> Float -> [RayStepSample]
 rayCast originPoint angle = undefined --TODO pull from previous code
 
-drawColumn :: (MonadIO m) => Int -> [RayStep] -> Float -> Map -> m ()
+drawColumn :: (MonadIO m) => Int -> [RayStepSample] -> Float -> Map -> m ()
 drawColumn = undefined --TODO
 
 projectWallHeight :: Float -> Float -> Float -> Float -> (Float, Float)
