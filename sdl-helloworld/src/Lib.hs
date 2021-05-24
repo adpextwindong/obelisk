@@ -20,10 +20,15 @@ data Player = Player {
                      }
 
 pRotate :: Player -> Player
-pRotate _ = undefined
+pRotate _ = undefined --TODO
 
 pWalk :: Player -> Player
-pWalk _ = undefined
+pWalk _ = undefined --TODO
+
+data Controls = Controls
+
+pUpdate :: Player -> Controls -> Map -> Float -> Player
+pUpdate player controls map elapsedFrameTime = undefined --TODO
 
 --We need some sort of update function for controls using elapsed time, map and control state for the frame
 
@@ -37,11 +42,11 @@ getMapLoc :: Map -> (Int,Int) -> Maybe Float
 getMapLoc m ind@(x,y) = if inBounds m ind
                         then Just $ wallGrid m ! ind
                         else Nothing
-
-inBounds m (x,y) = x > -1 && x < s &&
-                   y > -1 && y < s
     where
-        s = msize m
+    inBounds m (x,y) = x > -1 && x < s &&
+                       y > -1 && y < s
+        where
+            s = msize m
 
 generateMap seed size = Map size $ listArray ((0,0) , (size - 1, size - 1)) $ take (size * size) $ rolls pureGen
     where
@@ -92,8 +97,8 @@ drawColumn :: (MonadIO m) => Int -> [RayStep] -> Float -> Map -> m ()
 drawColumn = undefined --TODO
 
 projectWallHeight :: Float -> Float -> Float -> Float -> (Float, Float)
-projectWallHeight canvasHeight wallheight angle distance = (bottom - wallHeight, wallHeight)
+projectWallHeight canvasHeight sampledHeight angle distance = (bottom - wallHeight, wallHeight)
     where
         z = distance * cos angle
-        wallHeight = canvasHeight * wallHeight / z
+        wallHeight = canvasHeight * sampledHeight / z
         bottom = canvasHeight / 2 * (1 + 1 / z)
