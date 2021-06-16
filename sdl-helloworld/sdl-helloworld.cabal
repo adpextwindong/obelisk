@@ -12,9 +12,9 @@ build-type:     Simple
 
 library
   exposed-modules:
-      Raycaster
-  other-modules:
-      Paths_sdl_helloworld
+      Raycaster.DDA,
+      Raycaster.Raycast
+
   hs-source-dirs:
       src
   build-depends:
@@ -25,8 +25,6 @@ library
 
 executable sdl-helloworld-exe
   main-is: Main.hs
-  other-modules:
-      Paths_sdl_helloworld
   hs-source-dirs:
       app
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
