@@ -37,3 +37,25 @@ exe:sdl2-gfx-example from sdl2-gfx-0.2). See the build log above for details.
 ```
 
 No clue why this occurs. I just commented the extern line out.
+
+=====
+
+Building SDL2_gfx attempt 2
+
+You need automake and autoconf installed in Cygwin.
+
+./autogen.sh and ./configure will create a SDL2_gfx.pc that you need to point your pkg_config at.
+
+Run make, make install then cabal install sdl2-gfx -v3 to see which ld its using.
+
+Then using that ld check where its looking for your libs.
+
+Ghc's ld wants a folder like /cygdrive/c/building/msys64/mingw64/usr/lib
+
+For the sake of include file simplicity I shoved all the SDL2_gfx headers into
+
+/cygdrive/c/tools/msys64/mingw64/include
+
+because it was already in the include path given to gcc.
+
+Then we need to edit SDL_main.h line that it complains about.
