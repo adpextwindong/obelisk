@@ -20,8 +20,9 @@ screenWidth, screenHeight :: CInt
 (screenWidth, screenHeight) = (640, 480)
 
 type Line = (V3 CInt, V3 CInt)
-vertical_lines = [(homo (V2 x 0), homo (V2 x 10)) | x <- [0..10]]
-horizontal_lines = [(homo (V2 0 y), homo (V2 10 y)) | y <- [0..10]]
+
+vertical_lines = [(homo (V2 x 0), homo (V2 x 20)) | x <- [0..20]]
+horizontal_lines = [(homo (V2 0 y), homo (V2 20 y)) | y <- [0..20]]
 base_lines = vertical_lines ++ horizontal_lines
 
 zoom :: (Num a) => a -> V3 (V3 a)
@@ -44,13 +45,20 @@ rotate_around theta (V2 x y) = (translate x y) !*! (rotation theta) !*! (transla
 
 idv3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: V3 (V3 CInt)
 appT :: V3 (V3 CInt) -> [Line] -> [Line]
-appT t xs = fmap (bimap (*! t) (*! t)) xs
+appT t xs = fmap (bimap (t !* ) (t !*)) xs
+
+appDTFloor :: V3 (V3 Double) -> [Line] -> [Line]
+appDTFloor t xs = fmap (bimap f f) xs
+    where
+        f = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
+        --Convert to doubles, apply the transform then floor it
 
 homo :: (Num a) => V2 a -> V3 a
 homo (V2 x y) = V3 x y 1
 
 dropHomo :: (Num a) => V3 a -> V2 a
 dropHomo (V3 x y _) = V2 x y
+
 
 main :: IO ()
 main = do
@@ -74,9 +82,10 @@ main = do
             let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
         --Do stuff here, we can pass a monad in or somen
           --SDL.surfaceBlit garg Nothing screenSurface Nothing
-
-            let lines = appT (idv3) vertical_lines
-            forM_ (appT (zoom 10) vertical_lines) (\(start, end) -> line screenRenderer (dropHomo start) (dropHomo end) white)
+            let t = translate 320 240 !*! rotation (pi/4.0) !*! zoom 20 !*! translate (-10) (-10)
+            let lines = appDTFloor t base_lines
+            --let lines = appT (translate 320 240) vertical_lines
+            forM_ lines (\(start, end) -> line screenRenderer (dropHomo start) (dropHomo end) white)
 
             --forM_ horizontal_lines (\(start,end) -> line screenRenderer start end white)
             SDL.updateWindowSurface window
