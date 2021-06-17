@@ -59,3 +59,8 @@ For the sake of include file simplicity I shoved all the SDL2_gfx headers into
 because it was already in the include path given to gcc.
 
 Then we need to edit SDL_main.h line that it complains about.
+
+Oh yeah make sure the SDL2_gfx.a la lai files are in your /cygdrive/c/tools/msys64/mingw64/lib so Cabal repl can link to it.
+
+
+Have cygwin install zlib and libpng devel stuff
