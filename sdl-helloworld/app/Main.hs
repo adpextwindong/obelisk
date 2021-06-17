@@ -20,12 +20,12 @@ screenWidth, screenHeight :: CInt
 (screenWidth, screenHeight) = (640, 480)
 
 type Line = (V3 CInt, V3 CInt)
-vertical_lines = [(homo (V2 x 0), homo (V2 x 64)) | x <- [0..10]]
-horizontal_lines = [(homo (V2 0 y), homo (V2 64 y)) | y <- [0..10]]
+vertical_lines = [(homo (V2 x 0), homo (V2 x 10)) | x <- [0..10]]
+horizontal_lines = [(homo (V2 0 y), homo (V2 10 y)) | y <- [0..10]]
 base_lines = vertical_lines ++ horizontal_lines
 
-zoom_matrix :: (Num a) => a -> V3 (V3 a)
-zoom_matrix scale = V3 (V3 scale 0     0)
+zoom :: (Num a) => a -> V3 (V3 a)
+zoom scale = V3 (V3 scale 0     0)
                        (V3 0     scale 0)
                        (V3 0     0     1)
 
@@ -34,17 +34,17 @@ translate x y = V3 (V3 1 0 x)
                    (V3 0 1 y)
                    (V3 0 0 1)
 
-rotation_matrix :: Double -> V3 (V3 Double)
-rotation_matrix theta = V3 (V3 (cos theta) (-sin theta) 0)
+rotation :: Double -> V3 (V3 Double)
+rotation theta = V3 (V3 (cos theta) (-sin theta) 0)
                            (V3 (sin theta) (cos theta)  0)
                            (V3 0 0 1)
 
 rotate_around :: Double -> (V2 Double) -> (V3 (V3 Double))
-rotate_around theta (V2 x y) = (translate_matrix x y) !*! (rotation_matrix theta) !*! (translate_matrix (-x) (-y))
+rotate_around theta (V2 x y) = (translate x y) !*! (rotation theta) !*! (translate (-x) (-y))
 
 idv3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: V3 (V3 CInt)
-apply_transform :: V3 (V3 CInt) -> [Line] -> [Line]
-apply_transform t xs = fmap (bimap (*! t) (*! t)) xs
+appT :: V3 (V3 CInt) -> [Line] -> [Line]
+appT t xs = fmap (bimap (*! t) (*! t)) xs
 
 homo :: (Num a) => V2 a -> V3 a
 homo (V2 x y) = V3 x y 1
@@ -75,8 +75,8 @@ main = do
         --Do stuff here, we can pass a monad in or somen
           --SDL.surfaceBlit garg Nothing screenSurface Nothing
 
-            let lines = apply_transform (idv3) vertical_lines
-            forM_ (apply_transform (zoom_matrix 10) vertical_lines) (\(start, end) -> line screenRenderer (dropHomo start) (dropHomo end) white)
+            let lines = appT (idv3) vertical_lines
+            forM_ (appT (zoom 10) vertical_lines) (\(start, end) -> line screenRenderer (dropHomo start) (dropHomo end) white)
 
             --forM_ horizontal_lines (\(start,end) -> line screenRenderer start end white)
             SDL.updateWindowSurface window
