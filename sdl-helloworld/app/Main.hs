@@ -5,15 +5,16 @@ import Control.Monad
 import Control.Concurrent (threadDelay)
 import Foreign.C.Types
 import qualified Data.Text as T
-import SDL.Vect
+import qualified SDL.Vect as SDL
 import qualified SDL
 import qualified SDL.Event as SDL
+import qualified SDL.Video.Renderer as SDL
 
 import Data.Bifunctor
 import Data.Word
 import SDL.Image
 import Linear
-import SDL.Primitive
+import SDL.Primitive as SDL
 
 title = "My SDL Application"
 screenWidth, screenHeight :: CInt
@@ -72,17 +73,21 @@ main = do
     screenSurface <- SDL.getWindowSurface window
     let white = SDL.V4 maxBound maxBound maxBound maxBound
     let black = SDL.V4 0 0 0 0
-    SDL.surfaceFillRect screenSurface Nothing black
     SDL.updateWindowSurface window
 
     screenRenderer <- SDL.createSoftwareRenderer screenSurface
 
     let loop = do
+            SDL.clear screenRenderer
+            SDL.surfaceFillRect screenSurface Nothing black
             events <- SDL.pollEvents :: IO [SDL.Event]
             let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
         --Do stuff here, we can pass a monad in or somen
           --SDL.surfaceBlit garg Nothing screenSurface Nothing
-            let t = translate 320 240 !*! rotation (pi/4.0) !*! zoom 20 !*! translate (-10) (-10)
+            time <- SDL.ticks
+
+            let elapsed_seconds = (fromIntegral (toInteger time)) / 1000.0
+            let t = translate 320 240 !*! rotation (elapsed_seconds * pi / 4.0) !*! zoom 20 !*! translate (-10) (-10)
             let lines = appDTFloor t base_lines
             --let lines = appT (translate 320 240) vertical_lines
             forM_ lines (\(start, end) -> line screenRenderer (dropHomo start) (dropHomo end) white)
