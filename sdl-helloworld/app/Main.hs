@@ -19,7 +19,10 @@ title = "My SDL Application"
 screenWidth, screenHeight :: CInt
 (screenWidth, screenHeight) = (640, 480)
 
-type Line = (V3 CInt, V3 CInt)
+type Line = (V3 CInt, V3 CInt) -- After homogenous coordinates its a v3
+
+quads = [(V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..20], y <- [0..20]]
+--TODO make sdl_rect calls out of these vertexes for tile squares
 
 vertical_lines = [(homo (V2 x 0), homo (V2 x 20)) | x <- [0..20]]
 horizontal_lines = [(homo (V2 0 y), homo (V2 20 y)) | y <- [0..20]]
@@ -27,8 +30,8 @@ base_lines = vertical_lines ++ horizontal_lines
 
 zoom :: (Num a) => a -> V3 (V3 a)
 zoom scale = V3 (V3 scale 0     0)
-                       (V3 0     scale 0)
-                       (V3 0     0     1)
+                (V3 0     scale 0)
+                (V3 0     0     1)
 
 translate :: (Num a) => a -> a -> V3 (V3 a)
 translate x y = V3 (V3 1 0 x)
