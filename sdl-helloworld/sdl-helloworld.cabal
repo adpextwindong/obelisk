@@ -34,7 +34,6 @@ executable sdl-helloworld-exe
     , sdl2
     , text
     , sdl2-gfx
-    , sdl2-image
     , linear
     , directory
   default-language: Haskell2010

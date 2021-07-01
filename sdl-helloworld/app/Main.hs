@@ -12,7 +12,6 @@ import qualified SDL.Video.Renderer as SDL
 
 import Data.Bifunctor
 import Data.Word
-import SDL.Image
 import Linear
 import SDL.Primitive as SDL
 
@@ -67,8 +66,6 @@ main = do
 
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 screenWidth screenHeight }
     SDL.showWindow window
-
-    garg <- SDL.Image.load "GARG_4.png"
 
     screenSurface <- SDL.getWindowSurface window
     let white = SDL.V4 maxBound maxBound maxBound maxBound
