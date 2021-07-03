@@ -15,19 +15,15 @@ import Data.Word
 import Linear
 import SDL.Primitive as SDL
 
-title = "My SDL Application"
-screenWidth, screenHeight :: CInt
-(screenWidth, screenHeight) = (640, 480)
-
 type HV2 = V3 --TODO propagate this to indicate homogenous coordinates
 type Line = (HV2 CInt, HV2 CInt) -- After homogenous coordinates its a v3
 
 quads = [(V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..20], y <- [0..20]]
 --TODO make sdl_rect calls out of these vertexes for tile squares
 
-vertical_lines = [(homo (V2 x 0), homo (V2 x 20)) | x <- [0..20]]
-horizontal_lines = [(homo (V2 0 y), homo (V2 20 y)) | y <- [0..20]]
-base_lines = vertical_lines ++ horizontal_lines
+vertical_lines worldSize = [(homo (V2 x 0), homo (V2 x worldSize)) | x <- [0..worldSize]]
+horizontal_lines worldSize = [(homo (V2 0 y), homo (V2 worldSize y)) | y <- [0..worldSize]]
+base_lines worldSize = (vertical_lines worldSize) ++ (horizontal_lines worldSize)
 
 zoom :: (Num a) => a -> V3 (V3 a)
 zoom scale = V3 (V3 scale 0     0)
@@ -47,7 +43,7 @@ rotation theta = V3 (V3 (cos theta) (-sin theta) 0)
 rotate_around :: Double -> (V2 Double) -> (V3 (V3 Double))
 rotate_around theta (V2 x y) = (translate x y) !*! (rotation theta) !*! (translate (-x) (-y))
 
-type M22Affine t = V3 t -- TODO use this type alias??
+type M22Affine t = V3 (V3 t) -- TODO use this type alias??
 
 idv3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: V3 (V3 CInt)
 
@@ -76,19 +72,27 @@ drawGridLine screenRenderer (start, end) = line screenRenderer (dropHomoCoords s
 
 --TODO make this accept a grid size to accomodate world size
 --TODO ROTATION HANDLING
-drawGrid :: SDL.Renderer -> IO ()
-drawGrid screenRenderer = do
-    let t = translate 320 240 !*! zoom 20 !*! translate (-10) (-10)
+drawGrid :: CInt -> Double -> SDL.Renderer -> IO ()
+drawGrid worldSize zoomFactor screenRenderer = do
+    let delta = fromIntegral worldSize / 2
+    let centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
+    let t = translate 320 240 !*! zoom zoomFactor !*! centerToLocalOrigin
     --let t = translate 320 240 !*! rotation (elapsed_seconds * pi / 4.0) !*! ...
     --Center grid over origin, scale it by 20, move it to center of screen
-    let lines = appDTFloor t base_lines :: [Line]
+    let lines = appDTFloor t (base_lines worldSize) :: [Line]
     --let lines = applyAffineTransform (translate 320 240) vertical_lines
     forM_ lines (drawGridLine screenRenderer)
 
 
+(screenWidth, screenHeight) = (640, 480) :: (CInt,CInt)
+
+worldSize = 5 :: CInt
+zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
+
 main :: IO ()
 main = do
     SDL.initialize [SDL.InitVideo]
+    let title = "World Debug Window"
 
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 screenWidth screenHeight }
     SDL.showWindow window
@@ -108,7 +112,7 @@ main = do
 
             let elapsed_seconds = (fromIntegral (toInteger time)) / 1000.0
 
-            drawGrid screenRenderer
+            drawGrid worldSize zoomFactor screenRenderer
 
             --forM_ horizontal_lines (\(start,end) -> line screenRenderer start end white)
             SDL.updateWindowSurface window
