@@ -19,7 +19,8 @@ title = "My SDL Application"
 screenWidth, screenHeight :: CInt
 (screenWidth, screenHeight) = (640, 480)
 
-type Line = (V3 CInt, V3 CInt) -- After homogenous coordinates its a v3
+type HV2 = V3 --TODO propagate this to indicate homogenous coordinates
+type Line = (HV2 CInt, HV2 CInt) -- After homogenous coordinates its a v3
 
 quads = [(V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..20], y <- [0..20]]
 --TODO make sdl_rect calls out of these vertexes for tile squares
@@ -40,15 +41,18 @@ translate x y = V3 (V3 1 0 x)
 
 rotation :: Double -> V3 (V3 Double)
 rotation theta = V3 (V3 (cos theta) (-sin theta) 0)
-                           (V3 (sin theta) (cos theta)  0)
-                           (V3 0 0 1)
+                    (V3 (sin theta) (cos theta)  0)
+                    (V3  0           0           1)
 
 rotate_around :: Double -> (V2 Double) -> (V3 (V3 Double))
 rotate_around theta (V2 x y) = (translate x y) !*! (rotation theta) !*! (translate (-x) (-y))
 
+type M22Affine t = V3 t -- TODO use this type alias??
+
 idv3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: V3 (V3 CInt)
-appT :: V3 (V3 CInt) -> [Line] -> [Line]
-appT t xs = fmap (bimap (t !* ) (t !*)) xs
+
+applyAffineTransform :: V3 (V3 CInt) -> [Line] -> [Line]
+applyAffineTransform t xs = fmap (bimap (t !* ) (t !*)) xs
 
 appDTFloor :: V3 (V3 Double) -> [Line] -> [Line]
 appDTFloor t xs = fmap (bimap f f) xs
@@ -59,8 +63,27 @@ appDTFloor t xs = fmap (bimap f f) xs
 homo :: (Num a) => V2 a -> V3 a
 homo (V2 x y) = V3 x y 1
 
-dropHomo :: (Num a) => V3 a -> V2 a
-dropHomo (V3 x y _) = V2 x y
+--TODO make sure the HV2 usage is correct
+dropHomoCoords :: (Num a) => HV2 a -> V2 a
+dropHomoCoords (V3 x y _) = V2 x y
+
+--COLORS
+white = SDL.V4 maxBound maxBound maxBound maxBound
+black = SDL.V4 0 0 0 0
+
+drawGridLine :: SDL.Renderer -> Line -> IO ()
+drawGridLine screenRenderer (start, end) = line screenRenderer (dropHomoCoords start) (dropHomoCoords end) white
+
+--TODO make this accept a grid size to accomodate world size
+--TODO ROTATION HANDLING
+drawGrid :: SDL.Renderer -> IO ()
+drawGrid screenRenderer = do
+    let t = translate 320 240 !*! zoom 20 !*! translate (-10) (-10)
+    --let t = translate 320 240 !*! rotation (elapsed_seconds * pi / 4.0) !*! ...
+    --Center grid over origin, scale it by 20, move it to center of screen
+    let lines = appDTFloor t base_lines :: [Line]
+    --let lines = applyAffineTransform (translate 320 240) vertical_lines
+    forM_ lines (drawGridLine screenRenderer)
 
 
 main :: IO ()
@@ -71,31 +94,26 @@ main = do
     SDL.showWindow window
 
     screenSurface <- SDL.getWindowSurface window
-    let white = SDL.V4 maxBound maxBound maxBound maxBound
-    let black = SDL.V4 0 0 0 0
     SDL.updateWindowSurface window
 
-    screenRenderer <- SDL.createSoftwareRenderer screenSurface
+    screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
 
     let loop = do
             SDL.clear screenRenderer
             SDL.surfaceFillRect screenSurface Nothing black
             events <- SDL.pollEvents :: IO [SDL.Event]
-            let quit = elem SDL.QuitEvent $ map SDL.eventPayload events
-        --Do stuff here, we can pass a monad in or somen
-          --SDL.surfaceBlit garg Nothing screenSurface Nothing
+            let quitSignal = elem SDL.QuitEvent $ map SDL.eventPayload events
+            --SDL.surfaceBlit garg Nothing screenSurface Nothing
             time <- SDL.ticks
 
             let elapsed_seconds = (fromIntegral (toInteger time)) / 1000.0
-            let t = translate 320 240 !*! rotation (elapsed_seconds * pi / 4.0) !*! zoom 20 !*! translate (-10) (-10)
-            let lines = appDTFloor t base_lines
-            --let lines = appT (translate 320 240) vertical_lines
-            forM_ lines (\(start, end) -> line screenRenderer (dropHomo start) (dropHomo end) white)
+
+            drawGrid screenRenderer
 
             --forM_ horizontal_lines (\(start,end) -> line screenRenderer start end white)
             SDL.updateWindowSurface window
 
-            unless quit loop
+            unless quitSignal loop
 
 
     loop
