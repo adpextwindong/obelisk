@@ -58,25 +58,40 @@ dropHomoCoords :: (Num a) => HV2 a -> V2 a
 dropHomoCoords (V3 x y _) = V2 x y
 
 --COLORS
-white = SDL.V4 maxBound maxBound maxBound maxBound
-red = SDL.V4 maxBound 0 0 maxBound
-blue = SDL.V4 0 0 maxBound maxBound
-black = SDL.V4 0 0 0 0
+white = SDL.V4 maxBound maxBound maxBound maxBound :: Color
+red = SDL.V4 maxBound 0 0 maxBound :: Color
+blue = SDL.V4 0 0 maxBound maxBound :: Color
+black = SDL.V4 0 0 0 0 :: Color
+
+--GodBolt Colors
+backgroundColor= SDL.V4 34 34 34 maxBound :: Color
+filledTileColor = SDL.V4 51 51 102 maxBound :: Color
+doorTileColor = SDL.V4 102 51 102 maxBound :: Color
+arrowColor = SDL.V4 255 51 51 maxBound :: Color
+gridColor = SDL.V4 63 63 63 maxBound :: Color
 
 drawGridLine :: SDL.Renderer -> Line -> IO ()
-drawGridLine screenRenderer (start, end) = line screenRenderer (dropHomoCoords start) (dropHomoCoords end) white
+drawGridLine screenRenderer (start, end) = line screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
+
+data GridTParams = GridTParams {
+                        worldSize :: CInt,
+                        zoomFactor :: Double,
+                        rotationFactor :: Double
+                   }
+
+translateToPDCenter = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
 
         --Center grid over origin, scale it by zoomFactor, rotate it by rotationFactor, move it to center of screen
-gridT worldSize zoomFactor rotationFactor = translateToPDCenter !*! rotationT !*! zoom zoomFactor !*! centerToLocalOrigin
+gridT :: GridTParams -> M22Affine Double
+gridT (GridTParams worldSize zoomFactor rotationFactor) = translateToPDCenter !*! rotationT !*! zoom zoomFactor !*! centerToLocalOrigin
     where
         delta = fromIntegral worldSize / 2
         centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
-        translateToPDCenter = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
         rotationT = rotation rotationFactor
 
-drawGrid :: SDL.Renderer -> CInt -> Double -> Double -> IO ()
-drawGrid screenRenderer worldSize zoomFactor rotationFactor = do
-    let t = gridT worldSize zoomFactor rotationFactor
+drawGrid :: SDL.Renderer -> GridTParams -> IO ()
+drawGrid screenRenderer gtp@(GridTParams worldSize _ _) = do
+    let t = gridT gtp
     let hlines = appDTFloor t (horizontal_lines worldSize) :: [Line]
     let vlines = appDTFloor t (vertical_lines worldSize) :: [Line]
     --let lines = applyAffineTransform (translate 320 240) vertical_lines
@@ -86,24 +101,35 @@ drawGrid screenRenderer worldSize zoomFactor rotationFactor = do
         vertical_lines worldSize = [(homoCoords (V2 x 0), homoCoords (V2 x worldSize)) | x <- [0..worldSize]]
         horizontal_lines worldSize = [(homoCoords (V2 0 y), homoCoords (V2 worldSize y)) | y <- [0..worldSize]]
 
+blastFmap3Tupple f (a,b,c) = (f a, f b, f c)
 blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
 
 --TODO hook this up to a 2D tilegrid array
-drawGridTiles :: SDL.Renderer -> CInt -> Double -> Double -> IO ()
-drawGridTiles screenRenderer worldSize zoomFactor rotationFactor = do
-    let t = gridT worldSize zoomFactor rotationFactor
+drawGridTiles :: SDL.Renderer -> GridTParams -> IO ()
+drawGridTiles screenRenderer gtp@(GridTParams worldSize _ _) = do
+    let t = gridT gtp
     let projectVertToPD = (dropHomoCoords . (fmap floor) . (t !*) . homoCoords . (fmap fromIntegral))
     let quads = [blastFmap4Tupple projectVertToPD (V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..worldSize - 1], y <- [0..worldSize - 1]] :: [(Pos,Pos,Pos,Pos)]
 
     forM_ quads (\(vA,vB,vC,vD) -> do
-        fillTriangle screenRenderer vA vB vC red
-        fillTriangle screenRenderer vB vC vD blue
+        fillTriangle screenRenderer vA vB vC filledTileColor
+        fillTriangle screenRenderer vB vC vD filledTileColor
         )
+
+drawPlayerDirection :: SDL.Renderer -> (Double, Double) -> GridTParams -> IO ()
+drawPlayerDirection screenRenderer (px, py) gtp = do
+          --let t = translateToPDCenter !*! zoom 200.0 -- TODO change this
+          let t = (gridT gtp) !*! translate px py !*! zoom 0.4
+
+
+
+          let baseArrow = (homoCoords $ V2 0.0 (-0.2), homoCoords $ V2 0.7 0.0, homoCoords $ V2 0.0 0.2) :: (HV2 Double, HV2 Double, HV2 Double)
+          let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (dropHomoCoords . (fmap floor) . (t !*)) baseArrow
+
+          fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
 
 (screenWidth, screenHeight) = (640, 480) :: (CInt,CInt)
 
-worldSize = 10 :: CInt
-zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
 --TODO mouse zoom handling
 
 main :: IO ()
@@ -119,9 +145,14 @@ main = do
 
     screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
 
+    --CONSTS
+    let worldSize = 10 :: CInt
+    let zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
+    let p = (5.5, 5.5)
+
     let loop = do
             SDL.clear screenRenderer
-            SDL.surfaceFillRect screenSurface Nothing black
+            SDL.surfaceFillRect screenSurface Nothing backgroundColor
             events <- SDL.pollEvents :: IO [SDL.Event]
             let quitSignal = elem SDL.QuitEvent $ map SDL.eventPayload events
             --SDL.surfaceBlit garg Nothing screenSurface Nothing
@@ -130,8 +161,11 @@ main = do
             let elapsed_seconds = (fromIntegral (toInteger time)) / 1000.0
             let rotationFactor = elapsed_seconds --0.0
 
-            drawGridTiles screenRenderer worldSize zoomFactor rotationFactor
-            drawGrid screenRenderer worldSize zoomFactor rotationFactor
+            let gtp = GridTParams worldSize zoomFactor 0.0 --rotationFactor
+
+            drawGridTiles screenRenderer gtp
+            drawGrid screenRenderer gtp
+            drawPlayerDirection screenRenderer p gtp
 
             SDL.updateWindowSurface window
 
