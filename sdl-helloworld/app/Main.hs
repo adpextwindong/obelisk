@@ -116,10 +116,20 @@ drawGridTiles screenRenderer gtp@(GridTParams worldSize _ _) = do
         fillTriangle screenRenderer vB vC vD filledTileColor
         )
 
-drawPlayerDirection :: SDL.Renderer -> (Double, Double) -> GridTParams -> IO ()
-drawPlayerDirection screenRenderer (px, py) gtp = do
+    --Draw Arrow
+    --Draw Circle
+    --Draw Line
+    --TODO draw pov
+    --
+drawPlayer :: SDL.Renderer -> (Double, Double) -> GridTParams -> IO ()
+drawPlayer screenRenderer (px, py) gtp = do
           --let t = translateToPDCenter !*! zoom 200.0 -- TODO change this
-          let t = (gridT gtp) !*! translate px py !*! zoom 0.4
+          let t = (gridT gtp) !*! translate px py
+
+          let circle_pos = dropHomoCoords . (fmap floor) . (t !*) . homoCoords $ V2 0.0 0.0
+          let circle_radius = 10
+          circle screenRenderer circle_pos circle_radius white
+          let t_arrow = t !*! zoom 0.4
 
 
 
@@ -165,7 +175,7 @@ main = do
 
             drawGridTiles screenRenderer gtp
             drawGrid screenRenderer gtp
-            drawPlayerDirection screenRenderer p gtp
+            drawPlayer screenRenderer p gtp
 
             SDL.updateWindowSurface window
 
