@@ -116,27 +116,34 @@ drawGridTiles screenRenderer gtp@(GridTParams worldSize _ _) = do
         fillTriangle screenRenderer vB vC vD filledTileColor
         )
 
-    --Draw Arrow
-    --Draw Circle
     --Draw Line
     --TODO draw pov
     --
-drawPlayer :: SDL.Renderer -> (Double, Double) -> GridTParams -> IO ()
-drawPlayer screenRenderer (px, py) gtp = do
-          --let t = translateToPDCenter !*! zoom 200.0 -- TODO change this
-          let t = (gridT gtp) !*! translate px py
+drawPlayer :: SDL.Renderer -> (Double, Double) -> V2 Double -> GridTParams -> IO ()
+drawPlayer screenRenderer (px, py) dir gtp = do
+    --let t = translateToPDCenter !*! zoom 201.0 -- TODO change this
+    let t = (gridT gtp) !*! translate px py
 
-          let circle_pos = dropHomoCoords . (fmap floor) . (t !*) . homoCoords $ V2 0.0 0.0
-          let circle_radius = 10
-          circle screenRenderer circle_pos circle_radius white
-          let t_arrow = t !*! zoom 0.4
+    --Draw Circle
+    let circle_pos = dropHomoCoords . (fmap floor) . (t !*) . homoCoords $ V2 0.0 0.0
+    let circle_radius = 5
+    circle screenRenderer circle_pos circle_radius white
 
 
+    --TODO incorporate player rotation
+    let arrowT = (gridT gtp) !*! translate px py !*! rotation (vectorAngle dir) !*! zoom 0.5
 
-          let baseArrow = (homoCoords $ V2 0.0 (-0.2), homoCoords $ V2 0.7 0.0, homoCoords $ V2 0.0 0.2) :: (HV2 Double, HV2 Double, HV2 Double)
-          let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (dropHomoCoords . (fmap floor) . (t !*)) baseArrow
+    --Draw Arrow
+    let apDT t =  blastFmap3Tupple (dropHomoCoords . (fmap floor) . (t !*))
+    let baseArrow = (homoCoords $ V2 0.0 (-0.2), homoCoords $ V2 0.7 0.0, homoCoords $ V2 0.0 0.2) :: (HV2 Double, HV2 Double, HV2 Double)
+    let (arrowVA, arrowVB, arrowVC) = apDT arrowT baseArrow
 
-          fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
+    fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
+
+vectorAngle :: V2 Double -> Double
+vectorAngle (V2 x y)
+    | y > 0 = atan2 y x
+    | otherwise = (2 * pi) + (atan2 y x)
 
 (screenWidth, screenHeight) = (640, 480) :: (CInt,CInt)
 
@@ -158,7 +165,8 @@ main = do
     --CONSTS
     let worldSize = 10 :: CInt
     let zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
-    let p = (5.5, 5.5)
+    let ppos = (2.5,2.5)
+    let pdir = normalize $ V2 1 1
 
     let loop = do
             SDL.clear screenRenderer
@@ -175,7 +183,7 @@ main = do
 
             drawGridTiles screenRenderer gtp
             drawGrid screenRenderer gtp
-            drawPlayer screenRenderer p gtp
+            drawPlayer screenRenderer ppos pdir gtp
 
             SDL.updateWindowSurface window
 
