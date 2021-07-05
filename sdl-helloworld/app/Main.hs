@@ -101,6 +101,7 @@ drawGrid screenRenderer gtp@(GridTParams worldSize _ _) = do
         vertical_lines worldSize = [(homoCoords (V2 x 0), homoCoords (V2 x worldSize)) | x <- [0..worldSize]]
         horizontal_lines worldSize = [(homoCoords (V2 0 y), homoCoords (V2 worldSize y)) | y <- [0..worldSize]]
 
+blastFmapPair f (a,b) = (f a, f b)
 blastFmap3Tupple f (a,b,c) = (f a, f b, f c)
 blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
 
@@ -129,14 +130,18 @@ drawPlayer screenRenderer (px, py) dir gtp = do
     let circle_radius = 5
     circle screenRenderer circle_pos circle_radius white
 
-
     --TODO incorporate player rotation
-    let arrowT = (gridT gtp) !*! translate px py !*! rotation (vectorAngle dir) !*! zoom 0.5
+    let arrowT = (gridT gtp) !*! translate px py !*! rotation (vectorAngle dir)
+    let apDT t =  (dropHomoCoords . (fmap floor) . (t !*))
+
+    let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 0.5 0.0)
+    let (arrow_p0, arrow_p1) = blastFmapPair (apDT arrowT) arrow_line
+
+    line screenRenderer arrow_p0 arrow_p1 white
 
     --Draw Arrow
-    let apDT t =  blastFmap3Tupple (dropHomoCoords . (fmap floor) . (t !*))
     let baseArrow = (homoCoords $ V2 0.0 (-0.2), homoCoords $ V2 0.7 0.0, homoCoords $ V2 0.0 0.2) :: (HV2 Double, HV2 Double, HV2 Double)
-    let (arrowVA, arrowVB, arrowVC) = apDT arrowT baseArrow
+    let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate 0.5 0.0 !*! zoom 0.5)) baseArrow
 
     fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
 
