@@ -92,13 +92,20 @@ translateToPDCenter = translate (fromIntegral screenWidth / 2.0) (fromIntegral s
 
         --Center grid over origin, scale it by zoomFactor, rotate it by rotationFactor, move it to center of screen
 gridT :: GridTParams -> M22Affine Double
-gridT (GridTParams worldSize zoomFactor rotationFactor rotationFocus) = translateToPDCenter !*! rotationT !*! zoomT zoomFactor !*! centerToLocalOrigin
+gridT (GridTParams worldSize zoomFactor rotationFactor Nothing) = translateToPDCenter !*! rotationT !*! zoomT zoomFactor !*! centerToLocalOrigin
     where
         delta = fromIntegral worldSize / 2
         centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
-        rotationT = case rotationFocus of
-                        Nothing -> rotation rotationFactor
-                        Just (focus) -> rotate_around ((-pi/2.0) - rotationFactor) focus
+        rotationT = rotation rotationFactor
+
+gridT (GridTParams worldSize zoomFactor rotationFactor (Just focus)) = translateToPDCenter !*! zoomT zoomFactor !*! centerBackFromFocus !*! rotationT !*! centerOnFocus !*! centerToLocalOrigin
+    where
+        delta = fromIntegral worldSize / 2
+        centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
+        centerOnFocus = translate (0.5 * ((focus ^._x))) (0.5 * ((focus ^._y)))
+        centerBackFromFocus = translate 0.0 (-0.5 * ((focus ^._y)))
+        --TODO DOUBLE CHECK THIS
+        rotationT = rotation ((-pi/2.0) - rotationFactor)
                         --TODO make this toggable and center the camera on the player
 
 
@@ -221,6 +228,8 @@ drawDebug (window, screenSurface, screenRenderer) gs = do
     let worldSize = 10 :: CInt --TODO Move this to Vars
     let zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
 
+    --TODO refactor GTP, its bullshit rn
+    --Focus rotating will need its own datatype too
     let gtp = GridTParams worldSize zoomFactor rotationFactor (Just (position . player $ gs))
 
     drawGridTiles screenRenderer godboltMap gtp
