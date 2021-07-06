@@ -1,6 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
+import Control.Monad.State
+
 import Control.Monad
 import Control.Concurrent (threadDelay)
 import Foreign.C.Types
@@ -130,8 +132,13 @@ drawGridTiles screenRenderer map gtp@(GridTParams worldSize _ _) = do
     --Draw Line
     --TODO draw pov
     --
-drawPlayer :: SDL.Renderer -> (Double, Double) -> V2 Double -> GridTParams -> IO ()
-drawPlayer screenRenderer (px, py) dir gtp = do
+drawPlayer :: SDL.Renderer -> PVars -> GridTParams -> IO ()
+drawPlayer screenRenderer player gtp = do
+    let px = fst . position $ player
+    let py = snd . position $ player
+
+
+
     --let t = translateToPDCenter !*! zoom 201.0 -- TODO change this
     let t = (gridT gtp) !*! translate px py
 
@@ -141,7 +148,7 @@ drawPlayer screenRenderer (px, py) dir gtp = do
     circle screenRenderer circle_pos circle_radius white
 
     --TODO incorporate player rotation
-    let arrowT = (gridT gtp) !*! translate px py !*! rotation (vectorAngle dir)
+    let arrowT = (gridT gtp) !*! translate px py !*! rotation (vectorAngle . direction $ player)
     let apDT t =  (dropHomoCoords . (fmap floor) . (t !*))
                                                                 -- |
     --TODO figure out a better way to handle the scaling done here V
@@ -183,8 +190,65 @@ godboltMap = [take 10 $ rFW,
               FW : (take 8 rEW) ++ [FW],
               take 10 $ rFW] :: [[WallType]]
 
+--In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
+data PVars = PVars {
+                position :: (Double, Double),
+                direction :: V2 Double
+             }
 
+
+data Vars = Vars {
+                player :: PVars,
+                map :: WorldTiles
+            }
+
+gameTick :: ScreenHandles -> StateT Vars IO ()
+gameTick hs = do
+    --TODO gsUpdate :: StateT Vars IO ()
+    newgs <- get
+    lift $ drawDebug hs newgs
+    return ()
+
+--Theres a better way to handle this...
+drawDebug :: ScreenHandles -> Vars -> IO ()
+drawDebug (window, screenSurface, screenRenderer) gs = do
+    let rotationFactor = vectorAngle . direction $ player gs --TODO fix this
+    let worldSize = 10 :: CInt --TODO Move this to Vars
+    let zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
+
+    let gtp = GridTParams worldSize zoomFactor rotationFactor
+
+    drawGridTiles screenRenderer godboltMap gtp
+    drawGrid screenRenderer gtp
+    drawPlayer screenRenderer (player gs) gtp
+
+
+--TODO make minimap rotate around the player
 --TODO mouse zoom handling
+
+type ScreenHandles = (SDL.Window, SDL.Surface, SDL.Renderer)
+
+initVars = Vars p godboltMap
+    where p = PVars (2.5,2.5) (V2 1.0 1.0)
+
+mainLoop :: ScreenHandles -> StateT Vars IO ()
+mainLoop hs@(window, screenSurface, screenRenderer) = do
+    SDL.clear screenRenderer
+    SDL.surfaceFillRect screenSurface Nothing backgroundColor
+    events <- SDL.pollEvents
+    let quitSignal = elem SDL.QuitEvent $ fmap SDL.eventPayload events
+    --SDL.surfaceBlit garg Nothing screenSurface Nothing
+    time <- SDL.ticks
+
+    let elapsed_seconds = (fromIntegral (toInteger time)) / 1000.0
+    let rotationFactor = elapsed_seconds --0.0
+
+    gameTick hs
+
+    SDL.updateWindowSurface window
+
+    unless quitSignal (mainLoop hs)
+
 
 main :: IO ()
 main = do
@@ -199,35 +263,11 @@ main = do
 
     screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
 
+    let hs = (window, screenSurface, screenRenderer)
+
     --CONSTS
-    let worldSize = 10 :: CInt
-    let zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
-    let ppos = (2.5,2.5)
-    let pdir = normalize $ V2 1 1
-
-    let loop = do
-            SDL.clear screenRenderer
-            SDL.surfaceFillRect screenSurface Nothing backgroundColor
-            events <- SDL.pollEvents :: IO [SDL.Event]
-            let quitSignal = elem SDL.QuitEvent $ map SDL.eventPayload events
-            --SDL.surfaceBlit garg Nothing screenSurface Nothing
-            time <- SDL.ticks
-
-            let elapsed_seconds = (fromIntegral (toInteger time)) / 1000.0
-            let rotationFactor = elapsed_seconds --0.0
-
-            let gtp = GridTParams worldSize zoomFactor 0.0 --rotationFactor
-
-            drawGridTiles screenRenderer godboltMap gtp
-            drawGrid screenRenderer gtp
-            drawPlayer screenRenderer ppos pdir gtp
-
-            SDL.updateWindowSurface window
-
-            unless quitSignal loop
-
-
-    loop
+    --TODO INIT VARS
+    execStateT (mainLoop hs) initVars
 
     SDL.freeSurface screenSurface
     SDL.destroyWindow window
