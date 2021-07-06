@@ -171,6 +171,7 @@ type WorldTiles = [[WallType]]
 
 rFW = repeat FW
 rEW = repeat EW
+--ACCESSED godBoltMap !! y !! x style
 godboltMap = [take 10 $ rFW,
               FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
               FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
