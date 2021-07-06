@@ -133,14 +133,18 @@ drawPlayer screenRenderer (px, py) dir gtp = do
     --TODO incorporate player rotation
     let arrowT = (gridT gtp) !*! translate px py !*! rotation (vectorAngle dir)
     let apDT t =  (dropHomoCoords . (fmap floor) . (t !*))
-
+                                                                -- |
+    --TODO figure out a better way to handle the scaling done here V
     let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 0.5 0.0)
     let (arrow_p0, arrow_p1) = blastFmapPair (apDT arrowT) arrow_line
 
+    --Draw the line body of the arrow
     line screenRenderer arrow_p0 arrow_p1 white
 
     --Draw Arrow
     let baseArrow = (homoCoords $ V2 0.0 (-0.2), homoCoords $ V2 0.7 0.0, homoCoords $ V2 0.0 0.2) :: (HV2 Double, HV2 Double, HV2 Double)
+                                                                            --     |
+                    --TODO figure out a better way to handle the scaling done here V
     let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate 0.5 0.0 !*! zoom 0.5)) baseArrow
 
     fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
