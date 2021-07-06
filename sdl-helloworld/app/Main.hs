@@ -84,21 +84,26 @@ drawGridLine screenRenderer (start, end) = line screenRenderer (dropHomoCoords s
 data GridTParams = GridTParams {
                         worldSize :: CInt,
                         zoomFactor :: Double,
-                        rotationFactor :: Double
+                        rotationFactor :: Double,
+                        rotationFocus :: Maybe (V2 Double)
                    }
 
 translateToPDCenter = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
 
         --Center grid over origin, scale it by zoomFactor, rotate it by rotationFactor, move it to center of screen
 gridT :: GridTParams -> M22Affine Double
-gridT (GridTParams worldSize zoomFactor rotationFactor) = translateToPDCenter !*! rotationT !*! zoomT zoomFactor !*! centerToLocalOrigin
+gridT (GridTParams worldSize zoomFactor rotationFactor rotationFocus) = translateToPDCenter !*! rotationT !*! zoomT zoomFactor !*! centerToLocalOrigin
     where
         delta = fromIntegral worldSize / 2
         centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
-        rotationT = rotation rotationFactor
+        rotationT = case rotationFocus of
+                        Nothing -> rotation rotationFactor
+                        Just (focus) -> rotate_around ((-pi/2.0) - rotationFactor) focus
+                        --TODO make this toggable and center the camera on the player
+
 
 drawGrid :: SDL.Renderer -> GridTParams -> IO ()
-drawGrid screenRenderer gtp@(GridTParams worldSize _ _) = do
+drawGrid screenRenderer gtp@(GridTParams worldSize _ _ _) = do
     let t = gridT gtp
     let hlines = appDTFloor t (horizontal_lines worldSize) :: [Line]
     let vlines = appDTFloor t (vertical_lines worldSize) :: [Line]
@@ -115,7 +120,7 @@ blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
 
 --TODO hook this up to a 2D tilegrid array
 drawGridTiles :: SDL.Renderer -> WorldTiles -> GridTParams -> IO ()
-drawGridTiles screenRenderer map gtp@(GridTParams worldSize _ _) = do
+drawGridTiles screenRenderer map gtp@(GridTParams worldSize _ _ _) = do
     let t = gridT gtp
     let projectVertToPD = (dropHomoCoords . (fmap floor) . (t !*) . homoCoords . (fmap fromIntegral))
     let inds = [(x,y) | x <- [0..worldSize -1], y <- [0..worldSize - 1]]
@@ -134,8 +139,8 @@ drawGridTiles screenRenderer map gtp@(GridTParams worldSize _ _) = do
     --
 drawPlayer :: SDL.Renderer -> PVars -> GridTParams -> IO ()
 drawPlayer screenRenderer player gtp = do
-    let px = fst . position $ player
-    let py = snd . position $ player
+    let px = (position player) ^._x
+    let py = (position player) ^._y
 
 
 
@@ -192,7 +197,7 @@ godboltMap = [take 10 $ rFW,
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
 data PVars = PVars {
-                position :: (Double, Double),
+                position :: V2 Double,
                 direction :: V2 Double
              }
 
@@ -216,7 +221,7 @@ drawDebug (window, screenSurface, screenRenderer) gs = do
     let worldSize = 10 :: CInt --TODO Move this to Vars
     let zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
 
-    let gtp = GridTParams worldSize zoomFactor rotationFactor
+    let gtp = GridTParams worldSize zoomFactor rotationFactor (Just (position . player $ gs))
 
     drawGridTiles screenRenderer godboltMap gtp
     drawGrid screenRenderer gtp
@@ -229,7 +234,7 @@ drawDebug (window, screenSurface, screenRenderer) gs = do
 type ScreenHandles = (SDL.Window, SDL.Surface, SDL.Renderer)
 
 initVars = Vars p godboltMap
-    where p = PVars (2.5,2.5) (V2 1.0 1.0)
+    where p = PVars (V2 2.5 2.5) (V2 1.0 1.0)
 
 mainLoop :: ScreenHandles -> StateT Vars IO ()
 mainLoop hs@(window, screenSurface, screenRenderer) = do
