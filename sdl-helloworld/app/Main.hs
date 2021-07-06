@@ -13,14 +13,15 @@ import qualified SDL.Video.Renderer as SDL
 import Data.Bifunctor
 import Data.Word
 import Linear
+import Control.Lens
 import SDL.Primitive as SDL
 
 type HV2 = V3 --TODO propagate this to indicate homoCoordsgenous coordinates
 type Line = (HV2 CInt, HV2 CInt) -- After homoCoordsgenous coordinates its a v3
 
 
-zoom :: (Num a) => a -> V3 (V3 a)
-zoom scale = V3 (V3 scale 0     0)
+zoomT :: (Num a) => a -> V3 (V3 a)
+zoomT scale = V3 (V3 scale 0     0)
                 (V3 0     scale 0)
                 (V3 0     0     1)
 
@@ -70,6 +71,11 @@ doorTileColor = SDL.V4 102 51 102 maxBound :: Color
 arrowColor = SDL.V4 255 51 51 maxBound :: Color
 gridColor = SDL.V4 63 63 63 maxBound :: Color
 
+wallTypeToColor FW = filledTileColor
+wallTypeToColor EW = backgroundColor
+wallTypeToColor DW = doorTileColor
+
+
 drawGridLine :: SDL.Renderer -> Line -> IO ()
 drawGridLine screenRenderer (start, end) = line screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
 
@@ -83,7 +89,7 @@ translateToPDCenter = translate (fromIntegral screenWidth / 2.0) (fromIntegral s
 
         --Center grid over origin, scale it by zoomFactor, rotate it by rotationFactor, move it to center of screen
 gridT :: GridTParams -> M22Affine Double
-gridT (GridTParams worldSize zoomFactor rotationFactor) = translateToPDCenter !*! rotationT !*! zoom zoomFactor !*! centerToLocalOrigin
+gridT (GridTParams worldSize zoomFactor rotationFactor) = translateToPDCenter !*! rotationT !*! zoomT zoomFactor !*! centerToLocalOrigin
     where
         delta = fromIntegral worldSize / 2
         centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
@@ -106,15 +112,19 @@ blastFmap3Tupple f (a,b,c) = (f a, f b, f c)
 blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
 
 --TODO hook this up to a 2D tilegrid array
-drawGridTiles :: SDL.Renderer -> GridTParams -> IO ()
-drawGridTiles screenRenderer gtp@(GridTParams worldSize _ _) = do
+drawGridTiles :: SDL.Renderer -> WorldTiles -> GridTParams -> IO ()
+drawGridTiles screenRenderer map gtp@(GridTParams worldSize _ _) = do
     let t = gridT gtp
     let projectVertToPD = (dropHomoCoords . (fmap floor) . (t !*) . homoCoords . (fmap fromIntegral))
+    let inds = [(x,y) | x <- [0..worldSize -1], y <- [0..worldSize - 1]]
     let quads = [blastFmap4Tupple projectVertToPD (V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..worldSize - 1], y <- [0..worldSize - 1]] :: [(Pos,Pos,Pos,Pos)]
 
-    forM_ quads (\(vA,vB,vC,vD) -> do
-        fillTriangle screenRenderer vA vB vC filledTileColor
-        fillTriangle screenRenderer vB vC vD filledTileColor
+    forM_ (zip inds quads) (\((x,y),(vA,vB,vC,vD)) -> do
+        --TODO select tile color
+        let tileColor = wallTypeToColor $ map !! fromIntegral y !! fromIntegral x
+
+        fillTriangle screenRenderer vA vB vC tileColor
+        fillTriangle screenRenderer vB vC vD tileColor
         )
 
     --Draw Line
@@ -135,7 +145,7 @@ drawPlayer screenRenderer (px, py) dir gtp = do
     let apDT t =  (dropHomoCoords . (fmap floor) . (t !*))
                                                                 -- |
     --TODO figure out a better way to handle the scaling done here V
-    let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 0.5 0.0)
+    let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 0.6 0.0)
     let (arrow_p0, arrow_p1) = blastFmapPair (apDT arrowT) arrow_line
 
     --Draw the line body of the arrow
@@ -145,7 +155,7 @@ drawPlayer screenRenderer (px, py) dir gtp = do
     let baseArrow = (homoCoords $ V2 0.0 (-0.2), homoCoords $ V2 0.7 0.0, homoCoords $ V2 0.0 0.2) :: (HV2 Double, HV2 Double, HV2 Double)
                                                                             --     |
                     --TODO figure out a better way to handle the scaling done here V
-    let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate 0.5 0.0 !*! zoom 0.5)) baseArrow
+    let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate 0.5 0.0 !*! zoomT 0.5)) baseArrow
 
     fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
 
@@ -155,6 +165,23 @@ vectorAngle (V2 x y)
     | otherwise = (2 * pi) + (atan2 y x)
 
 (screenWidth, screenHeight) = (640, 480) :: (CInt,CInt)
+
+data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
+type WorldTiles = [[WallType]]
+
+rFW = repeat FW
+rEW = repeat EW
+godboltMap = [take 10 $ rFW,
+              FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
+              FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
+              (take 3 rFW) ++ [DW] ++ [FW] ++ (take 4 rEW) ++ [FW],
+              FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
+              [FW,DW] ++ (take 3 rFW) ++ (take 4 rEW) ++ [FW],
+              FW : (take 3 rEW) ++ (take 4 rFW) ++ [DW, FW],
+              FW : (take 8 rEW) ++ [FW],
+              FW : (take 8 rEW) ++ [FW],
+              take 10 $ rFW] :: [[WallType]]
+
 
 --TODO mouse zoom handling
 
@@ -190,7 +217,7 @@ main = do
 
             let gtp = GridTParams worldSize zoomFactor 0.0 --rotationFactor
 
-            drawGridTiles screenRenderer gtp
+            drawGridTiles screenRenderer godboltMap gtp
             drawGrid screenRenderer gtp
             drawPlayer screenRenderer ppos pdir gtp
 
