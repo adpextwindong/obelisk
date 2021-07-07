@@ -1,4 +1,9 @@
 #SDL2_gfx
+SDL2_gfx lib stuff license:
+(C) A. Schiffler, aschiffler [at] ferzkopp.net 2012-2018, licensed under the zlib license
+
+
+===================================
 
 Make sure your PKG_CONFIG_PATH is pointing at your SDL2_gfx install.
 
