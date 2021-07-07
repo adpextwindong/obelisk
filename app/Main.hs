@@ -37,18 +37,18 @@ rotation theta = V3 (V3 (cos theta) (-sin theta) 0)
                     (V3 (sin theta) (cos theta)  0)
                     (V3  0           0           1)
 
-rotate_around :: Double -> (V2 Double) -> (V3 (V3 Double))
-rotate_around theta (V2 x y) = (translate x y) !*! (rotation theta) !*! (translate (-x) (-y))
+rotateAround :: Double -> V2 Double -> V3 (V3 Double)
+rotateAround theta (V2 x y) = translate x y !*! rotation theta !*! translate (-x) (-y)
 
 type M22Affine t = V3 (V3 t) -- TODO use this type alias??
 
 idv3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: V3 (V3 CInt)
 
 applyAffineTransform :: M22Affine CInt -> [Line] -> [Line]
-applyAffineTransform t xs = fmap (bimap (t !* ) (t !*)) xs
+applyAffineTransform t = fmap (bimap (t !* ) (t !*))
 
 appDTFloor :: M22Affine Double -> [Line] -> [Line]
-appDTFloor t xs = fmap (bimap f f) xs
+appDTFloor t = fmap (bimap f f)
     where
         f = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
         --Convert to doubles, apply the transform then floor it
@@ -102,8 +102,8 @@ gridT (GridTParams worldSize zoomFactor rotationFactor (Just focus)) = translate
     where
         delta = fromIntegral worldSize / 2
         centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
-        centerOnFocus = translate (0.5 * ((focus ^._x))) (0.5 * ((focus ^._y)))
-        centerBackFromFocus = translate 0.0 (-0.5 * ((focus ^._y)))
+        centerOnFocus = translate (0.5 * focus ^._x) (0.5 * focus ^._y)
+        centerBackFromFocus = translate 0.0 (-0.5 * focus ^._y)
         --TODO DOUBLE CHECK THIS
         rotationT = rotation ((-pi/2.0) - rotationFactor)
                         --TODO make this toggable and center the camera on the player
@@ -129,7 +129,7 @@ blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
 drawGridTiles :: SDL.Renderer -> WorldTiles -> GridTParams -> IO ()
 drawGridTiles screenRenderer map gtp@(GridTParams worldSize _ _ _) = do
     let t = gridT gtp
-    let projectVertToPD = (dropHomoCoords . (fmap floor) . (t !*) . homoCoords . (fmap fromIntegral))
+    let projectVertToPD = dropHomoCoords . fmap floor . (t !*) . homoCoords . fmap fromIntegral
     let inds = [(x,y) | x <- [0..worldSize -1], y <- [0..worldSize - 1]]
     let quads = [blastFmap4Tupple projectVertToPD (V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..worldSize - 1], y <- [0..worldSize - 1]] :: [(Pos,Pos,Pos,Pos)]
 
@@ -146,22 +146,22 @@ drawGridTiles screenRenderer map gtp@(GridTParams worldSize _ _ _) = do
     --
 drawPlayer :: SDL.Renderer -> PVars -> GridTParams -> IO ()
 drawPlayer screenRenderer player gtp = do
-    let px = (position player) ^._x
-    let py = (position player) ^._y
+    let px = position player ^._x
+    let py = position player ^._y
 
 
 
     --let t = translateToPDCenter !*! zoom 201.0 -- TODO change this
-    let t = (gridT gtp) !*! translate px py
+    let t = gridT gtp !*! translate px py
 
     --Draw Circle
-    let circle_pos = dropHomoCoords . (fmap floor) . (t !*) . homoCoords $ V2 0.0 0.0
+    let circle_pos = dropHomoCoords . fmap floor . (t !*) . homoCoords $ V2 0.0 0.0
     let circle_radius = 5
     circle screenRenderer circle_pos circle_radius white
 
     --TODO incorporate player rotation
-    let arrowT = (gridT gtp) !*! translate px py !*! rotation (vectorAngle . direction $ player)
-    let apDT t =  (dropHomoCoords . (fmap floor) . (t !*))
+    let arrowT = gridT gtp !*! translate px py !*! rotation (vectorAngle . direction $ player)
+    let apDT t =  dropHomoCoords . fmap floor . (t !*)
                                                                 -- |
     --TODO figure out a better way to handle the scaling done here V
     let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 0.6 0.0)
@@ -181,7 +181,7 @@ drawPlayer screenRenderer player gtp = do
 vectorAngle :: V2 Double -> Double
 vectorAngle (V2 x y)
     | y > 0 = atan2 y x
-    | otherwise = (2 * pi) + (atan2 y x)
+    | otherwise = 2 * pi + atan2 y x
 
 (screenWidth, screenHeight) = (640, 480) :: (CInt,CInt)
 
@@ -191,16 +191,17 @@ type WorldTiles = [[WallType]]
 rFW = repeat FW
 rEW = repeat EW
 --ACCESSED godBoltMap !! y !! x style
-godboltMap = [take 10 $ rFW,
-              FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
-              FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
-              (take 3 rFW) ++ [DW] ++ [FW] ++ (take 4 rEW) ++ [FW],
-              FW : (take 3 rEW) ++ [FW] ++ (take 4 rEW) ++ [FW],
-              [FW,DW] ++ (take 3 rFW) ++ (take 4 rEW) ++ [FW],
-              FW : (take 3 rEW) ++ (take 4 rFW) ++ [DW, FW],
-              FW : (take 8 rEW) ++ [FW],
-              FW : (take 8 rEW) ++ [FW],
-              take 10 $ rFW] :: [[WallType]]
+godboltMap :: [[WallType]]
+godboltMap = [take 10 rFW,
+              FW : take 3 rEW ++ [FW] ++ take 4 rEW ++ [FW],
+              FW : take 3 rEW ++ [FW] ++ take 4 rEW ++ [FW],
+              take 3 rFW ++ [DW] ++ [FW] ++ take 4 rEW ++ [FW],
+              FW : take 3 rEW ++ [FW] ++ take 4 rEW ++ [FW],
+              [FW,DW] ++ take 3 rFW ++ take 4 rEW ++ [FW],
+              FW : take 3 rEW ++ take 4 rFW ++ [DW, FW],
+              FW : take 8 rEW ++ [FW],
+              FW : take 8 rEW ++ [FW],
+              take 10 rFW]
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
 data PVars = PVars {
@@ -226,7 +227,7 @@ drawDebug :: ScreenHandles -> Vars -> IO ()
 drawDebug (window, screenSurface, screenRenderer) gs = do
     let rotationFactor = vectorAngle . direction $ player gs --TODO fix this
     let worldSize = 10 :: CInt --TODO Move this to Vars
-    let zoomFactor = (fromIntegral screenHeight / fromIntegral worldSize) * 0.95 :: Double
+    let zoomFactor = fromIntegral screenHeight / fromIntegral worldSize * 0.95 :: Double
 
     --TODO refactor GTP, its bullshit rn
     --Focus rotating will need its own datatype too
@@ -254,7 +255,7 @@ mainLoop hs@(window, screenSurface, screenRenderer) = do
     --SDL.surfaceBlit garg Nothing screenSurface Nothing
     time <- SDL.ticks
 
-    let elapsed_seconds = (fromIntegral (toInteger time)) / 1000.0
+    let elapsed_seconds = fromIntegral (toInteger time) / 1000.0
     let rotationFactor = elapsed_seconds --0.0
 
     gameTick hs
