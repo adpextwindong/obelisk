@@ -1,4 +1,0 @@
-:set -l SDL2_gfx
-:set -package sdl2
-:set -package linear
-:set -package sdl2-gfx

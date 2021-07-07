@@ -1,4 +1,4 @@
-module Raycaster.TODOPORT.DDA (rayPath', limitDrawDistance, limitDrawDistance')
+module Obelisk.Raycaster.DDA (rayPath', limitDrawDistance, limitDrawDistance')
     where
 
 data DDAStep = NoWall | Step {
