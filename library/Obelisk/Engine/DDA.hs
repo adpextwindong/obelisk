@@ -8,6 +8,7 @@ data DDAStep = NoWall | Step {
 
     deriving Show
 
+--FIXME, likely incorrect. We should sample from where the ray starts.
 startingStep = Step 0.0 0.0
 
 lengthStep :: DDAStep -> Float
@@ -50,3 +51,7 @@ limitDrawDistance :: Float -> [DDAStep] -> [DDAStep]
 limitDrawDistance drawDistance = takeWhile (\step -> sqrt (lengthStep step) < drawDistance)
 
 limitDrawDistance' drawDistance = takeWhile (\(step, _) -> sqrt (lengthStep step) < drawDistance)
+
+--Starting step should be ray origin
+tx = fmap fst $ take 10 $ rayPath (pi/3) (Step 0 0)
+ty = fmap fst $ take 10 $ rayPath (pi/3) (Step 0.25 0.33)
