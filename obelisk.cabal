@@ -12,9 +12,7 @@ build-type:     Simple
 
 library
   exposed-modules:
-      Obelisk.Raycaster.DDA
-    , Obelisk.Raycaster.Raycast
-    , Obelisk
+      Obelisk
   hs-source-dirs:
       library
   build-depends:

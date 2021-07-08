@@ -1,4 +1,4 @@
-module Obelisk.Homogenous where
+module Obelisk.Math.Homogenous where
 
 import Linear
 import Foreign.C.Types ( CInt )

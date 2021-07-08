@@ -1,4 +1,4 @@
-module Obelisk.Raycaster.DDA (rayPath', limitDrawDistance, limitDrawDistance')
+module Obelisk.Engine.DDA (rayPath', limitDrawDistance, limitDrawDistance')
     where
 
 data DDAStep = NoWall | Step {

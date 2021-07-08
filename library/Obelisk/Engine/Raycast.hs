@@ -1,4 +1,4 @@
-module Obelisk.Raycaster.Raycast where
+module Obelisk.Engine.Raycast where
 
 import Control.Monad
 import Control.Monad.IO.Class (MonadIO, liftIO)
