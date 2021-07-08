@@ -43,9 +43,6 @@ gameTick hs = do
 --TODO make minimap rotate around the player
 --TODO mouse zoom handling
 
---TODO REMOVE
-type ScreenHandles = (SDL.Window, SDL.Surface, SDL.Renderer)
-
 (initialScreenWidth, initialScreenHeight) = (640, 480) :: (CInt,CInt)
 main :: IO ()
 main = do
@@ -62,7 +59,6 @@ main = do
 
     let hs = (window, screenSurface, screenRenderer)
 
-    --TODO incorporate
     let cfg = Config {
                 cWindow = window,
                 cRenderer = screenRenderer,
@@ -70,9 +66,6 @@ main = do
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenWidth
             }
-
-    --CONSTS
-    --TODO INIT VARS
 
     runObelisk cfg initVars mainLoop
 
@@ -100,7 +93,7 @@ instance SDLInput Obelisk where
     getTime = getTime'
 
 instance Renderer Obelisk where
-    clearScreen = clearScreen' 
+    clearScreen = clearScreen'
     drawScreen = drawScreen'
     fillBackground = fillBackground'
     drawDebug = drawDebug'
