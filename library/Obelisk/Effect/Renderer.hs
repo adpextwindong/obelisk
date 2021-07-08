@@ -41,6 +41,7 @@ class Monad m => Renderer m where
     clearScreen :: m ()
     drawScreen :: m ()
     fillBackground :: m ()
+    drawDebug :: Vars -> m ()
     
     -- drawGrid :: m ()
     -- drawGridTiles :: m ()
@@ -80,8 +81,8 @@ drawDebug' gs = do
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
 
     --let map = map gs
-    drawGrid ws gtp
     drawGridTiles (world gs) gtp
+    drawGrid ws gtp
     drawPlayer (player gs) gtp
 
 ---------------------------------------------------------------

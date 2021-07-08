@@ -103,3 +103,4 @@ instance Renderer Obelisk where
     clearScreen = clearScreen' 
     drawScreen = drawScreen'
     fillBackground = fillBackground'
+    drawDebug = drawDebug'

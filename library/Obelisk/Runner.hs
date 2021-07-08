@@ -27,7 +27,12 @@ mainLoop = do
     let rotationFactor = elapsed_seconds --0.0
     
     --gameTick hs TODO updateStep
+    
+    gs <- get
 
+    drawDebug gs
+    drawScreen 
+    
     fillBackground
     
     unless quitSignal mainLoop
