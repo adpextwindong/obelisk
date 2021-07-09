@@ -71,7 +71,9 @@ drawDebug' gs = do
     let ws = worldSize . world $ gs
     screenWidth <- asks cScreenWidth
     screenHeight <- asks cScreenHeight
-    let zoomFactor = fromIntegral screenHeight / fromIntegral ws * 0.95
+
+    let zoomLimiter = 0.95
+    let zoomFactor = fromIntegral screenHeight / fromIntegral ws * zoomLimiter
 
     --TODO rotation focus mechanism
     let rotationFactor = vectorAngle. direction $ player gs
@@ -170,15 +172,12 @@ gridT worldSize zoomFactor rotationFactor Nothing translateToPDCenter = translat
         centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
         rotationT = rotation rotationFactor
 
-gridT worldSize zoomFactor rotationFactor (Just focus) translateToPDCenter = translateToPDCenter !*! zoomT zoomFactor !*! centerBackFromFocus !*! rotationT !*! centerOnFocus !*! centerToLocalOrigin
+gridT worldSize zoomFactor rotationFactor (Just focus) translateToPDCenter = translateToPDCenter !*! zt !*! rotationT !*! playerToLocalOrigin
     where
-        delta = fromIntegral worldSize / 2
-        centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
-        centerOnFocus = translate (0.5 * focus ^._x) (0.5 * focus ^._y)
-        centerBackFromFocus = translate 0.0 (-0.5 * focus ^._y)
-        --TODO DOUBLE CHECK THIS
+        zt = zoomT zoomFactor
+        wsMid = fromIntegral worldSize / 2.0
+        playerToLocalOrigin = translate (-focus ^._x) (-focus ^._y)  :: M22Affine Double
         rotationT = rotation ((-pi/2.0) - rotationFactor)
-                        --TODO make this toggable and center the camera on the player
 
 blastFmapPair :: (t -> b) -> (t, t) -> (b, b)
 blastFmapPair f (a,b) = (f a, f b)
