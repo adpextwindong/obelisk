@@ -16,21 +16,26 @@ import Obelisk.Math.Homogenous
 import Obelisk.Wrapper.SDLRenderer
 
 --COLORS
-white = SDL.V4 maxBound maxBound maxBound maxBound :: SDL.Color
-red = SDL.V4 maxBound 0 0 maxBound :: SDL.Color
-blue = SDL.V4 0 0 maxBound maxBound :: SDL.Color
-black = SDL.V4 0 0 0 0 :: SDL.Color
+white :: SDL.Color
+white = SDL.V4 maxBound maxBound maxBound maxBound
+red :: SDL.Color
+red = SDL.V4 maxBound 0 0 maxBound
+blue :: SDL.Color
+blue = SDL.V4 0 0 maxBound maxBound
+black :: SDL.Color
+black = SDL.V4 0 0 0 0
+
 --GodBolt Colors
 backgroundColor :: SDL.Color
-backgroundColor = SDL.V4 34 34 34 maxBound :: SDL.Color
+backgroundColor = SDL.V4 34 34 34 maxBound
 gridColor :: SDL.Color
-gridColor = SDL.V4 63 63 63 maxBound :: SDL.Color
+gridColor = SDL.V4 63 63 63 maxBound
 filledTileColor :: SDL.Color
-filledTileColor = SDL.V4 51 51 102 maxBound :: SDL.Color
+filledTileColor = SDL.V4 51 51 102 maxBound
 doorTileColor :: SDL.Color
-doorTileColor = SDL.V4 102 51 102 maxBound :: SDL.Color
+doorTileColor = SDL.V4 102 51 102 maxBound
 arrowColor :: SDL.Color
-arrowColor = SDL.V4 255 51 51 maxBound :: SDL.Color
+arrowColor = SDL.V4 255 51 51 maxBound
 
 wallTypeToColor :: WallType -> SDL.Color
 wallTypeToColor FW = filledTileColor
@@ -42,10 +47,6 @@ class Monad m => Renderer m where
     drawScreen :: m ()
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
-    
-    -- drawGrid :: m ()
-    -- drawGridTiles :: m ()
-    -- drawPlayer :: m ()
 
 type SDLCanDraw m = (SDLRenderer m, MonadReader Config m)
 
@@ -82,7 +83,6 @@ drawDebug' gs = do
     let tPDCenter = translateToPDCenter screenWidth screenHeight
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
 
-    --let map = map gs
     drawGridTiles (world gs) gtp
     drawGrid ws gtp
     drawPlayer (player gs) gtp
@@ -95,7 +95,7 @@ drawGrid ws t = do
 
     let hlines = appDTFloor t (horizontal_lines ws) :: [Line]
     let vlines = appDTFloor t (vertical_lines ws) :: [Line]
-    --let lines = applyAffineTransform (translate 320 240) vertical_lines
+
     forM_ hlines drawGridLine
     forM_ vlines drawGridLine 
     where
@@ -107,7 +107,6 @@ drawGridLine (start, end) = do
     screenRenderer <- asks cRenderer
     drawLine screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
 
---TODO hook this up to a real 2D Tilegrid array
 drawGridTiles :: (SDLCanDraw m) => WorldTiles -> GridTransform -> m ()
 drawGridTiles world t = do
     let ws = worldSize world
@@ -124,8 +123,6 @@ drawGridTiles world t = do
         fillTriangle screenRenderer vB vC vD tileColor
         )
 
-    --TODO draw pov
-    --
 drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayer player gtp = do
     screenRenderer <- asks cRenderer
@@ -133,7 +130,6 @@ drawPlayer player gtp = do
     let px = position player ^._x
     let py = position player ^._y
 
-    --let t = translateToPDCenter !*! zoom 201.0 -- TODO change this
     let t = gtp !*! translate px py
 
     --Draw Circle
@@ -141,7 +137,6 @@ drawPlayer player gtp = do
     let circle_radius = 5
     circle screenRenderer circle_pos circle_radius white
 
-    --TODO incorporate player rotation
     let arrowT = gtp !*! translate px py !*! rotation (vectorAngle . direction $ player)
     let apDT t =  dropHomoCoords . fmap floor . (t !*)
                                                 --                 |
