@@ -1,15 +1,18 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Obelisk.State where
 
+import Obelisk.Math.Homogenous
+
 import Control.Lens
 import Prelude hiding (map)
-import Linear ( V2(..) )
+import Linear
 import Foreign.C.Types
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
 data PVars = PVars {
                 position :: V2 Double,
-                direction :: V2 Double
+                direction :: V2 Double,
+                camera_plane :: V2 Double
              } deriving (Show)
 
 
@@ -44,7 +47,10 @@ data Vars = Vars {
             }
 
 initPVars :: PVars
-initPVars = PVars (V2 2.5 2.5) (V2 1.0 1.0)
+initPVars = PVars (V2 2.5 6.5) dir cam
+    where
+        dir = normalize (V2 0.8 0.330)
+        cam = normalize $ dir *! rotation2 (-pi/2)
 
 initVars :: Vars
 initVars = Vars initPVars godboltMap

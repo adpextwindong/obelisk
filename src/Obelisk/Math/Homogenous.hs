@@ -23,6 +23,10 @@ rotation theta = V3 (V3 (cos theta) (-sin theta) 0)
                     (V3 (sin theta) (cos theta)  0)
                     (V3  0           0           1)
 
+rotation2 :: Double -> V2 (V2 Double)
+rotation2 theta = V2 (V2 (cos theta) (-sin theta))
+                    (V2 (sin theta) (cos theta))
+
 rotateAround :: Double -> V2 Double -> V3 (V3 Double)
 rotateAround theta (V2 x y) = translate x y !*! rotation theta !*! translate (-x) (-y)
 
