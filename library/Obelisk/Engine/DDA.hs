@@ -11,9 +11,7 @@ data DDAStep = NoWall | Step {
     deriving Show
 
 intersectionPositions :: [DDAStep] -> [V2 Double]
-intersectionPositions ((Step x y) : xs) = V2 x y : intersectionPositions xs
-intersectionPositions (NoWall : xs) = intersectionPositions xs
-intersectionPositions [] = []
+intersectionPositions xs = [V2 x y | Step x y <- xs]
 
 --FIXME, likely incorrect. We should sample from where the ray starts.
 startingStep = Step 0.0 0.0
