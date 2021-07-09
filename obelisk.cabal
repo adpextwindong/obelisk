@@ -25,7 +25,7 @@ library
       Obelisk.Wrapper.SDLInput
       Obelisk.Wrapper.SDLRenderer
   hs-source-dirs:
-      library
+      src
   build-depends:
       base >=4.7 && <5
       , array >= 0.5.4.0
