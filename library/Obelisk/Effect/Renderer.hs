@@ -131,8 +131,7 @@ drawRaycastIntersectionSimple player t = do
     let pOrigin = Step (position player ^._x) (position player ^._y)
     let intersections = take 10 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
 
-    let pointToScreenSpace = dropHomoCoords . fmap floor . (t !*) . homoCoords
-    let intersectionPosXs = fmap pointToScreenSpace $ intersectionPositions $ fmap fst intersections
+    let intersectionPosXs = fmap (pointToScreenSpace t) $ intersectionPositions $ fmap fst intersections
 
     screenRenderer <- asks cRenderer
     forM_ intersectionPosXs (\pos -> do
@@ -196,3 +195,6 @@ blastFmap3Tupple :: (t -> c) -> (t, t, t) -> (c, c, c)
 blastFmap3Tupple f (a,b,c) = (f a, f b, f c)
 blastFmap4Tupple :: (t -> d) -> (t, t, t, t) -> (d, d, d, d)
 blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
+
+pointToScreenSpace :: GridTransform -> V2 Double -> V2 CInt
+pointToScreenSpace t = dropHomoCoords . fmap floor . (t !*) . homoCoords
