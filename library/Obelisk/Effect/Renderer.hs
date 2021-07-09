@@ -14,6 +14,7 @@ import Obelisk.State
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous
 import Obelisk.Wrapper.SDLRenderer
+import Obelisk.Engine.DDA
 
 --COLORS
 white :: SDL.Color
@@ -86,6 +87,7 @@ drawDebug' gs = do
     drawGridTiles (world gs) gtp
     drawGrid ws gtp
     drawPlayer (player gs) gtp
+    drawRaycastIntersectionSimple (player gs) gtp
 
 ---------------------------------------------------------------
 
@@ -123,6 +125,20 @@ drawGridTiles world t = do
         fillTriangle screenRenderer vB vC vD tileColor
         )
 
+drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+drawRaycastIntersectionSimple player t = do
+    let pAngle = vectorAngle $ direction player
+    let pOrigin = Step (position player ^._x) (position player ^._y)
+    let intersections = take 10 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
+
+    let pointToScreenSpace = dropHomoCoords . fmap floor . (t !*) . homoCoords
+    let intersectionPosXs = fmap pointToScreenSpace $ intersectionPositions $ fmap fst intersections
+
+    screenRenderer <- asks cRenderer
+    forM_ intersectionPosXs (\pos -> do
+            circle screenRenderer pos 3 (V4 255 255 0 maxBound)
+        )
+
 drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayer player gtp = do
     screenRenderer <- asks cRenderer
@@ -141,7 +157,7 @@ drawPlayer player gtp = do
     let apDT t =  dropHomoCoords . fmap floor . (t !*)
                                                 --                 |
     --TODO figure out a better way to handle the scaling done here V
-    let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 0.6 0.0)
+    let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 10.0 0.0)
     let (arrow_p0, arrow_p1) = blastFmapPair (apDT arrowT) arrow_line
 
     --Draw the line body of the arrow

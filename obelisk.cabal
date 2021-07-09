@@ -16,6 +16,8 @@ library
   other-modules:
       Obelisk.Config
       Obelisk.Effect.Renderer
+      Obelisk.Engine.DDA
+      Obelisk.Engine.Raycast
       Obelisk.Math.Homogenous
       Obelisk.Math.Vector
       Obelisk.Runner

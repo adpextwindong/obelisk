@@ -30,6 +30,8 @@ mainLoop = do
     
     gs <- get
 
+    --TODO once we finish debug stuff and get drawing done
+        --Implement press tab to show debug screen
     drawDebug gs
     drawScreen 
     

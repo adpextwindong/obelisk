@@ -1,21 +1,28 @@
-module Obelisk.Engine.DDA (rayPath', limitDrawDistance, limitDrawDistance')
+module Obelisk.Engine.DDA 
     where
 
+import Linear
+
 data DDAStep = NoWall | Step {
-                            distX :: Float, -- Distance away from Ray Origin
-                            distY :: Float
+                            distX :: Double, -- Distance away from Ray Origin
+                            distY :: Double
                         }
 
     deriving Show
 
+intersectionPositions :: [DDAStep] -> [V2 Double]
+intersectionPositions ((Step x y) : xs) = V2 x y : intersectionPositions xs
+intersectionPositions (NoWall : xs) = intersectionPositions xs
+intersectionPositions [] = []
+
 --FIXME, likely incorrect. We should sample from where the ray starts.
 startingStep = Step 0.0 0.0
 
-lengthStep :: DDAStep -> Float
+lengthStep :: DDAStep -> Double
 lengthStep NoWall = read "Infinity"
 lengthStep (Step x y) = x * x + y * y
 
-step :: Float -> Float -> Float -> Float -> Bool -> DDAStep
+step :: Double -> Double -> Double -> Double -> Bool -> DDAStep
 step rise run x y inverted
     | run == 0.0 = NoWall
     | otherwise = Step nX nY
@@ -28,7 +35,7 @@ step rise run x y inverted
 
 -- Generates the path it takes through the scene
 -- I want to decouple the map Inspection
-rayPath :: Float -> DDAStep -> [(DDAStep, Float)]
+rayPath :: Double -> DDAStep -> [(DDAStep, Double)]
 rayPath _ NoWall = undefined --Should be unreachable because nextStep is guarenteed to pick a non NoWall step
 rayPath angle origin@(Step x y) = (origin,offset) : rayPath angle nextStep
                                     where   stepX = step (sin angle) (cos angle) x y False
@@ -41,15 +48,16 @@ rayPath angle origin@(Step x y) = (origin,offset) : rayPath angle nextStep
                                                         then offSetClip (distY stepX)
                                                         else offSetClip (distX stepY)
 
-rayPath' :: Float -> [(DDAStep, Float)]
+rayPath' :: Double -> [(DDAStep, Double)]
 rayPath' angle = rayPath angle startingStep
 
-offSetClip :: Float -> Float
-offSetClip x = x - (fromIntegral (floor x))
+offSetClip :: Double -> Double
+offSetClip x = x - fromIntegral (floor x)
 
-limitDrawDistance :: Float -> [DDAStep] -> [DDAStep]
+limitDrawDistance :: Double -> [DDAStep] -> [DDAStep]
 limitDrawDistance drawDistance = takeWhile (\step -> sqrt (lengthStep step) < drawDistance)
 
+limitDrawDistance' :: Double -> [(DDAStep, b)] -> [(DDAStep, b)]
 limitDrawDistance' drawDistance = takeWhile (\(step, _) -> sqrt (lengthStep step) < drawDistance)
 
 --Starting step should be ray origin

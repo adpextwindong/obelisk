@@ -27,10 +27,6 @@ pWalk _ = undefined --TODO
 
 data Controls = Controls
 
-pUpdate :: Player -> Controls -> Map -> Float -> Player
-pUpdate player controls map elapsedFrameTime = undefined --TODO
-
---We need some sort of update function for controls using elapsed time, map and control state for the frame
 
 data Map = Map {
                  msize :: Int -- we could drop this and use the array bounds fn
