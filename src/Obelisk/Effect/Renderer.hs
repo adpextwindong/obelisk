@@ -144,9 +144,8 @@ drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersections player t = do
     let rayCount = 5 --TODO REMOVEME
     let intersectionLimit = 10 --TODO REMOVEME
-    let rayPaths = fmap (fmap (pointToScreenSpace t). intersectionPositions . (fmap (fst))) $ fmap (take intersectionLimit) $ genRays rayCount player
-        --  fmap (fmap (pointToScreenSpace t . intersectionPositions . fst) . (take 10)) 
-    
+    let rayPaths = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
+
     screenRenderer <- asks cRenderer
     forM_ rayPaths (\intersections -> do
         forM_ intersections (\pos -> do
@@ -194,14 +193,16 @@ drawPlayer player gtp = do
 
 genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
 genRays screenWidth player = fmap (\rH -> rayPath (rayAngle rH) (convertToStep rH)) rayHeads
-    where 
-        rayHeads = [position player + direction player + (camera_plane player ^* ((2.0 * (x / fromIntegral screenWidth) - 1.0))) | x <- [0.. fromIntegral screenWidth]] :: [V2 Double]
+    where
+        rayHeads = [position player + direction player + (camera_plane player ^* (2.0 * (x / fromIntegral screenWidth) - 1.0)) | x <- [0.. fromIntegral screenWidth]] :: [V2 Double]
         rayAngle rH = vectorAngle (rH - position player)
         convertToStep (V2 x y) = Step x y
 
 
 tgr = genRays 4 (player initVars)
 -------------------------------------------------------------------
+
+
 translateToPDCenter :: CInt -> CInt -> M22Affine Double
 translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
 
