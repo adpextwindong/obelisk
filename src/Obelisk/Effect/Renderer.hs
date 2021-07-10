@@ -88,6 +88,7 @@ drawDebug' gs = do
     drawGrid ws gtp
     drawPlayer (player gs) gtp
     drawRaycastIntersectionSimple (player gs) gtp
+    drawRaycastIntersections (player gs) gtp
     --TODO draw sideRaycastIntersections
 
 ---------------------------------------------------------------
@@ -138,6 +139,18 @@ drawRaycastIntersectionSimple player t = do
     forM_ intersectionPosXs (\pos -> do
             circle screenRenderer pos 3 (V4 255 255 0 maxBound)
         )
+
+drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+drawRaycastIntersections player t = do
+    let rayCount = 5 --TODO REMOVEME
+    let intersectionLimit = 10 --TODO REMOVEME
+    let rayPaths = fmap (fmap (pointToScreenSpace t). intersectionPositions . (fmap (fst))) $ fmap (take intersectionLimit) $ genRays rayCount player
+        --  fmap (fmap (pointToScreenSpace t . intersectionPositions . fst) . (take 10)) 
+    
+    screenRenderer <- asks cRenderer
+    forM_ rayPaths (\intersections -> do
+        forM_ intersections (\pos -> do
+            circle screenRenderer pos 3 (V4 255 255 0 maxBound)))
 
 drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayer player gtp = do
