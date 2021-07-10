@@ -179,7 +179,15 @@ drawPlayer player gtp = do
 
     fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
 
+genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
+genRays screenWidth player = fmap (\rH -> rayPath (rayAngle rH) (convertToStep rH)) rayHeads
+    where 
+        rayHeads = [position player + direction player + (camera_plane player ^* ((2.0 * (x / fromIntegral screenWidth) - 1.0))) | x <- [0.. fromIntegral screenWidth]] :: [V2 Double]
+        rayAngle rH = vectorAngle (rH - position player)
+        convertToStep (V2 x y) = Step x y
 
+
+tgr = genRays 4 (player initVars)
 -------------------------------------------------------------------
 translateToPDCenter :: CInt -> CInt -> M22Affine Double
 translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)

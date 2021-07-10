@@ -89,6 +89,7 @@ data RayStepSample = RayStepSample {
 rayCast :: (Float, Float) -> Float -> [RayStepSample]
 rayCast originPoint angle = undefined --TODO pull from previous code
 
+--TODO move this to Effect/Renderer
 drawColumn :: (MonadIO m) => Int -> [RayStepSample] -> Float -> Map -> m ()
 drawColumn = undefined --TODO
 

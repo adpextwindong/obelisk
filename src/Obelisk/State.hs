@@ -17,10 +17,12 @@ data PVars = PVars {
 
 
 data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
+    deriving Show
 data WorldTiles = WorldTiles {
                     mapTiles :: [[WallType]],
                     worldSize :: CInt
                   }
+    deriving Show
 
 rFW :: [WallType]
 rFW = repeat FW
@@ -45,6 +47,7 @@ data Vars = Vars {
                 player :: PVars,
                 world :: WorldTiles
             }
+    deriving Show
 
 initPVars :: PVars
 initPVars = PVars (V2 2.5 6.5) dir cam
