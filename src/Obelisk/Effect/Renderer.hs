@@ -161,31 +161,38 @@ drawPlayer player gtp = do
     let t = gtp !*! translate px py
 
     --Draw Circle
+
+
     let circle_pos = dropHomoCoords . fmap floor . (t !*) . homoCoords $ V2 0.0 0.0
-    let circle_radius = 5
-    circle screenRenderer circle_pos circle_radius white
+    let circle_radius = 3
+    fillCircle screenRenderer circle_pos circle_radius white
 
     let arrowT = gtp !*! translate px py !*! rotation (vectorAngle . direction $ player)
     let apDT t =  dropHomoCoords . fmap floor . (t !*)
                                                 --                 |
+
+
     --TODO figure out a better way to handle the scaling done here V
+
+
     let dir_len = norm $ direction player
     let arrow_line = (homoCoords $ V2 0.0 0.0 , homoCoords $ V2 10.0 0.0)
     let (arrow_p0, arrow_p1) = blastFmapPair (apDT arrowT) arrow_line
 
     --Draw the line body of the arrow
-    drawLine screenRenderer arrow_p0 arrow_p1 white
-    
+    drawLine screenRenderer arrow_p0 arrow_p1 red
+
     --Draw the camera plane line
     let camTail = pointToScreenSpace gtp $ position player + direction player - camera_plane player
     let camHead = pointToScreenSpace gtp $ position player + direction player + camera_plane player
-    drawLine screenRenderer camTail camHead red
+    drawLine screenRenderer camTail camHead white
 
     --Draw Arrow
     --TODO assert direction is larger than the arrow length so we dont get a graphical error
-    let arrowLength = 0.35
-    let baseArrow = (homoCoords $ V2 0.0 (-0.1), homoCoords $ V2 arrowLength 0.0, homoCoords $ V2 0.0 0.1) :: (HV2 Double, HV2 Double, HV2 Double)
-    
+    let arrowLength = 0.25
+    let arrowWidth = 0.06
+    let baseArrow = (homoCoords $ V2 0.0 (-arrowWidth), homoCoords $ V2 arrowLength 0.0, homoCoords $ V2 0.0 arrowWidth) :: (HV2 Double, HV2 Double, HV2 Double)
+
 
     let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate (1.05*dir_len - arrowLength) 0.0)) baseArrow
 

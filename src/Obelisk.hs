@@ -86,6 +86,7 @@ instance SDLRenderer Obelisk where
     drawLine = drawLine'
     fillTriangle = fillTriangle'
     circle = circle'
+    fillCircle = fillCircle'
 
 instance SDLInput Obelisk where
     pollEventPayloads = pollEventPayloads'

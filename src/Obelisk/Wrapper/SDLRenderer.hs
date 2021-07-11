@@ -13,6 +13,7 @@ class Monad m => SDLRenderer m where
     drawLine :: SDL.Renderer -> SDL.Pos -> SDL.Pos -> SDL.Color -> m ()
     fillTriangle :: SDL.Renderer -> SDL.Pos -> SDL.Pos -> SDL.Pos -> SDL.Color -> m ()
     circle :: SDL.Renderer -> SDL.Pos -> SDL.Radius -> SDL.Color -> m ()
+    fillCircle :: SDL.Renderer -> SDL.Pos -> SDL.Radius -> SDL.Color -> m ()
 
 updateWindowSurface' :: MonadIO m => SDL.Window -> m ()
 updateWindowSurface' window = liftIO $ SDL.updateWindowSurface window
@@ -31,3 +32,6 @@ fillTriangle' = SDL.fillTriangle
 
 circle' :: MonadIO m => SDL.Renderer -> SDL.Pos -> SDL.Radius -> SDL.Color -> m ()
 circle' = SDL.circle 
+
+fillCircle' :: MonadIO m => SDL.Renderer -> SDL.Pos -> SDL.Radius -> SDL.Color -> m ()
+fillCircle' = SDL.fillCircle 
