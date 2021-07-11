@@ -155,20 +155,14 @@ apDT t =  dropHomoCoords . fmap floor . (t !*)
 
 drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayer player gtp = do
+    drawPlayerCircle player gtp
+    drawCameraPlane player gtp
+    drawPlayerArrow player gtp
+
+drawPlayerArrow :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+drawPlayerArrow player gtp = do
     screenRenderer <- asks cRenderer
-
-    let px = position player ^._x
-    let py = position player ^._y
-
-    let t = gtp !*! translate px py
-
-    --Draw Circle
-    let circle_pos = dropHomoCoords . fmap floor . (t !*) . homoCoords $ V2 0.0 0.0
-    let circle_radius = 3
-    fillCircle screenRenderer circle_pos circle_radius white
-
-    let arrowT = gtp !*! translate px py !*! rotation (vectorAngle . direction $ player)
-
+    let arrowT = gtp !*! translate (position player^._x) (position player^._y) !*! rotation (vectorAngle . direction $ player)
                                                 --                 |
     --TODO figure out a better way to handle the scaling done here V
     let dir_len = norm $ direction player
@@ -177,11 +171,6 @@ drawPlayer player gtp = do
 
     --Draw the line body of the arrow
     drawLine screenRenderer arrow_p0 arrow_p1 red
-
-    --Draw the camera plane line
-    let camTail = pointToScreenSpace gtp $ position player + direction player - camera_plane player
-    let camHead = pointToScreenSpace gtp $ position player + direction player + camera_plane player
-    drawLine screenRenderer camTail camHead white
 
     --Draw Arrow
     --TODO assert direction is larger than the arrow length so we dont get a graphical error
@@ -192,6 +181,23 @@ drawPlayer player gtp = do
     let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate (1.05*dir_len - arrowLength) 0.0)) baseArrow
     fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
 
+drawCameraPlane :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+drawCameraPlane player gtp = do
+    screenRenderer <- asks cRenderer
+    let camTail = pointToScreenSpace gtp $ position player + direction player - camera_plane player
+    let camHead = pointToScreenSpace gtp $ position player + direction player + camera_plane player
+    drawLine screenRenderer camTail camHead white
+
+drawPlayerCircle :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+drawPlayerCircle player gtp = do
+    screenRenderer <- asks cRenderer
+    let px = position player ^._x
+    let py = position player ^._y
+    let t = gtp !*! translate px py
+    let circle_pos = dropHomoCoords . fmap floor . (t !*) . homoCoords $ V2 0.0 0.0
+    let circle_radius = 3
+    fillCircle screenRenderer circle_pos circle_radius white
+
 genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
 genRays screenWidth player = fmap (\rH -> rayPath (rayAngle rH) (convertToStep rH)) rayHeads
     where
@@ -199,10 +205,8 @@ genRays screenWidth player = fmap (\rH -> rayPath (rayAngle rH) (convertToStep r
         rayAngle rH = vectorAngle (rH - position player)
         convertToStep (V2 x y) = Step x y
 
-
 tgr = genRays 4 (player initVars)
 -------------------------------------------------------------------
-
 
 translateToPDCenter :: CInt -> CInt -> M22Affine Double
 translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
