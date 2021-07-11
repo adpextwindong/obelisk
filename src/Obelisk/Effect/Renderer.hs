@@ -151,8 +151,6 @@ drawRaycastIntersections player t = do
         forM_ intersections (\pos -> do
             circle screenRenderer pos 3 (V4 255 255 0 maxBound)))
 
-apDT t =  dropHomoCoords . fmap floor . (t !*)
-
 drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayer player gtp = do
     drawPlayerCircle player gtp

@@ -49,3 +49,6 @@ homoCoords (V2 x y) = V3 x y 1
 --TODO make sure the HV2 usage is correct
 dropHomoCoords :: (Num a) => HV2 a -> V2 a
 dropHomoCoords (V3 x y _) = V2 x y
+
+apDT :: (Integral a) => M22Affine Double ->  HV2 Double -> V2 a
+apDT t =  dropHomoCoords . fmap floor . (t !*)
