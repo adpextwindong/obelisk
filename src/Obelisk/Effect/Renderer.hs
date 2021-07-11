@@ -162,7 +162,8 @@ drawPlayer player gtp = do
 drawPlayerArrow :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayerArrow player gtp = do
     screenRenderer <- asks cRenderer
-    let arrowT = gtp !*! translate (position player^._x) (position player^._y) !*! rotation (vectorAngle . direction $ player)
+    let playerT = translate (position player^._x) (position player^._y)
+    let arrowT = gtp !*! playerT !*! rotation (vectorAngle . direction $ player)
                                                 --                 |
     --TODO figure out a better way to handle the scaling done here V
     let dir_len = norm $ direction player
