@@ -190,10 +190,10 @@ drawCameraPlane player gtp = do
 
     let edgeLength = 10.0
     let leftEnd = pointToScreenSpace gtp $ ppos + (edgeLength *^ (direction player - camera_plane player))
-    drawLine screenRenderer (pointToScreenSpace gtp ppos) leftEnd white
+    drawLine screenRenderer (pointToScreenSpace gtp ppos) leftEnd gridColor
 
     let rightEnd = pointToScreenSpace gtp $ ppos + (edgeLength *^ (direction player + camera_plane player))
-    drawLine screenRenderer (pointToScreenSpace gtp ppos) rightEnd white
+    drawLine screenRenderer (pointToScreenSpace gtp ppos) rightEnd gridColor
 
 drawPlayerCircle :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayerCircle player gtp = do
