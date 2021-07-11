@@ -183,9 +183,17 @@ drawPlayerArrow player gtp = do
 drawCameraPlane :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawCameraPlane player gtp = do
     screenRenderer <- asks cRenderer
-    let camTail = pointToScreenSpace gtp $ position player + direction player - camera_plane player
-    let camHead = pointToScreenSpace gtp $ position player + direction player + camera_plane player
+    let ppos = position player
+    let camTail = pointToScreenSpace gtp $ ppos + direction player - camera_plane player
+    let camHead = pointToScreenSpace gtp $ ppos + direction player + camera_plane player
     drawLine screenRenderer camTail camHead white
+
+    let edgeLength = 10.0
+    let leftEnd = pointToScreenSpace gtp $ ppos + (edgeLength *^ (direction player - camera_plane player))
+    drawLine screenRenderer (pointToScreenSpace gtp ppos) leftEnd white
+
+    let rightEnd = pointToScreenSpace gtp $ ppos + (edgeLength *^ (direction player + camera_plane player))
+    drawLine screenRenderer (pointToScreenSpace gtp ppos) rightEnd white
 
 drawPlayerCircle :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayerCircle player gtp = do
