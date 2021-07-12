@@ -128,7 +128,6 @@ drawGridTiles world t = do
         fillTriangle screenRenderer vB vC vD tileColor
         )
 
---TODO refactor the raycasting in this
 drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersectionSimple player t = do
     let intersections = take 10 $ shootRay player (position player + direction player)
@@ -139,7 +138,6 @@ drawRaycastIntersectionSimple player t = do
             circle screenRenderer pos 3 (V4 255 255 0 maxBound)
         )
 
---TODO refactor the raycasting in this
 drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersections player t = do
     let rayCount = 5 --TODO REMOVEME
