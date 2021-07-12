@@ -131,10 +131,7 @@ drawGridTiles world t = do
 --TODO refactor the raycasting in this
 drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersectionSimple player t = do
-    let pAngle = vectorAngle $ direction player
-    let pOrigin = Step (position player ^._x) (position player ^._y)
-    let intersections = take 10 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
-
+    let intersections = take 10 $ shootRay player (position player + direction player)
     let intersectionPosXs = fmap (pointToScreenSpace t) $ intersectionPositions $ fmap fst intersections
 
     screenRenderer <- asks cRenderer
@@ -147,10 +144,10 @@ drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersections player t = do
     let rayCount = 5 --TODO REMOVEME
     let intersectionLimit = 10 --TODO REMOVEME
-    let rayPaths = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
+    let rayPathIntersections = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
 
     screenRenderer <- asks cRenderer
-    forM_ rayPaths (\intersections -> do
+    forM_ rayPathIntersections (\intersections -> do
         forM_ intersections (\pos -> do
             circle screenRenderer pos 3 (V4 255 255 0 maxBound)))
 
