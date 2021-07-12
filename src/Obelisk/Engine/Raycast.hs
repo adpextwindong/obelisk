@@ -9,11 +9,16 @@ import Obelisk.Engine.DDA
 import Obelisk.Math.Vector
 
 genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
-genRays screenWidth player = fmap (\rH -> rayPath (rayAngle rH) (convertToStep rH)) rayHeads
+genRays screenWidth player = fmap (shootRay player) rayHeads
     where
         cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0.. fromIntegral screenWidth]]
         rayHeads = [position player + direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Double]
-        rayAngle rH = vectorAngle (rH - position player)
+
+shootRay :: PVars -> V2 Double -> [(DDAStep, Double)]
+shootRay player rayHeadOffset = rayPath rayAngle rayOrigin
+    where
+        rayAngle = vectorAngle (rayHeadOffset - position player)
+        rayOrigin = convertToStep rayHeadOffset
         convertToStep (V2 x y) = Step x y
 
 ---------------------------------------------------------------------------
