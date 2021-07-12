@@ -15,6 +15,7 @@ import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Engine.DDA
+import Obelisk.Engine.Raycast
 
 --COLORS
 white :: SDL.Color
@@ -127,6 +128,7 @@ drawGridTiles world t = do
         fillTriangle screenRenderer vB vC vD tileColor
         )
 
+--TODO refactor the raycasting in this
 drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersectionSimple player t = do
     let pAngle = vectorAngle $ direction player
@@ -140,6 +142,7 @@ drawRaycastIntersectionSimple player t = do
             circle screenRenderer pos 3 (V4 255 255 0 maxBound)
         )
 
+--TODO refactor the raycasting in this
 drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersections player t = do
     let rayCount = 5 --TODO REMOVEME
@@ -205,15 +208,7 @@ drawPlayerCircle player gtp = do
     let circle_radius = 3
     fillCircle screenRenderer circle_pos circle_radius white
 
-genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
-genRays screenWidth player = fmap (\rH -> rayPath (rayAngle rH) (convertToStep rH)) rayHeads
-    where
-        rayHeads = [position player + direction player + (camera_plane player ^* (2.0 * (x / fromIntegral screenWidth) - 1.0)) | x <- [0.. fromIntegral screenWidth]] :: [V2 Double]
-        rayAngle rH = vectorAngle (rH - position player)
-        convertToStep (V2 x y) = Step x y
-
-tgr = genRays 4 (player initVars)
--------------------------------------------------------------------
+------------------------------------------------------------------
 
 translateToPDCenter :: CInt -> CInt -> M22Affine Double
 translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
