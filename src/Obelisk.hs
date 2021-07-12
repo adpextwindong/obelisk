@@ -9,6 +9,7 @@ import Obelisk.Runner
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Renderer
+import Obelisk.Manager.Input
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
 
@@ -92,6 +93,11 @@ instance SDLInput Obelisk where
     pollEventPayloads = pollEventPayloads'
     checkQuitSignal = checkQuitSignal'
     getTime = getTime'
+
+instance HasInput Obelisk where
+    updateInput = updateInput'
+    getInput = getInput'
+    setInput = setInput'
 
 instance Renderer Obelisk where
     clearScreen = clearScreen'

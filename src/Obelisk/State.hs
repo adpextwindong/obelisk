@@ -2,6 +2,7 @@
 module Obelisk.State where
 
 import Obelisk.Math.Homogenous
+import Obelisk.Engine.Input
 
 import Control.Lens
 import Prelude hiding (map)
@@ -15,9 +16,9 @@ data PVars = PVars {
                 camera_plane :: V2 Double
              } deriving (Show)
 
-
 data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
     deriving (Show, Eq)
+
 data WorldTiles = WorldTiles {
                     mapTiles :: [[WallType]],
                     worldSize :: CInt
@@ -62,7 +63,8 @@ data Vars = Vars {
                 player :: PVars,
                 world :: WorldTiles,
                 --Debug vars TODO refactor
-                rotateToPView :: Bool
+                rotateToPView :: Bool,
+                vInput :: Input
             }
     deriving Show
 
@@ -73,7 +75,7 @@ initPVars = PVars (V2 2.5 6.5) dir cam
         cam = normalize $ dir *! rotation2 (-pi/2)
 
 initVars :: Vars
-initVars = Vars initPVars godboltMap False
+initVars = Vars initPVars godboltMap False initInput
 
 makeClassy ''Vars
 makeClassy ''PVars

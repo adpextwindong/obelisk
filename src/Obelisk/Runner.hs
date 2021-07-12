@@ -8,18 +8,25 @@ import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Renderer
 import Obelisk.Wrapper.SDLInput
+import Obelisk.Engine.Input
+import Obelisk.Manager.Input
 
 import qualified SDL
 
 mainLoop :: ( MonadReader Config m
             , MonadState Vars m
             , SDLInput m
+            , HasInput m
             , Renderer m ) => m ()
 mainLoop = do
+    updateInput
     clearScreen
     fillBackground
 
-    quitSignal <- checkQuitSignal
+    -- quitSignal <- checkQuitSignal
+    --TODO process input update to rotation
+    input <- getInput
+    let quitSignal = iQuit input
     --SDL.surfaceBlit garg Nothing screenSurface Nothing
     time <- getTime
 
