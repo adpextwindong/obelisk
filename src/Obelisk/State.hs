@@ -17,7 +17,7 @@ data PVars = PVars {
 
 
 data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
-    deriving Show
+    deriving (Show, Eq)
 data WorldTiles = WorldTiles {
                     mapTiles :: [[WallType]],
                     worldSize :: CInt
@@ -29,6 +29,7 @@ rFW = repeat FW
 rEW :: [WallType]
 rEW = repeat EW
 
+--ACCESSED godBoltMap !! y !! x style
 godboltMap :: WorldTiles
 godboltMap = WorldTiles map (fromIntegral $ length map)
     where map = [take 10 rFW,
@@ -42,10 +43,26 @@ godboltMap = WorldTiles map (fromIntegral $ length map)
               FW : take 8 rEW ++ [FW],
               take 10 rFW]
 
+boxMap :: WorldTiles
+boxMap = WorldTiles map (fromIntegral $ length map)
+    where map = [take 10 rFW,
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 take 10 rFW
+                ]
 
 data Vars = Vars {
                 player :: PVars,
-                world :: WorldTiles
+                world :: WorldTiles,
+                --Debug vars TODO refactor
+                rotateToPView :: Bool
             }
     deriving Show
 
@@ -56,7 +73,7 @@ initPVars = PVars (V2 2.5 6.5) dir cam
         cam = normalize $ dir *! rotation2 (-pi/2)
 
 initVars :: Vars
-initVars = Vars initPVars godboltMap
+initVars = Vars initPVars godboltMap False
 
 makeClassy ''Vars
 makeClassy ''PVars

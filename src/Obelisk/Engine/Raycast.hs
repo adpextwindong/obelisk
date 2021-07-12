@@ -1,101 +1,52 @@
 module Obelisk.Engine.Raycast where
 
-import Control.Monad
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Data.Array
-import Data.List
-import System.Random
+import Foreign.C.Types
+import Linear
+import Control.Lens
+import qualified Data.Set as S
 
--- Types we need
--- Bitmap type
--- Player record
--- Map type
--- Camera record for details on focal length and stuff
+import Obelisk.State
+import Obelisk.Engine.DDA
+import Obelisk.Math.Vector
 
-data Player = Player {
-                       pX :: Float
-                     , pY :: Float
-                     , direction :: Float
-                     , paces :: Int
-                     }
-
-pRotate :: Player -> Player
-pRotate _ = undefined --TODO
-
-pWalk :: Player -> Player
-pWalk _ = undefined --TODO
-
-data Controls = Controls
-
-
-data Map = Map {
-                 msize :: Int -- we could drop this and use the array bounds fn
-               , wallGrid :: Array (Int,Int) Float
-               -- , light :: Int
-               }
-
-getMapLoc :: Map -> (Int,Int) -> Maybe Float
-getMapLoc m ind@(x,y) = if inBounds m ind
-                        then Just $ wallGrid m ! ind
-                        else Nothing
+genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
+genRays screenWidth player = fmap (shootRay player) rayHeads
     where
-    inBounds m (x,y) = x > -1 && x < s &&
-                       y > -1 && y < s
-        where
-            s = msize m
+        cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0.. fromIntegral screenWidth]]
+        rayHeads = [position player + direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Double]
 
-generateMap seed size = Map size $ listArray ((0,0) , (size - 1, size - 1)) $ take (size * size) $ rolls pureGen
+shootRay :: PVars -> V2 Double -> [(DDAStep, Double)]
+shootRay player rayHeadOffset = rayPath rayAngle rayOrigin
     where
-        pureGen = mkStdGen seed
-        roll = uniformR (0.0 :: Float, 1.0 :: Float)
-        rolls = unfoldr (Just . roll)
+        rayAngle = vectorAngle (rayHeadOffset - position player)
+        rayOrigin = convertToStep rayHeadOffset
+        convertToStep (V2 x y) = Step x y
 
+---------------------------------------------------------------------------
+tgr :: [[(DDAStep, Double)]]
+tgr = genRays 4 (player initVars)
 
-data Camera = Camera {
-                       width :: Int
-                     , height :: Int
-                     , resolution :: Int -- ??
-                     , focalLength :: Float
-                     , range :: Int
-                     , lightRange :: Int
-                     , scale :: Int
-                     }
--- TODO find a bitmap type the SDL one can probably work
-
-cameraResolution = 320
-drawDistLimitRange = 10000.0 --This is range in the original code
-
-drawColumns :: (MonadIO m) => Player -> Map -> Camera -> m ()
-drawColumns player map camera = forM_ columns
-            (\colIndex -> do
-                              let screenX = (fromIntegral colIndex / fromIntegral cameraResolution) - 0.5 :: Float
-                              let rayAngle = atan2 screenX cameraFocalLength
-                              --TODO RENDER COL
-                              let raySteps = rayCast (pX player, pY player) (direction player + rayAngle)
-                              drawColumn colIndex raySteps rayAngle map)
+--TODO turn off rotation, paint visited tiles for a single ray
+tpr :: PVars -> [V2 Double]
+tpr player = intersectionPositions $ fmap fst intersections
     where
-        cameraResolution = resolution camera
-        cameraFocalLength = focalLength camera
-        columns = [0..cameraResolution - 1]
+        pAngle = vectorAngle $ direction player
+        pOrigin = Step (position player ^._x) (position player ^._y)
+        intersections = take 10 $ drop 1 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
+
+tpx = tpr $ player initVars 
+ftpx = fmap (fmap floor) tpx
+cftpx = checkRay initVars
+lenPassthrough = length . takeWhile (/= FW) $ cftpx
 
 
-data RayStepSample = RayStepSample {
-                    rayHeight :: Float,
-                    rayDistance :: Float,
-                    rayOffset :: Float
-               }
-
-
-rayCast :: (Float, Float) -> Float -> [RayStepSample]
-rayCast originPoint angle = undefined --TODO pull from previous code
-
---TODO move this to Effect/Renderer
-drawColumn :: (MonadIO m) => Int -> [RayStepSample] -> Float -> Map -> m ()
-drawColumn = undefined --TODO
-
-projectWallHeight :: Float -> Float -> Float -> Float -> (Float, Float)
-projectWallHeight canvasHeight sampledHeight angle distance = (bottom - wallHeight, wallHeight)
+checkRay :: Vars -> [WallType]
+checkRay gs = fmap checkV2 ftpx
     where
-        z = distance * cos angle
-        wallHeight = canvasHeight * sampledHeight / z
-        bottom = canvasHeight / 2 * (1 + 1 / z)
+        checkV2 (V2 x y) = check x y
+        check x y = mapTiles (world gs) !! y !! x
+
+--TODO test this by spinning the player around
+visitedSet :: S.Set (V2 CInt)
+visitedSet = S.fromList (fmap fromIntegral <$> take (lenPassthrough + 1) ftpx)
+        

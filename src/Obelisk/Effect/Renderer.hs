@@ -8,6 +8,8 @@ import qualified SDL.Primitive as SDL
 import Control.Lens
 import Linear
 import Foreign.C.Types
+import Data.Bool
+import qualified Data.Set as S
 
 import Obelisk.Config
 import Obelisk.State
@@ -15,6 +17,7 @@ import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Engine.DDA
+import Obelisk.Engine.Raycast
 
 --COLORS
 white :: SDL.Color
@@ -78,8 +81,8 @@ drawDebug' gs = do
     let zoomFactor = fromIntegral screenHeight / fromIntegral ws * zoomLimiter
 
     --TODO rotation focus mechanism
-    let rotationFactor = vectorAngle. direction $ player gs
-    let focus = Just (position . player $ gs)
+    let rotationFactor = bool 0.0 (vectorAngle. direction $ player gs) $ rotateToPView gs
+    let focus = bool Nothing (Just (position . player $ gs)) $ rotateToPView gs
 
     let tPDCenter = translateToPDCenter screenWidth screenHeight
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
@@ -121,7 +124,11 @@ drawGridTiles world t = do
     let quads = [blastFmap4Tupple projectVertToPD (V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..ws - 1], y <- [0..ws - 1]] :: [(SDL.Pos,SDL.Pos,SDL.Pos,SDL.Pos)]
 
     forM_ (zip inds quads) (\((x,y),(vA,vB,vC,vD)) -> do
-        let tileColor = wallTypeToColor $ mapTiles world !! fromIntegral y !! fromIntegral x
+        let sampleColor = wallTypeToColor $ mapTiles world !! fromIntegral y !! fromIntegral x
+        let tileColor = if S.member (V2 x y) visitedSet
+                        --Lighten the tiles that get rayCasted
+                        then sampleColor + V4 20 20 20 0
+                        else sampleColor 
 
         fillTriangle screenRenderer vA vB vC tileColor
         fillTriangle screenRenderer vB vC vD tileColor
@@ -129,10 +136,7 @@ drawGridTiles world t = do
 
 drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersectionSimple player t = do
-    let pAngle = vectorAngle $ direction player
-    let pOrigin = Step (position player ^._x) (position player ^._y)
-    let intersections = take 10 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
-
+    let intersections = take 10 $ shootRay player (position player + direction player)
     let intersectionPosXs = fmap (pointToScreenSpace t) $ intersectionPositions $ fmap fst intersections
 
     screenRenderer <- asks cRenderer
@@ -144,10 +148,10 @@ drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersections player t = do
     let rayCount = 5 --TODO REMOVEME
     let intersectionLimit = 10 --TODO REMOVEME
-    let rayPaths = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
+    let rayPathIntersections = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
 
     screenRenderer <- asks cRenderer
-    forM_ rayPaths (\intersections -> do
+    forM_ rayPathIntersections (\intersections -> do
         forM_ intersections (\pos -> do
             circle screenRenderer pos 3 (V4 255 255 0 maxBound)))
 
@@ -205,15 +209,7 @@ drawPlayerCircle player gtp = do
     let circle_radius = 3
     fillCircle screenRenderer circle_pos circle_radius white
 
-genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
-genRays screenWidth player = fmap (\rH -> rayPath (rayAngle rH) (convertToStep rH)) rayHeads
-    where
-        rayHeads = [position player + direction player + (camera_plane player ^* (2.0 * (x / fromIntegral screenWidth) - 1.0)) | x <- [0.. fromIntegral screenWidth]] :: [V2 Double]
-        rayAngle rH = vectorAngle (rH - position player)
-        convertToStep (V2 x y) = Step x y
-
-tgr = genRays 4 (player initVars)
--------------------------------------------------------------------
+------------------------------------------------------------------
 
 translateToPDCenter :: CInt -> CInt -> M22Affine Double
 translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
