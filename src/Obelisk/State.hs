@@ -17,7 +17,7 @@ data PVars = PVars {
 
 
 data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
-    deriving Show
+    deriving (Show, Eq)
 data WorldTiles = WorldTiles {
                     mapTiles :: [[WallType]],
                     worldSize :: CInt

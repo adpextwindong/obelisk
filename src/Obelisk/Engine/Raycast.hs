@@ -3,6 +3,7 @@ module Obelisk.Engine.Raycast where
 import Foreign.C.Types
 import Linear
 import Control.Lens
+import qualified Data.Set as S
 
 import Obelisk.State
 import Obelisk.Engine.DDA
@@ -35,9 +36,16 @@ tpr player = intersectionPositions $ fmap fst intersections
 
 tpx = tpr $ player initVars 
 ftpx = fmap (fmap floor) tpx
+cftpx = checkRay initVars
+lenPassthrough = length . takeWhile (/= FW) $ cftpx
+
 
 checkRay :: Vars -> [WallType]
 checkRay gs = fmap checkV2 ftpx
     where
         checkV2 (V2 x y) = check x y
         check x y = mapTiles (world gs) !! y !! x
+
+visitedSet :: S.Set (V2 CInt)
+visitedSet = S.fromList (fmap fromIntegral <$> take (lenPassthrough + 1) ftpx)
+        

@@ -9,6 +9,7 @@ import Control.Lens
 import Linear
 import Foreign.C.Types
 import Data.Bool
+import qualified Data.Set as S
 
 import Obelisk.Config
 import Obelisk.State
@@ -123,7 +124,11 @@ drawGridTiles world t = do
     let quads = [blastFmap4Tupple projectVertToPD (V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..ws - 1], y <- [0..ws - 1]] :: [(SDL.Pos,SDL.Pos,SDL.Pos,SDL.Pos)]
 
     forM_ (zip inds quads) (\((x,y),(vA,vB,vC,vD)) -> do
-        let tileColor = wallTypeToColor $ mapTiles world !! fromIntegral y !! fromIntegral x
+        let sampleColor = wallTypeToColor $ mapTiles world !! fromIntegral y !! fromIntegral x
+        let tileColor = if S.member (V2 x y) visitedSet
+                        --Lighten the tiles that get rayCasted
+                        then sampleColor + V4 20 20 20 0
+                        else sampleColor 
 
         fillTriangle screenRenderer vA vB vC tileColor
         fillTriangle screenRenderer vB vC vD tileColor
