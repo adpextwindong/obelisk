@@ -46,6 +46,7 @@ checkRay gs = fmap checkV2 ftpx
         checkV2 (V2 x y) = check x y
         check x y = mapTiles (world gs) !! y !! x
 
+--TODO test this by spinning the player around
 visitedSet :: S.Set (V2 CInt)
 visitedSet = S.fromList (fmap fromIntegral <$> take (lenPassthrough + 1) ftpx)
         

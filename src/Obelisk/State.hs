@@ -43,6 +43,20 @@ godboltMap = WorldTiles map (fromIntegral $ length map)
               FW : take 8 rEW ++ [FW],
               take 10 rFW]
 
+boxMap :: WorldTiles
+boxMap = WorldTiles map (fromIntegral $ length map)
+    where map = [take 10 rFW,
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 FW : take 8 rEW ++ [FW],
+                 take 10 rFW
+                ]
 
 data Vars = Vars {
                 player :: PVars,
