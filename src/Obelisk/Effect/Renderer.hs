@@ -8,6 +8,7 @@ import qualified SDL.Primitive as SDL
 import Control.Lens
 import Linear
 import Foreign.C.Types
+import Data.Bool
 
 import Obelisk.Config
 import Obelisk.State
@@ -79,8 +80,8 @@ drawDebug' gs = do
     let zoomFactor = fromIntegral screenHeight / fromIntegral ws * zoomLimiter
 
     --TODO rotation focus mechanism
-    let rotationFactor = vectorAngle. direction $ player gs
-    let focus = Just (position . player $ gs)
+    let rotationFactor = bool 0.0 (vectorAngle. direction $ player gs) $ rotateToPView gs
+    let focus = bool Nothing (Just (position . player $ gs)) $ rotateToPView gs
 
     let tPDCenter = translateToPDCenter screenWidth screenHeight
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter

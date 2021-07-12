@@ -31,6 +31,13 @@ tpr player = intersectionPositions $ fmap fst intersections
     where
         pAngle = vectorAngle $ direction player
         pOrigin = Step (position player ^._x) (position player ^._y)
-        intersections = take 10 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
+        intersections = take 10 $ drop 1 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
 
 tpx = tpr $ player initVars 
+ftpx = fmap (fmap floor) tpx
+
+checkRay :: Vars -> [WallType]
+checkRay gs = fmap checkV2 ftpx
+    where
+        checkV2 (V2 x y) = check x y
+        check x y = mapTiles (world gs) !! y !! x
