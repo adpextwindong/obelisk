@@ -15,9 +15,9 @@ class Monad m => HasInput m where
 
 updateInput' :: (HasInput m, SDLInput m) => m ()
 updateInput' = do
-    input <- getInput
+    -- input <- getInput
     events <- pollEventPayloads
-    setInput (stepControl events input)
+    setInput (stepControl events initInput) --TODO probably should be init vars so we dont spin endlessly
 
 getInput' :: MonadState Vars m => m Input
 getInput' = gets vInput

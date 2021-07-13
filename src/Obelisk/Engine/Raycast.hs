@@ -49,4 +49,5 @@ checkRay gs = fmap checkV2 ftpx
 --TODO test this by spinning the player around
 visitedSet :: S.Set (V2 CInt)
 visitedSet = S.fromList (fmap fromIntegral <$> take (lenPassthrough + 1) ftpx)
-        
+
+--TODO make a monadic version that gets the users's current field of view
