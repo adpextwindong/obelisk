@@ -51,3 +51,8 @@ visitedSet :: S.Set (V2 CInt)
 visitedSet = S.fromList (fmap fromIntegral <$> take (lenPassthrough + 1) ftpx)
 
 --TODO make a monadic version that gets the users's current field of view
+
+type RayPath = [(DDAStep, Double)]
+
+visitedPositions :: [RayPath] -> S.Set (V2 CInt)
+visitedPositions rays = undefined
