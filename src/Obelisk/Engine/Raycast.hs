@@ -54,5 +54,5 @@ visitedSet = S.fromList (fmap fromIntegral <$> take (lenPassthrough + 1) ftpx)
 
 type RayPath = [(DDAStep, Double)]
 
-visitedPositions :: [RayPath] -> S.Set (V2 CInt)
-visitedPositions rays = undefined
+visitedPositions :: RayPath -> S.Set (V2 CInt)
+visitedPositions steps = undefined
