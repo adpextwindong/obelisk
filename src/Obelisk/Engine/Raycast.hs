@@ -50,3 +50,6 @@ visitedPositions gs steps = S.fromList $ take takeLength $ visitedIndexes steps
     where
         takeLength = lenPassthrough walls + 1
         walls = wallSamples gs $ visitedIndexes steps
+
+-------
+trays = genRays 1 initPVars 

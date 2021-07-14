@@ -28,6 +28,8 @@ blue :: SDL.Color
 blue = SDL.V4 0 0 maxBound maxBound
 black :: SDL.Color
 black = SDL.V4 0 0 0 0
+yellow :: SDL.Color
+yellow = SDL.V4 255 255 0 maxBound
 
 --GodBolt Colors
 backgroundColor :: SDL.Color
@@ -144,7 +146,7 @@ drawRaycastIntersectionSimple player t = do
 
     screenRenderer <- asks cRenderer
     forM_ intersectionPosXs (\pos -> do
-            circle screenRenderer pos 3 (V4 255 255 0 maxBound)
+            circle screenRenderer pos 3 yellow
         )
 
 drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
@@ -156,7 +158,7 @@ drawRaycastIntersections player t = do
     screenRenderer <- asks cRenderer
     forM_ rayPathIntersections (\intersections -> do
         forM_ intersections (\pos -> do
-            circle screenRenderer pos 3 (V4 255 255 0 maxBound)))
+            circle screenRenderer pos 3 yellow))
 
 drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayer player gtp = do
