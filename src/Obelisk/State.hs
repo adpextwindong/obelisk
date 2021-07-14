@@ -59,7 +59,6 @@ boxMap = WorldTiles map 10
                  FW : take 8 rEW ++ [FW],
                  FW : take 8 rEW ++ [FW],
                  FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
                  take 10 rFW
                 ]
 
