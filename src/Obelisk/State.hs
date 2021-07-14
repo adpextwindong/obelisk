@@ -8,6 +8,7 @@ import Control.Lens
 import Prelude hiding (map)
 import Linear
 import Foreign.C.Types
+import Data.Array
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
 data PVars = PVars {
@@ -20,10 +21,13 @@ data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
     deriving (Show, Eq)
 
 data WorldTiles = WorldTiles {
-                    mapTiles :: [[WallType]],
+                    mapTiles :: Array Int WallType,
                     worldSize :: CInt
                   }
     deriving Show
+
+accessMap :: WorldTiles -> Int -> Int -> WallType
+accessMap world x y = mapTiles world ! ((x * fromIntegral (worldSize world)) + y)
 
 rFW :: [WallType]
 rFW = repeat FW
@@ -32,8 +36,8 @@ rEW = repeat EW
 
 --ACCESSED godBoltMap !! y !! x style
 godboltMap :: WorldTiles
-godboltMap = WorldTiles map (fromIntegral $ length map)
-    where map = [take 10 rFW,
+godboltMap = WorldTiles map 10
+    where map = listArray (0, 10*10 - 1) $ concat [take 10 rFW,
               FW : take 3 rEW ++ [FW] ++ take 4 rEW ++ [FW],
               FW : take 3 rEW ++ [FW] ++ take 4 rEW ++ [FW],
               take 3 rFW ++ [DW] ++ [FW] ++ take 4 rEW ++ [FW],
@@ -45,8 +49,8 @@ godboltMap = WorldTiles map (fromIntegral $ length map)
               take 10 rFW]
 
 boxMap :: WorldTiles
-boxMap = WorldTiles map (fromIntegral $ length map)
-    where map = [take 10 rFW,
+boxMap = WorldTiles map 10
+    where map = listArray (0, 99) $ concat [take 10 rFW,
                  FW : take 8 rEW ++ [FW],
                  FW : take 8 rEW ++ [FW],
                  FW : take 8 rEW ++ [FW],

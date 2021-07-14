@@ -28,8 +28,8 @@ lenPassthrough = length . takeWhile (/= FW)
 
 --TODO THIS NEEDS TO BE AN ARRAY NOW!!
 checkAt :: Vars -> V2 Int -> WallType
-checkAt gs (V2 x y) = mapTiles (world gs) !! y !! x
-
+checkAt gs (V2 x y) = accessMap (world gs) x y
+    
 visitedIndexes :: RayPath -> [V2 Int]
 visitedIndexes = fmap (fmap floor) . intersectionPositions . fmap fst 
 

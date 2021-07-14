@@ -127,7 +127,7 @@ drawGridTiles world visitedSet t = do
     let quads = [blastFmap4Tupple projectVertToPD (V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..ws - 1], y <- [0..ws - 1]] :: [(SDL.Pos,SDL.Pos,SDL.Pos,SDL.Pos)]
 
     forM_ (zip inds quads) (\((x,y),(vA,vB,vC,vD)) -> do
-        let sampleColor = wallTypeToColor $ mapTiles world !! fromIntegral y !! fromIntegral x
+        let sampleColor = wallTypeToColor $ accessMap world (fromIntegral y) (fromIntegral x)
         let tileColor = if S.member (V2 (fromIntegral x) (fromIntegral y)) visitedSet
                         --Lighten the tiles that get rayCasted
                         then sampleColor + V4 20 20 20 0
