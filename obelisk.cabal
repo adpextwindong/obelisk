@@ -15,13 +15,15 @@ library
       Obelisk
   other-modules:
       Obelisk.Config
+      Obelisk.Runner
+      Obelisk.State
       Obelisk.Effect.Renderer
       Obelisk.Engine.DDA
       Obelisk.Engine.Raycast
+      Obelisk.Engine.Input
+      Obelisk.Manager.Input
       Obelisk.Math.Homogenous
       Obelisk.Math.Vector
-      Obelisk.Runner
-      Obelisk.State
       Obelisk.Wrapper.SDLInput
       Obelisk.Wrapper.SDLRenderer
   hs-source-dirs:

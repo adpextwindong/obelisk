@@ -87,7 +87,9 @@ drawDebug' gs = do
     let tPDCenter = translateToPDCenter screenWidth screenHeight
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
 
-    drawGridTiles (world gs) gtp
+    let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
+
+    drawGridTiles (world gs) visitedSet gtp
     drawGrid ws gtp
     drawPlayer (player gs) gtp
     drawRaycastIntersectionSimple (player gs) gtp
@@ -95,6 +97,7 @@ drawDebug' gs = do
     --TODO draw sideRaycastIntersections
 
 ---------------------------------------------------------------
+rayCount = 10 --TODO FIXME
 
 drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
 drawGrid ws t = do
@@ -114,8 +117,8 @@ drawGridLine (start, end) = do
     screenRenderer <- asks cRenderer
     drawLine screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
 
-drawGridTiles :: (SDLCanDraw m) => WorldTiles -> GridTransform -> m ()
-drawGridTiles world t = do
+drawGridTiles :: (SDLCanDraw m) => WorldTiles -> S.Set (V2 Int) -> GridTransform -> m ()
+drawGridTiles world visitedSet t = do
     let ws = worldSize world
     screenRenderer <- asks cRenderer 
 
@@ -125,7 +128,7 @@ drawGridTiles world t = do
 
     forM_ (zip inds quads) (\((x,y),(vA,vB,vC,vD)) -> do
         let sampleColor = wallTypeToColor $ mapTiles world !! fromIntegral y !! fromIntegral x
-        let tileColor = if S.member (V2 x y) visitedSet
+        let tileColor = if S.member (V2 (fromIntegral x) (fromIntegral y)) visitedSet
                         --Lighten the tiles that get rayCasted
                         then sampleColor + V4 20 20 20 0
                         else sampleColor 
@@ -146,7 +149,7 @@ drawRaycastIntersectionSimple player t = do
 
 drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersections player t = do
-    let rayCount = 5 --TODO REMOVEME
+    -- let rayCount = 5 --TODO REMOVEME
     let intersectionLimit = 10 --TODO REMOVEME
     let rayPathIntersections = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
 

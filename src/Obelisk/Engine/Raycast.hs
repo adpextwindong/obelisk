@@ -23,36 +23,30 @@ shootRay player rayHeadOffset = rayPath rayAngle rayOrigin
         convertToStep (V2 x y) = Step x y
 
 ---------------------------------------------------------------------------
-tgr :: [[(DDAStep, Double)]]
-tgr = genRays 4 (player initVars)
+lenPassthrough :: [WallType] -> Int
+lenPassthrough = length . takeWhile (/= FW)
 
---TODO turn off rotation, paint visited tiles for a single ray
-tpr :: PVars -> [V2 Double]
-tpr player = intersectionPositions $ fmap fst intersections
-    where
-        pAngle = vectorAngle $ direction player
-        pOrigin = Step (position player ^._x) (position player ^._y)
-        intersections = take 10 $ drop 1 $ rayPath pAngle pOrigin :: [(DDAStep, Double)]
+--TODO THIS NEEDS TO BE AN ARRAY NOW!!
+checkAt :: Vars -> V2 Int -> WallType
+checkAt gs (V2 x y) = mapTiles (world gs) !! y !! x
 
-tpx = tpr $ player initVars 
-ftpx = fmap (fmap floor) tpx
-cftpx = checkRay initVars
-lenPassthrough = length . takeWhile (/= FW) $ cftpx
+visitedIndexes :: RayPath -> [V2 Int]
+visitedIndexes = fmap (fmap floor) . intersectionPositions . fmap fst 
 
+wallSamples :: Vars -> [V2 Int] -> [WallType]
+wallSamples gs [] = []
+wallSamples gs (r:rs) = if inBounds gs r
+                        then checkAt gs r : wallSamples gs rs
+                        else []
 
-checkRay :: Vars -> [WallType]
-checkRay gs = fmap checkV2 ftpx
-    where
-        checkV2 (V2 x y) = check x y
-        check x y = mapTiles (world gs) !! y !! x
-
---TODO test this by spinning the player around
-visitedSet :: S.Set (V2 CInt)
-visitedSet = S.fromList (fmap fromIntegral <$> take (lenPassthrough + 1) ftpx)
-
---TODO make a monadic version that gets the users's current field of view
+inBounds :: Vars -> V2 Int -> Bool
+inBounds gs (V2 x y) = x >= 0 && y >= 0 && x < limit && y < limit
+    where limit = fromIntegral . worldSize . world $ gs
 
 type RayPath = [(DDAStep, Double)]
 
-visitedPositions :: RayPath -> S.Set (V2 CInt)
-visitedPositions steps = undefined
+visitedPositions :: Vars -> RayPath -> S.Set (V2 Int)
+visitedPositions gs steps = S.fromList $ take takeLength $ visitedIndexes steps
+    where
+        takeLength = lenPassthrough walls + 1
+        walls = wallSamples gs $ visitedIndexes steps
