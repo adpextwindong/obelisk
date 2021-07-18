@@ -41,6 +41,8 @@ mainLoop = do
     let (rotated_dir, rotated_cplane) = if | iLeft input && not (iRight input) -> (dir *! rotation2 0.05, cplane *! rotation2 0.05)
                                            | iRight input && not (iLeft input) -> (dir *! rotation2 (-0.05), cplane *! rotation2 (-0.05))
                                            | otherwise -> (dir, cplane)
+    
+
     modify $ pVars %~ (\v -> v { direction = rotated_dir, camera_plane = rotated_cplane})
 
     time <- getTime
