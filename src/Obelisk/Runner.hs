@@ -11,6 +11,7 @@ import qualified SDL
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Renderer
+import Obelisk.Effect.Debug
 import Obelisk.Wrapper.SDLInput
 import Obelisk.Engine.Input
 import Obelisk.Manager.Input
@@ -21,6 +22,7 @@ mainLoop :: ( MonadReader Config m
             , MonadState Vars m
             , SDLInput m
             , HasInput m
+            , Debug m
             , Renderer m ) => m ()
 mainLoop = do
     updateInput
@@ -52,6 +54,11 @@ mainLoop = do
         --Implement press tab to show debug screen
 
     gs <- get
+
+    if iPrintState input
+    then printGS gs
+    else return ()
+
     drawDebug gs
     drawScreen 
     

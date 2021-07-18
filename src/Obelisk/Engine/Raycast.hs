@@ -29,9 +29,9 @@ lenPassthrough = length . takeWhile (/= FW)
 --TODO THIS NEEDS TO BE AN ARRAY NOW!!
 checkAt :: Vars -> V2 Int -> WallType
 checkAt gs (V2 x y) = accessMap (world gs) x y
-    
+
 visitedIndexes :: RayPath -> [V2 Int]
-visitedIndexes = fmap (fmap floor) . intersectionPositions . fmap fst 
+visitedIndexes = fmap (fmap floor) . intersectionPositions . fmap fst
 
 wallSamples :: Vars -> [V2 Int] -> [WallType]
 wallSamples gs [] = []
@@ -48,8 +48,22 @@ type RayPath = [(DDAStep, Double)]
 visitedPositions :: Vars -> RayPath -> S.Set (V2 Int)
 visitedPositions gs steps = S.fromList $ take takeLength $ visitedIndexes steps
     where
-        takeLength = lenPassthrough walls + 1
+        takeLength = lenPassthrough walls
         walls = wallSamples gs $ visitedIndexes steps
 
 -------
-trays = genRays 1 initPVars 
+trays = genRays 1 initPVars
+
+
+-----------
+-- We need stuff for
+--
+-- Drawing the ray arrows
+-- The positions they sample
+-- The tiles they go through
+
+-- RayPath -> (Set Positions, debugRay Primitives, SampledWallInfo)
+
+type WallSampleInfo = (V2 Double, WallType)
+castRay :: RayPath -> (S.Set (V2 Int), WallSampleInfo)
+castRay = undefined

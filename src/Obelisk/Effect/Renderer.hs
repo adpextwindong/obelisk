@@ -94,12 +94,13 @@ drawDebug' gs = do
     drawGridTiles (world gs) visitedSet gtp
     drawGrid ws gtp
     drawPlayer (player gs) gtp
-    drawRaycastIntersectionSimple (player gs) gtp
+    
+    -- drawRaycastIntersectionSimple (player gs) gtp
     drawRaycastIntersections (player gs) gtp
     --TODO draw sideRaycastIntersections
 
 ---------------------------------------------------------------
-rayCount = 10 --TODO FIXME
+rayCount = 1 --TODO FIXME
 
 drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
 drawGrid ws t = do

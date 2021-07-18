@@ -9,6 +9,7 @@ import Obelisk.Runner
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Renderer
+import Obelisk.Effect.Debug
 import Obelisk.Manager.Input
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
@@ -104,3 +105,6 @@ instance Renderer Obelisk where
     drawScreen = drawScreen'
     fillBackground = fillBackground'
     drawDebug = drawDebug'
+
+instance Debug Obelisk where
+    printGS = printGS'

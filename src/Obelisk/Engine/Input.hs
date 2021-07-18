@@ -4,8 +4,9 @@ data Input = Input
     {
         iLeft :: Bool,
         iRight :: Bool,
-        iQuit :: Bool
+        iQuit :: Bool,
+        iPrintState :: Bool
     } deriving (Show, Eq)
 
 initInput :: Input
-initInput = Input False False False
+initInput = Input False False False False
