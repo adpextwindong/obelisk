@@ -26,10 +26,6 @@ shootRay player rayHeadOffset = rayPath rayAngle rayOrigin
 lenPassthrough :: [WallType] -> Int
 lenPassthrough = length . takeWhile (/= FW)
 
---TODO THIS NEEDS TO BE AN ARRAY NOW!!
-checkAt :: Vars -> V2 Int -> WallType
-checkAt gs (V2 x y) = accessMap (world gs) x y
-
 visitedIndexes :: RayPath -> [V2 Int]
 visitedIndexes = fmap (fmap floor) . intersectionPositions . fmap fst
 
@@ -38,10 +34,6 @@ wallSamples gs [] = []
 wallSamples gs (r:rs) = if inBounds gs r
                         then checkAt gs r : wallSamples gs rs
                         else []
-
-inBounds :: Vars -> V2 Int -> Bool
-inBounds gs (V2 x y) = x >= 0 && y >= 0 && x < limit && y < limit
-    where limit = fromIntegral . worldSize . world $ gs
 
 type RayPath = [(DDAStep, Double)]
 

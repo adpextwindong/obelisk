@@ -29,6 +29,13 @@ data WorldTiles = WorldTiles {
 accessMap :: WorldTiles -> Int -> Int -> WallType
 accessMap world x y = mapTiles world ! ((x * fromIntegral (worldSize world)) + y)
 
+checkAt :: Vars -> V2 Int -> WallType
+checkAt gs (V2 x y) = accessMap (world gs) x y
+
+inBounds :: Vars -> V2 Int -> Bool
+inBounds gs (V2 x y) = x >= 0 && y >= 0 && x < limit && y < limit
+    where limit = fromIntegral . worldSize . world $ gs
+
 rFW :: [WallType]
 rFW = repeat FW
 rEW :: [WallType]
