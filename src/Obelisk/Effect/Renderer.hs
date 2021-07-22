@@ -13,6 +13,7 @@ import qualified Data.Set as S
 
 import Obelisk.Config
 import Obelisk.State
+import Obelisk.Effect.Debug
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous
 import Obelisk.Wrapper.SDLRenderer
@@ -73,7 +74,7 @@ fillBackground' = do
 
 type GridTransform = M22Affine Double
 
-drawDebug' :: SDLCanDraw m => Vars -> m ()
+drawDebug' :: (Debug m , SDLCanDraw m) => Vars -> m ()
 drawDebug' gs = do
     let ws = worldSize . world $ gs
     screenWidth <- asks cScreenWidth
@@ -88,6 +89,7 @@ drawDebug' gs = do
 
     let tPDCenter = translateToPDCenter screenWidth screenHeight
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
+    --dprint gtp
 
     let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
 
@@ -243,3 +245,14 @@ blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
 
 pointToScreenSpace :: GridTransform -> V2 Double -> V2 CInt
 pointToScreenSpace t = dropHomoCoords . fmap floor . (t !*) . homoCoords
+
+pdToWorldT :: M22Affine Double -> M22Affine Double
+pdToWorldT gridTransform = inv33 gridTransform
+
+
+tgridT = V3 (V3 45.599999999999994 0.0 92.00000000000003) (V3 0.0 45.599999999999994 12.000000000000028) (V3 0.0 0.0 1.0)
+tz = pdToWorldT tgridT
+tresult x y = dropHomoCoords . (fmap floor) . (tz !*) . homoCoords $ V2 x y --TODO we need to figure out mouse position on screen and pipe it into this
+
+pdToWorldPos t x y = dropHomoCoords . ((pdToWorldT t) !*) . homoCoords $ V2 x y
+pdToGridPos t x y = dropHomoCoords . (fmap floor) . ((pdToWorldT t) !*) . homoCoords $ V2 x y

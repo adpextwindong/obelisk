@@ -108,3 +108,4 @@ instance Renderer Obelisk where
 
 instance Debug Obelisk where
     printGS = printGS'
+    dprint = print'
