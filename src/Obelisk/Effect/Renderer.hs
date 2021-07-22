@@ -72,7 +72,6 @@ fillBackground' = do
     surface <- asks cSurface
     surfaceFillScreenRect surface backgroundColor
 
-type GridTransform = M22Affine Double
 
 drawDebug' :: (Debug m , SDLCanDraw m) => Vars -> m ()
 drawDebug' gs = do
@@ -104,23 +103,7 @@ drawDebug' gs = do
 ---------------------------------------------------------------
 rayCount = 1 --TODO FIXME
 
-drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
-drawGrid ws t = do
-    screenRenderer <- asks cRenderer
-
-    let hlines = appDTFloor t (horizontal_lines ws) :: [Line]
-    let vlines = appDTFloor t (vertical_lines ws) :: [Line]
-
-    forM_ hlines drawGridLine
-    forM_ vlines drawGridLine 
-    where
-        vertical_lines ws = [(homoCoords (V2 x 0), homoCoords (V2 x ws)) | x <- [0..ws]]
-        horizontal_lines ws = [(homoCoords (V2 0 y), homoCoords (V2 ws y)) | y <- [0..ws]]
-
-drawGridLine :: (SDLCanDraw m) => Line -> m ()
-drawGridLine (start, end) = do
-    screenRenderer <- asks cRenderer
-    drawLine screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
+type GridTransform = M22Affine Double
 
 drawGridTiles :: (SDLCanDraw m) => WorldTiles -> S.Set (V2 Int) -> GridTransform -> m ()
 drawGridTiles world visitedSet t = do
@@ -162,6 +145,25 @@ drawRaycastIntersections player t = do
     forM_ rayPathIntersections (\intersections -> do
         forM_ intersections (\pos -> do
             circle screenRenderer pos 3 yellow))
+
+--------------------------------------------------------------------------------
+drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
+drawGrid ws t = do
+    screenRenderer <- asks cRenderer
+
+    let hlines = appDTFloor t (horizontal_lines ws) :: [Line]
+    let vlines = appDTFloor t (vertical_lines ws) :: [Line]
+
+    forM_ hlines drawGridLine
+    forM_ vlines drawGridLine 
+    where
+        vertical_lines ws = [(homoCoords (V2 x 0), homoCoords (V2 x ws)) | x <- [0..ws]]
+        horizontal_lines ws = [(homoCoords (V2 0 y), homoCoords (V2 ws y)) | y <- [0..ws]]
+
+drawGridLine :: (SDLCanDraw m) => Line -> m ()
+drawGridLine (start, end) = do
+    screenRenderer <- asks cRenderer
+    drawLine screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
 
 drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawPlayer player gtp = do

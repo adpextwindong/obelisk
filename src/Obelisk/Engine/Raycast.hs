@@ -12,8 +12,11 @@ import Obelisk.Math.Vector
 genRays :: CInt -> PVars -> [[(DDAStep,Double)]]
 genRays screenWidth player = fmap (shootRay player) rayHeads
     where
-        cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0.. fromIntegral screenWidth]]
+        cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0]]--[0.. fromIntegral screenWidth]] TODO REVERT
         rayHeads = [position player + direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Double]
+
+type RayPath = [(DDAStep, Double)]
+type RayResult = (RayPath, Double)
 
 shootRay :: PVars -> V2 Double -> [(DDAStep, Double)]
 shootRay player rayHeadOffset = rayPath rayAngle rayOrigin
@@ -35,7 +38,6 @@ wallSamples gs (r:rs) = if inBounds gs r
                         then checkAt gs r : wallSamples gs rs
                         else []
 
-type RayPath = [(DDAStep, Double)]
 
 visitedPositions :: Vars -> RayPath -> S.Set (V2 Int)
 visitedPositions gs steps = S.fromList $ take takeLength $ visitedIndexes steps
