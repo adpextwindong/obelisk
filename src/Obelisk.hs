@@ -72,7 +72,8 @@ main = do
                 cRenderer = screenRenderer,
                 cSurface = screenSurface,
                 cScreenWidth = initialScreenWidth,
-                cScreenHeight = initialScreenHeight
+                cScreenHeight = initialScreenHeight,
+                cFont = font
             }
 
     runObelisk cfg initVars mainLoop
