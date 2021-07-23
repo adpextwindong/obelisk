@@ -26,6 +26,8 @@ import qualified SDL
 import qualified SDL.Event as SDL
 import qualified SDL.Video.Renderer as SDL
 
+import qualified SDL.Font as SDLF
+
 
 import Data.Word
 import Linear
@@ -49,6 +51,7 @@ gameTick hs = do
 main :: IO ()
 main = do
     SDL.initialize [SDL.InitVideo]
+    SDLF.initialize
     let title = "World Debug Window"
 
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
