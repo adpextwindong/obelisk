@@ -13,6 +13,7 @@ import Obelisk.Effect.Debug
 import Obelisk.Manager.Input
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
+import Obelisk.Wrapper.SDLFont
 
 import Control.Monad.Reader
 import Control.Monad.State
@@ -26,7 +27,7 @@ import qualified SDL
 import qualified SDL.Event as SDL
 import qualified SDL.Video.Renderer as SDL
 
-import qualified SDL.Font as SDLF
+import qualified SDL.Font
 
 
 import Data.Word
@@ -51,8 +52,10 @@ gameTick hs = do
 main :: IO ()
 main = do
     SDL.initialize [SDL.InitVideo]
-    SDLF.initialize
+    SDL.Font.initialize
     let title = "World Debug Window"
+
+    font <- SDL.Font.load "resources/OFLGoudyStMTT.ttf" 16
 
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
     SDL.showWindow window
@@ -74,6 +77,7 @@ main = do
 
     runObelisk cfg initVars mainLoop
 
+    SDL.Font.free font
     SDL.freeSurface screenSurface
     SDL.destroyWindow window
     SDL.quit
@@ -112,3 +116,6 @@ instance Renderer Obelisk where
 instance Debug Obelisk where
     printGS = printGS'
     dprint = print'
+
+instance SDLFont Obelisk where
+    renderSolidText = renderSolidText'

@@ -27,6 +27,7 @@ library
       Obelisk.Math.Vector
       Obelisk.Wrapper.SDLInput
       Obelisk.Wrapper.SDLRenderer
+      Obelisk.Wrapper.SDLFont
   hs-source-dirs:
       src
   build-depends:
