@@ -5,11 +5,13 @@ module Obelisk.Effect.Renderer where
 import Control.Monad.Reader
 import qualified SDL
 import qualified SDL.Primitive as SDL
+import qualified SDL.Font
 import Control.Lens
 import Linear
 import Foreign.C.Types
 import Data.Bool
 import qualified Data.Set as S
+import qualified Data.Text as T
 
 import Obelisk.Config
 import Obelisk.State
@@ -17,8 +19,11 @@ import Obelisk.Effect.Debug
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous
 import Obelisk.Wrapper.SDLRenderer
+import Obelisk.Wrapper.SDLInput
+import Obelisk.Wrapper.SDLFont
 import Obelisk.Engine.DDA
 import Obelisk.Engine.Raycast
+
 
 --COLORS
 white :: SDL.Color
@@ -55,6 +60,7 @@ class Monad m => Renderer m where
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
 
+--TODO consider SDLFont being in this
 type SDLCanDraw m = (SDLRenderer m, MonadReader Config m)
 
 clearScreen' :: SDLCanDraw m => m ()
@@ -73,7 +79,7 @@ fillBackground' = do
     surfaceFillScreenRect surface backgroundColor
 
 
-drawDebug' :: (Debug m , SDLCanDraw m) => Vars -> m ()
+drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m) => Vars -> m ()
 drawDebug' gs = do
     let ws = worldSize . world $ gs
     screenWidth <- asks cScreenWidth
@@ -98,7 +104,9 @@ drawDebug' gs = do
     
     -- drawRaycastIntersectionSimple (player gs) gtp
     drawRaycastIntersections (player gs) gtp
+    _ <- drawMouseLoc gtp
     --TODO draw sideRaycastIntersections
+    return ()
 
 ---------------------------------------------------------------
 rayCount = 1 --TODO FIXME
@@ -145,6 +153,22 @@ drawRaycastIntersections player t = do
     forM_ rayPathIntersections (\intersections -> do
         forM_ intersections (\pos -> do
             circle screenRenderer pos 3 yellow))
+
+drawMouseLoc :: (SDLCanDraw m, SDLInput m, SDLFont m) => GridTransform -> m (Maybe (SDL.Rectangle CInt))
+drawMouseLoc t = do
+    mloc <- getMouseAbsoluteLoc
+    targetSurface <- asks cSurface
+    font <- asks cFont
+    
+    let textColor = V4 255 255 255 255
+
+    let gridLoc = pdToGridPos t (fmap fromIntegral mloc)
+    let text = T.pack $ show gridLoc
+    textSurface <- renderSolidText font textColor text
+
+    let position = Just (SDL.P (V2 50 50))
+    
+    surfaceBlit textSurface Nothing targetSurface position
 
 --------------------------------------------------------------------------------
 drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
@@ -256,5 +280,5 @@ tgridT = V3 (V3 45.599999999999994 0.0 92.00000000000003) (V3 0.0 45.59999999999
 tz = pdToWorldT tgridT
 tresult x y = dropHomoCoords . (fmap floor) . (tz !*) . homoCoords $ V2 x y --TODO we need to figure out mouse position on screen and pipe it into this
 
-pdToWorldPos t x y = dropHomoCoords . ((pdToWorldT t) !*) . homoCoords $ V2 x y
-pdToGridPos t x y = dropHomoCoords . (fmap floor) . ((pdToWorldT t) !*) . homoCoords $ V2 x y
+pdToWorldPos t (SDL.P pos) = dropHomoCoords . ((pdToWorldT t) !*) . homoCoords $ pos
+pdToGridPos t (SDL.P pos) = dropHomoCoords . (fmap floor) . ((pdToWorldT t) !*) . homoCoords $ pos

@@ -97,11 +97,13 @@ instance SDLRenderer Obelisk where
     fillTriangle = fillTriangle'
     circle = circle'
     fillCircle = fillCircle'
+    surfaceBlit = surfaceBlit'
 
 instance SDLInput Obelisk where
     pollEventPayloads = pollEventPayloads'
     checkQuitSignal = checkQuitSignal'
     getTime = getTime'
+    getMouseAbsoluteLoc = getMouseAbsoluteLoc'
 
 instance HasInput Obelisk where
     updateInput = updateInput'
