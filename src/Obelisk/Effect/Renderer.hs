@@ -275,10 +275,5 @@ pointToScreenSpace t = dropHomoCoords . fmap floor . (t !*) . homoCoords
 pdToWorldT :: M22Affine Double -> M22Affine Double
 pdToWorldT gridTransform = inv33 gridTransform
 
-
-tgridT = V3 (V3 45.599999999999994 0.0 92.00000000000003) (V3 0.0 45.599999999999994 12.000000000000028) (V3 0.0 0.0 1.0)
-tz = pdToWorldT tgridT
-tresult x y = dropHomoCoords . (fmap floor) . (tz !*) . homoCoords $ V2 x y --TODO we need to figure out mouse position on screen and pipe it into this
-
 pdToWorldPos t (SDL.P pos) = dropHomoCoords . ((pdToWorldT t) !*) . homoCoords $ pos
 pdToGridPos t (SDL.P pos) = dropHomoCoords . (fmap floor) . ((pdToWorldT t) !*) . homoCoords $ pos
