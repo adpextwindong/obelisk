@@ -14,7 +14,7 @@ intersectionPositions :: [DDAStep] -> [V2 Double]
 intersectionPositions xs = [V2 x y | Step x y <- xs]
 
 --FIXME, likely incorrect. We should sample from where the ray starts.
-startingStep = Step 0.0 0.0
+-- startingStep = Step 0.0 0.0
 
 lengthStep :: DDAStep -> Double
 lengthStep NoWall = read "Infinity"
@@ -46,8 +46,8 @@ rayPath angle origin@(Step x y) = (origin,offset) : rayPath angle nextStep
                                                         then offSetClip (distY stepX)
                                                         else offSetClip (distX stepY)
 
-rayPath' :: Double -> [(DDAStep, Double)]
-rayPath' angle = rayPath angle startingStep
+-- rayPath' :: Double -> [(DDAStep, Double)]
+-- rayPath' angle = rayPath angle startingStep
 
 offSetClip :: Double -> Double
 offSetClip x = x - fromIntegral (floor x)

@@ -88,8 +88,9 @@ drawDebug' gs = do
     let tPDCenter = translateToPDCenter screenWidth screenHeight
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
 
-    let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
-
+    let rays = genRays rayCount (player gs) :: [(RayPath, RayAngle)]
+    let visitedSet = S.unions $ uncurry (visitedProperPositions gs) <$> rays
+    
     drawGridTiles (world gs) visitedSet gtp
     drawGrid ws gtp
     drawPlayer (player gs) gtp
@@ -137,7 +138,8 @@ drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 drawRaycastIntersections player t = do
     -- let rayCount = 5 --TODO REMOVEME
     let intersectionLimit = 10 --TODO REMOVEME
-    let rayPathIntersections = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
+    let rayPathIntersections = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit . fst) (genRays rayCount player)
+    --TODO RAYCAST REFACTOR
 
     screenRenderer <- asks cRenderer
     forM_ rayPathIntersections (\intersections -> do
