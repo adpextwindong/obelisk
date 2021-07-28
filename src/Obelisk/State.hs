@@ -87,11 +87,15 @@ initPVars = PVars (V2 2.5 6.5) dir cam
         -- dir = V2 0.8817506897247581 0.4717157207152668
         -- cam = V2 (-0.4717157207152668) 0.8817506897247581
 
-        dir = V2 0.17859740053185252 0.9839222370305881
-        cam = V2 (-0.9839222370305881) 0.17859740053185252
+        -- dir = V2 0.17859740053185252 0.9839222370305881
+        -- cam = V2 (-0.9839222370305881) 0.17859740053185252
+
+        --Boxmap
+        dir = V2 0.9304581537328835 (-0.36639817705888417)
+        cam = V2 0.36639817705888417 0.9304581537328835
 
 initVars :: Vars
-initVars = Vars initPVars godboltMap False initInput
+initVars = Vars initPVars boxMap False initInput
 
 makeClassy ''Vars
 makeClassy ''PVars
