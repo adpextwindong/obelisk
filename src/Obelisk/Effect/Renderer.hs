@@ -97,8 +97,12 @@ drawDebug' gs = do
     --dprint gtp
 
     let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
+    drawGridTiles (world gs) visitedSet gtp --TODO REVERT
+    -- dprint visitedSet
 
-    drawGridTiles (world gs) visitedSet gtp
+    -- let tempVisitedSet = S.fromList tzzz  --TODO REVERT
+    -- drawGridTiles (world gs) tempVisitedSet gtp
+
     drawGrid ws gtp
     drawPlayer (player gs) gtp
     

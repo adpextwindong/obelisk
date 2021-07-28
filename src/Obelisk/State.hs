@@ -83,8 +83,12 @@ initPVars = PVars (V2 2.5 6.5) dir cam
     where
         -- dir = normalize (V2 0.8 0.330)
         -- cam = normalize $ dir *! rotation2 (-pi/2)
-        dir = V2 0.8817506897247581 0.4717157207152668
-        cam = V2 (-0.4717157207152668) 0.8817506897247581
+
+        -- dir = V2 0.8817506897247581 0.4717157207152668
+        -- cam = V2 (-0.4717157207152668) 0.8817506897247581
+
+        dir = V2 0.17859740053185252 0.9839222370305881
+        cam = V2 (-0.9839222370305881) 0.17859740053185252
 
 initVars :: Vars
 initVars = Vars initPVars godboltMap False initInput
