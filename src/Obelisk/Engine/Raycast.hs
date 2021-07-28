@@ -68,6 +68,9 @@ ty = take 5 . visitedIndexes $ p1
 --We can check the current step to see which grid intersection is of interested for correct flooring/adjusting and peek at the previous
 --TODO NOTE This probably should be a zipWith implementation
 
+--TODO Theres an issue when the ray is facing straight up but it might be solved by just having the other rays work correctly.
+--Not rock solid however.
+
 visitedIndexes :: RayPath -> [V2 Int]
 visitedIndexes path = (floor <$> head xs) : zipWith wallCrossAdjust xs (tail xs)
     where 

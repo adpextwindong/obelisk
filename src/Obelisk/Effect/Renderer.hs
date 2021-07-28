@@ -113,7 +113,7 @@ drawDebug' gs = do
     return ()
 
 ---------------------------------------------------------------
-rayCount = 1 --TODO FIXME
+rayCount = 1 --TODO FIXME REVERT
 
 type GridTransform = M22Affine Double
 
