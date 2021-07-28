@@ -46,8 +46,15 @@ visitedPositions gs steps = S.fromList $ take takeLength $ visitedIndexes steps
         walls = wallSamples gs $ visitedIndexes steps
 
 -------
+trays :: [RayPath]
 trays = genRays 1 initPVars
+p1 :: RayPath
+p1 = head trays
+vi = visitedIndexes p1
+vwalls = wallSamples initVars vi
 
+vs :: S.Set (V2 Int)
+vs = visitedPositions initVars p1
 
 -----------
 -- We need stuff for
