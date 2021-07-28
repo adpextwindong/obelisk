@@ -162,8 +162,10 @@ drawMouseLoc t = do
     
     let textColor = V4 255 255 255 255
 
+    let worldLoc = pdToWorldPos t (fmap fromIntegral mloc)
     let gridLoc = pdToGridPos t (fmap fromIntegral mloc)
-    let text = T.pack $ show gridLoc
+    let text = T.pack $ (show worldLoc ++ "  $$  " ++ show gridLoc)
+
     textSurface <- renderSolidText font textColor text
 
     let position = Just (SDL.P (V2 50 50))

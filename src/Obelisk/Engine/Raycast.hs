@@ -56,6 +56,15 @@ vwalls = wallSamples initVars vi
 vs :: S.Set (V2 Int)
 vs = visitedPositions initVars p1
 
+tx = take 5 . intersectionPositions . fmap fst $ p1
+ty = take 5 . visitedIndexes $ p1
+
+adjusedtedIndexes :: [V2 Double] -> [V2 Int]
+adjusedtedIndexes (x:y:xs) = undefined 
+adjusedtedIndexes [] = undefined 
+
+wallCross :: V2 Double -> V2 Double -> (Bool,Bool)
+wallCross = undefined
 -----------
 -- We need stuff for
 --

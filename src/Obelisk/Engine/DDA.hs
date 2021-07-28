@@ -59,5 +59,5 @@ limitDrawDistance' :: Double -> [(DDAStep, b)] -> [(DDAStep, b)]
 limitDrawDistance' drawDistance = takeWhile (\(step, _) -> sqrt (lengthStep step) < drawDistance)
 
 --Starting step should be ray origin
-tx = fmap fst $ take 10 $ rayPath (pi/3) (Step 0 0)
-ty = fmap fst $ take 10 $ rayPath (pi/3) (Step 0.25 0.33)
+-- tx = fmap fst $ take 10 $ rayPath (pi/3) (Step 0 0)
+-- ty = fmap fst $ take 10 $ rayPath (pi/3) (Step 0.25 0.33)
