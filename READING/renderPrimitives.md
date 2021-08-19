@@ -10,12 +10,87 @@ forM_ render stack
 
 This issue I'm having reminds me of the free monad tax example where I should have an intermediate structure to look at. Directly blasting geometry across CFFI into the surface is dumb. I guess you could call it a VBO (Vertex Buffer Object).
 
-```haskell
+
+SDL-gfx SDL-Primitive avalible calls
+```
+Pixel
+
 Lines
-Arrow Line Line Line
+    Line
+    Smoothline
+    HorizontalLine???
+    VericalLine????
+    thickline
+
+Triangle
+    Smooth
+    Fill
+
 Rects
-Circles
+    roundRectangle
+    fillRectangle
+    fillRoundRectangle
+
+Curves
+    Arc
+    Circle
+        circle
+        SmoothCircle
+        fillCircle
+    Ellise
+        ellipse
+        smoothEllipse
+        fillEllipse
+    Pie
+        Pie
+        fillPie
+    Bezier
+
+polygon
+    polygon
+    smoothpolygon
+    fillpolygon
+```
+
+Every draw call in SDL-primitive takes a color argument.
+So given t we can traverse the geometry and evaluate the color.
+We can have a constructor for color value functions thats just const in disguise to make it uniform.
+
+Compositions:
+```
+Arrow Line Line Line
+DoubleEnded Arrow
+XMarks
 Grid
+```
+
+Common actions
+```
+Color
+Highlight/Lighten/Darken
+Text annotation?
+Affine Matrix Transformations
+
+What if we had a hiearchy of Position types to denote Local space, world space, screen space
+```
+
+Things we want to do
+
+```
+Animations for things
+Expr (t -> a)
+Parameterize exprs over T
+```
+Look at how `[reanimate](https://github.com/reanimate/reanimate)` does things.
+
+
+
+Traversable with sequence
+
+```
+sequence :: (Traversable t, Monad m) => t (m a) -> m (t a)
+```
+
 
 We should make it nicer to apply transformations.
 
