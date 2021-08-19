@@ -15,6 +15,10 @@ genRays screenWidth player = fmap (shootRay player) rayHeads
         cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0]]--[0.. fromIntegral screenWidth]] TODO REVERT
         rayHeads = [position player + direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Double]
 
+--TODO debug DDA facing northwards
+tray :: RayPath
+tray = rayPath 5.122652108550136 (Step 3.0640599766739993 5.203143669208233)
+
 type RayPath = [(DDAStep, Double)]
 type RayResult = (RayPath, Double)
 
