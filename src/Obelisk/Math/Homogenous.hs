@@ -32,16 +32,20 @@ rotateAround theta (V2 x y) = translate x y !*! rotation theta !*! translate (-x
 
 type M22Affine t = V3 (V3 t) -- TODO use this type alias??
 
+m22AffineIdD = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: M22Affine Double
 idv3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: V3 (V3 CInt)
 
-applyAffineTransform :: M22Affine CInt -> [Line] -> [Line]
-applyAffineTransform t = fmap (bimap (t !* ) (t !*))
+-- applyAffineTransform :: M22Affine CInt -> [Line] -> [Line]
+-- applyAffineTransform t = fmap (bimap (t !* ) (t !*))
 
 appDTFloor :: M22Affine Double -> [Line] -> [Line]
 appDTFloor t = fmap (bimap f f)
-    where
-        f = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
-        --Convert to doubles, apply the transform then floor it
+    where f = doubleTransformFloor t
+
+doubleTransformFloor t = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
+
+-- foo t = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
+--Convert to doubles, apply the transform then floor it
 
 homoCoords :: (Num a) => V2 a -> HV2 a
 homoCoords (V2 x y) = V3 x y 1

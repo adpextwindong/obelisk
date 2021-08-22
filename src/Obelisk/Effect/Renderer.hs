@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE GADTs #-}
 module Obelisk.Effect.Renderer where
 
 import Control.Monad.Reader
@@ -23,6 +24,8 @@ import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
 import Obelisk.Engine.DDA
 import Obelisk.Engine.Raycast
+
+import Obelisk.Graphics.Primitives
 
 
 --COLORS
@@ -93,22 +96,29 @@ drawDebug' gs = do
     let focus = bool Nothing (Just (position . player $ gs)) $ rotateToPView gs
 
     let tPDCenter = translateToPDCenter screenWidth screenHeight
+
+    -- Grid To Player as center Local to Screen Affine Transformation
     let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
     --dprint gtp
 
     let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
-    drawGridTiles (world gs) visitedSet gtp --TODO REVERT
+    -- old_drawGridTiles (world gs) visitedSet gtp --TODO REVERT
     -- dprint visitedSet
 
     -- let tempVisitedSet = S.fromList tzzz  --TODO REVERT
-    -- drawGridTiles (world gs) tempVisitedSet gtp
+    -- old_drawGridTiles (world gs) tempVisitedSet gtp
 
-    drawGrid ws gtp
-    drawPlayer (player gs) gtp
+    let new_grid = worldGridGraphic ws gtp
+    let new_ui = evalGraphic $ GroupPrim [new_grid]
+    -- dprint new_grid
+
+    drawGraphic new_ui
+    -- old_drawGrid ws gtp
+    -- old_drawPlayer (player gs) gtp
     
-    -- drawRaycastIntersectionSimple (player gs) gtp
-    drawRaycastIntersections (player gs) gtp
-    _ <- drawMouseLoc gtp
+    -- old_drawRaycastIntersectionSimple (player gs) gtp
+    -- old_drawRaycastIntersections (player gs) gtp
+    -- _ <- drawMouseLoc gtp
     --TODO draw sideRaycastIntersections
     return ()
 
@@ -117,8 +127,10 @@ rayCount = 1 --TODO FIXME REVERT
 
 type GridTransform = M22Affine Double
 
-drawGridTiles :: (SDLCanDraw m) => WorldTiles -> S.Set (V2 Int) -> GridTransform -> m ()
-drawGridTiles world visitedSet t = do
+-- TODO gridTilesGraphic :: WorldTiles -> S.Set (V2 Int) -> GridTransform -> Graphic Shape
+
+old_drawGridTiles :: (SDLCanDraw m) => WorldTiles -> S.Set (V2 Int) -> GridTransform -> m ()
+old_drawGridTiles world visitedSet t = do
     let ws = worldSize world
     screenRenderer <- asks cRenderer 
 
@@ -137,8 +149,8 @@ drawGridTiles world visitedSet t = do
         fillTriangle screenRenderer vB vC vD tileColor
         )
 
-drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-drawRaycastIntersectionSimple player t = do
+old_drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+old_drawRaycastIntersectionSimple player t = do
     let intersections = take 10 $ shootRay player (position player + direction player)
     let intersectionPosXs = fmap (pointToScreenSpace t) $ intersectionPositions $ fmap fst intersections
 
@@ -147,8 +159,8 @@ drawRaycastIntersectionSimple player t = do
             circle screenRenderer pos 3 yellow
         )
 
-drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-drawRaycastIntersections player t = do
+old_drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+old_drawRaycastIntersections player t = do
     -- let rayCount = 5 --TODO REMOVEME
     let intersectionLimit = 10 --TODO REMOVEME
     let rayPathIntersections = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
@@ -177,32 +189,61 @@ drawMouseLoc t = do
     surfaceBlit textSurface Nothing targetSurface position
 
 --------------------------------------------------------------------------------
-drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
-drawGrid ws t = do
+
+-- | Evaluates the Shape Graphic and applies all the transformations
+evalGraphic :: Graphic Shape -> Graphic (Evaluated Shape)
+evalGraphic (AffineT t s) = evalGraphic' t s
+evalGraphic s = evalGraphic' m22AffineIdD s
+
+-- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
+evalGraphic' :: M22Affine Double -> Graphic Shape -> Graphic (Evaluated Shape)
+evalGraphic' t (Prim l@(Line _ _ _)) =  EvaldP $ Prim $ applyAffineTransform t l
+evalGraphic' t (GroupPrim gs) = EvaldGP $ fmap (evalGraphic' t) gs
+evalGraphic' t (AffineT t' s) = evalGraphic' (t' !*! t) s
+
+drawGraphic :: SDLCanDraw m => Graphic (Evaluated Shape) -> m ()
+drawGraphic (EvaldGP evald_xs) = mapM_ drawGraphic evald_xs
+drawGraphic (EvaldP (Prim (Line start end color))) = do
+    screenRenderer <- asks cRenderer
+    drawLine screenRenderer start end color
+--------------------------------------------------------------------------------
+
+worldGridGraphic :: CInt -> GridTransform -> Graphic Shape
+worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim gridLines
+    where
+        verticalLines ws   = [Prim (Line (V2 x 0) (V2 x ws) gridColor) | x <- [0..ws]]
+        horizontalLines ws = [Prim (Line (V2 0 y) (V2 ws y) gridColor) | y <- [0..ws]]
+        gridLines = verticalLines ws ++ horizontalLines ws
+
+--TODO REMOVE
+old_drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
+old_drawGrid ws t = do
     screenRenderer <- asks cRenderer
 
     let hlines = appDTFloor t (horizontal_lines ws) :: [Line]
     let vlines = appDTFloor t (vertical_lines ws) :: [Line]
 
-    forM_ hlines drawGridLine
-    forM_ vlines drawGridLine 
+    forM_ hlines old_drawGridLine
+    forM_ vlines old_drawGridLine 
     where
         vertical_lines ws = [(homoCoords (V2 x 0), homoCoords (V2 x ws)) | x <- [0..ws]]
         horizontal_lines ws = [(homoCoords (V2 0 y), homoCoords (V2 ws y)) | y <- [0..ws]]
 
-drawGridLine :: (SDLCanDraw m) => Line -> m ()
-drawGridLine (start, end) = do
+old_drawGridLine :: (SDLCanDraw m) => Line -> m ()
+old_drawGridLine (start, end) = do
     screenRenderer <- asks cRenderer
     drawLine screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
 
-drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-drawPlayer player gtp = do
-    drawPlayerCircle player gtp
-    drawCameraPlane player gtp
-    drawPlayerArrow player gtp
+--TODO FINISH PORTING THE REST TO THE NEW GRAPHIC API
+--------------------------------------------------------------------------------
+old_drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+old_drawPlayer player gtp = do
+    old_drawPlayerCircle player gtp
+    old_drawCameraPlane player gtp
+    old_drawPlayerArrow player gtp
 
-drawPlayerArrow :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-drawPlayerArrow player gtp = do
+old_drawPlayerArrow :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+old_drawPlayerArrow player gtp = do
     screenRenderer <- asks cRenderer
     let playerT = translate (position player^._x) (position player^._y)
     let arrowT = gtp !*! playerT !*! rotation (vectorAngle . direction $ player)
@@ -224,8 +265,8 @@ drawPlayerArrow player gtp = do
     let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate (1.05*dir_len - arrowLength) 0.0)) baseArrow
     fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
 
-drawCameraPlane :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-drawCameraPlane player gtp = do
+old_drawCameraPlane :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+old_drawCameraPlane player gtp = do
     screenRenderer <- asks cRenderer
     let ppos = position player
     let camTail = pointToScreenSpace gtp $ ppos + direction player - camera_plane player
@@ -239,8 +280,8 @@ drawCameraPlane player gtp = do
     let rightEnd = pointToScreenSpace gtp $ ppos + (edgeLength *^ (direction player + camera_plane player))
     drawLine screenRenderer (pointToScreenSpace gtp ppos) rightEnd gridColor
 
-drawPlayerCircle :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-drawPlayerCircle player gtp = do
+old_drawPlayerCircle :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
+old_drawPlayerCircle player gtp = do
     screenRenderer <- asks cRenderer
     let px = position player ^._x
     let py = position player ^._y

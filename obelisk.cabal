@@ -22,6 +22,8 @@ library
       Obelisk.Engine.DDA
       Obelisk.Engine.Raycast
       Obelisk.Engine.Input
+      Obelisk.Graphics.Primitives
+      Obelisk.Graphics.DebugUI
       Obelisk.Manager.Input
       Obelisk.Math.Homogenous
       Obelisk.Math.Vector
