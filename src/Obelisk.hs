@@ -55,7 +55,8 @@ main = do
     SDL.Font.initialize
     let title = "World Debug Window"
 
-    font <- SDL.Font.load "resources/OFLGoudyStMTT.ttf" 16
+    --TODO fetch system fonts later so we dont have to redistribute ttfs
+    font <- SDL.Font.load "resources/arial.ttf" 16
 
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
     SDL.showWindow window
