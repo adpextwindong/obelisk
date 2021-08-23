@@ -191,29 +191,33 @@ drawMouseLoc t = do
 --------------------------------------------------------------------------------
 
 -- | Evaluates the Shape Graphic and applies all the transformations
-evalGraphic :: Graphic Shape -> Graphic (Evaluated Shape)
+evalGraphic :: Graphic (Shape Double) -> Graphic (Shape CInt)
 evalGraphic (AffineT t s) = evalGraphic' t s
 evalGraphic s = evalGraphic' m22AffineIdD s
 
 -- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
-evalGraphic' :: M22Affine Double -> Graphic Shape -> Graphic (Evaluated Shape)
-evalGraphic' t (Prim l@(Line _ _ _)) =  EvaldP $ Prim $ applyAffineTransform t l
+evalGraphic' :: M22Affine Double -> Graphic (Shape Double) -> Graphic (Shape CInt)
+evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
 evalGraphic' t (GroupPrim gs) = EvaldGP $ fmap (evalGraphic' t) gs
-evalGraphic' t (AffineT t' s) = evalGraphic' (t' !*! t) s
+evalGraphic' t (AffineT t' s) = evalGraphic' (t' !*! t) s --TODO make sure this is the correct behavior when nesting transforms
+--TODO remaining patterns
 
-drawGraphic :: SDLCanDraw m => Graphic (Evaluated Shape) -> m ()
+drawGraphic :: SDLCanDraw m => Graphic (Shape CInt) -> m ()
 drawGraphic (EvaldGP evald_xs) = mapM_ drawGraphic evald_xs
-drawGraphic (EvaldP (Prim (Line start end color))) = do
+drawGraphic (EvaldP (Line start end color)) = do
     screenRenderer <- asks cRenderer
     drawLine screenRenderer start end color
+drawGraphic _ = undefined
+--TODO remaining patterns
 --------------------------------------------------------------------------------
 
-worldGridGraphic :: CInt -> GridTransform -> Graphic Shape
+worldGridGraphic :: CInt -> GridTransform -> Graphic (Shape Double)
 worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim gridLines
     where
+        worldSize = fromIntegral ws
         verticalLines ws   = [Prim (Line (V2 x 0) (V2 x ws) gridColor) | x <- [0..ws]]
         horizontalLines ws = [Prim (Line (V2 0 y) (V2 ws y) gridColor) | y <- [0..ws]]
-        gridLines = verticalLines ws ++ horizontalLines ws
+        gridLines = verticalLines worldSize ++ horizontalLines worldSize
 
 --TODO REMOVE
 old_drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()

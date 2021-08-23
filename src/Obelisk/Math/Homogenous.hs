@@ -42,7 +42,10 @@ appDTFloor :: M22Affine Double -> [Line] -> [Line]
 appDTFloor t = fmap (bimap f f)
     where f = doubleTransformFloor t
 
+doubleTransformFloor :: RealFrac a => V3 (V3 a) -> V3 CInt -> V3 CInt
 doubleTransformFloor t = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
+
+transformFloor t = fmap floor . (t !*)
 
 -- foo t = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
 --Convert to doubles, apply the transform then floor it

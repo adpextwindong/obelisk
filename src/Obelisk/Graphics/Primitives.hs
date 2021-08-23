@@ -1,21 +1,27 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE FlexibleInstances #-}
 module Obelisk.Graphics.Primitives where
 
 import qualified SDL
 import qualified SDL.Primitive as SDL
+import Linear.V2 ( V2 )
+import Foreign.C.Types (CInt)
 
 import Obelisk.Math.Homogenous
 --Consider how we should handle pixels
 
-data Shape = Line SDL.Pos SDL.Pos SDL.Color
-            | Circle SDL.Pos SDL.Radius SDL.Color
-            | FillTriangle SDL.Pos SDL.Pos SDL.Pos SDL.Color
-            | FillCircle SDL.Pos SDL.Radius SDL.Color
+--TODO for CONSIDERATION Should these be SDL.Pos or V2 a's ???
+data Shape a = Line (V2 a) (V2 a) SDL.Color
+             | Circle (V2 a) SDL.Radius SDL.Color
+             | FillTriangle (V2 a) (V2 a) (V2 a) SDL.Color
+             | FillCircle (V2 a) SDL.Radius SDL.Color
             deriving Show
 
-applyAffineTransform :: M22Affine Double -> Shape -> Shape
-applyAffineTransform t (Line start end color) = Line (f start) (f end) color
-    where f = dropHomoCoords . doubleTransformFloor t . homoCoords
+applyAffineTransformFloor :: M22Affine Double -> Shape Double -> Shape CInt
+applyAffineTransformFloor t (Line start end color) = Line (f start) (f end) color
+    where f = dropHomoCoords . transformFloor t . homoCoords 
+applyAffineTransformFloor _ _ = undefined
+--TODO finish other patterns
 
 --             | Triangle
 --             | Rectangle
@@ -33,22 +39,24 @@ applyAffineTransform t (Line start end color) = Line (f start) (f end) color
 -- Used to phase graphics that we've applied all transformations and effects
 -- so that we only draw it in the renderer once its all applied
 -- Phasing it this way can help us look at the scene's graphics before and after transformations are applied I guess
-data Evaluated a = Evaluated a
-    deriving Show
+-- data Evaluated a b = Evaluated a b
+--     deriving Show
     
 data Graphic a where
-    Prim :: Shape -> Graphic Shape
-    GroupPrim :: [Graphic Shape] -> Graphic Shape
+    Prim :: Shape Double -> Graphic (Shape Double)
+    GroupPrim :: [Graphic (Shape Double)] -> Graphic (Shape Double)
     -- ColorPrim :: ColorEffect -> Graphic Shape -> Graphic Shape
-    AffineT :: M22Affine Double -> Graphic Shape -> Graphic Shape
-    EvaldP :: Graphic Shape -> Graphic (Evaluated Shape)
-    EvaldGP :: [Graphic (Evaluated Shape)] -> Graphic (Evaluated Shape)
+    AffineT :: M22Affine Double -> Graphic (Shape Double) -> Graphic (Shape Double)
+    EvaldP :: Shape CInt -> Graphic (Shape CInt)
+    EvaldGP :: [Graphic (Shape CInt)] -> Graphic (Shape CInt)
     --At evaluation we floor at the end
 
-instance (Show a) => Show (Graphic a) where
+instance Show (Graphic (Shape Double)) where
     show (Prim s) = "Prim " ++ show s
     show (GroupPrim xs) = "GroupPrim " ++ show xs
     show (AffineT t s) = "AffineT " ++ show t ++ show s
+
+instance Show (Graphic (Shape CInt)) where
     show (EvaldP s) = "Evaluated Prim" ++ show s
     show (EvaldGP gs) = "Evaluated GroupPrim" ++ show gs
 
@@ -59,7 +67,7 @@ type Time = Double
 -- | Duration of an animation or effect. Usually measured in seconds.
 type Duration = Double
 
-data Animation = Animation Duration (Time -> Graphic Shape)
+-- data Animation = Animation Duration (Time -> Graphic Shape)
 
-staticFrame :: Duration -> Graphic Shape -> Animation
-staticFrame d g = Animation d (const g)
+-- staticFrame :: Duration -> Graphic Shape -> Animation
+-- staticFrame d g = Animation d (const g)
