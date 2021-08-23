@@ -109,7 +109,8 @@ drawDebug' gs = do
     -- old_drawGridTiles (world gs) tempVisitedSet gtp
 
     let new_grid = worldGridGraphic ws gtp
-    let new_ui = evalGraphic $ GroupPrim [new_grid]
+    let new_player = playerGraphic (player gs) gtp
+    let new_ui = evalGraphic $ GroupPrim [new_grid, new_player]
     -- dprint new_grid
 
     drawGraphic new_ui
@@ -220,6 +221,20 @@ worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim 
 
 --TODO FINISH PORTING THE REST TO THE NEW GRAPHIC API
 --------------------------------------------------------------------------------
+
+playerGraphic :: PVars -> GridTransform -> Graphic (Shape Double)
+playerGraphic p gtp = AffineT gtp $ GroupPrim [
+                                    -- playerCircleGraphic p,
+                                    -- cameraPlaneGraphic p gtp,
+                                    playerArrowGraphic p
+                                ]
+
+playerCircleGraphic :: PVars -> Graphic (Shape Double)
+playerCircleGraphic p = undefined 
+
+cameraPlaneGraphic :: PVars -> GridTransform -> Graphic (Shape Double)
+cameraPlaneGraphic p gtp = undefined 
+
 old_drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 old_drawPlayer player gtp = do
     old_drawPlayerCircle player gtp
@@ -248,6 +263,35 @@ old_drawPlayerArrow player gtp = do
 
     let (arrowVA, arrowVB, arrowVC) = blastFmap3Tupple (apDT (arrowT !*! translate (1.05*dir_len - arrowLength) 0.0)) baseArrow
     fillTriangle screenRenderer arrowVA arrowVB arrowVC arrowColor
+
+playerArrowGraphic :: PVars -> Graphic (Shape Double)
+playerArrowGraphic player = do
+    let playerT = translate (position player^._x) (position player^._y)
+    let arrowT = playerT !*! rotation (vectorAngle . direction $ player)
+                                                --                 |
+    --TODO figure out a better way to handle the scaling done here V
+    let dir_len = norm $ direction player
+    let arrowLine = Prim $ Line (V2 0 0) (V2 10 0) red
+
+    --Draw Arrow
+    --TODO assert direction is larger than the arrow length so we dont get a graphical error
+    let arrowLength = 0.25
+    let arrowWidth = 0.06
+
+    let arrowHead = Prim (FillTriangle
+                            (V2 0.0 (-arrowWidth))
+                            (V2 arrowLength 0.0)
+                            (V2 0.0 arrowWidth)
+                            arrowColor)
+
+    let arrowHeadDisplacementT = translate (1.05*dir_len - arrowLength) 0.0
+
+    let arrow = AffineT arrowT $ GroupPrim [
+                             arrowLine,
+                             AffineT arrowHeadDisplacementT arrowHead
+                          ]
+
+    arrow
 
 old_drawCameraPlane :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 old_drawCameraPlane player gtp = do
