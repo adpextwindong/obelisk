@@ -113,7 +113,6 @@ drawDebug' gs = do
     -- dprint new_grid
 
     drawGraphic new_ui
-    -- old_drawGrid ws gtp
     -- old_drawPlayer (player gs) gtp
     
     -- old_drawRaycastIntersectionSimple (player gs) gtp
@@ -218,25 +217,6 @@ worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim 
         verticalLines ws   = [Prim (Line (V2 x 0) (V2 x ws) gridColor) | x <- [0..ws]]
         horizontalLines ws = [Prim (Line (V2 0 y) (V2 ws y) gridColor) | y <- [0..ws]]
         gridLines = verticalLines worldSize ++ horizontalLines worldSize
-
---TODO REMOVE
-old_drawGrid :: SDLCanDraw m => CInt -> GridTransform -> m ()
-old_drawGrid ws t = do
-    screenRenderer <- asks cRenderer
-
-    let hlines = appDTFloor t (horizontal_lines ws) :: [Line]
-    let vlines = appDTFloor t (vertical_lines ws) :: [Line]
-
-    forM_ hlines old_drawGridLine
-    forM_ vlines old_drawGridLine 
-    where
-        vertical_lines ws = [(homoCoords (V2 x 0), homoCoords (V2 x ws)) | x <- [0..ws]]
-        horizontal_lines ws = [(homoCoords (V2 0 y), homoCoords (V2 ws y)) | y <- [0..ws]]
-
-old_drawGridLine :: (SDLCanDraw m) => Line -> m ()
-old_drawGridLine (start, end) = do
-    screenRenderer <- asks cRenderer
-    drawLine screenRenderer (dropHomoCoords start) (dropHomoCoords end) gridColor
 
 --TODO FINISH PORTING THE REST TO THE NEW GRAPHIC API
 --------------------------------------------------------------------------------
