@@ -199,7 +199,7 @@ evalGraphic s = evalGraphic' m22AffineIdD s
 evalGraphic' :: M22Affine Double -> Graphic (Shape Double) -> Graphic (Shape CInt)
 evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
 evalGraphic' t (GroupPrim gs) = EvaldGP $ fmap (evalGraphic' t) gs
-evalGraphic' t (AffineT t' s) = evalGraphic' (t' !*! t) s --TODO make sure this is the correct behavior when nesting transforms
+evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! t') s --TODO make sure this is the correct behavior when nesting transforms
 --TODO remaining patterns
 
 -- | Maps eval'd primitives to their SDLCanDraw draw calls
