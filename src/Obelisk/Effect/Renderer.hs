@@ -108,12 +108,12 @@ drawDebug' gs = do
     -- let tempVisitedSet = S.fromList tzzz  --TODO REVERT
     -- old_drawGridTiles (world gs) tempVisitedSet gtp
 
-    let new_grid = worldGridGraphic ws gtp
-    let new_player = playerGraphic (player gs) gtp
-    let new_ui = evalGraphic $ GroupPrim [new_grid, new_player]
+    let new_grid = worldGridGraphic ws
+    let new_player = playerGraphic (player gs)
+    let new_ui = AffineT gtp $ GroupPrim [new_grid, new_player]
     -- dprint new_grid
 
-    drawGraphic new_ui
+    drawGraphic $ evalGraphic new_ui
     -- old_drawPlayer (player gs) gtp
     
     -- old_drawRaycastIntersectionSimple (player gs) gtp
@@ -212,8 +212,8 @@ drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr ce
 --TODO remaining patterns
 --------------------------------------------------------------------------------
 
-worldGridGraphic :: CInt -> GridTransform -> Graphic (Shape Double)
-worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim gridLines
+worldGridGraphic :: CInt -> Graphic (Shape Double)
+worldGridGraphic ws = GroupPrim gridLines
     where
         worldSize = fromIntegral ws
         verticalLines ws   = [Prim (Line (V2 x 0) (V2 x ws) gridColor) | x <- [0..ws]]
@@ -224,14 +224,12 @@ worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim 
 --------------------------------------------------------------------------------
 
 --TODO hoist GTP application to top level
-playerGraphic :: PVars -> GridTransform -> Graphic (Shape Double)
-playerGraphic p gtp = AffineT gtp $ GroupPrim [
-                                    playerCircleGraphic p,
-                                    cameraPlaneGraphic p,
-                                    playerArrowGraphic p
-                                ]
-
-
+playerGraphic :: PVars -> Graphic (Shape Double)
+playerGraphic p = GroupPrim [
+                    playerCircleGraphic p,
+                    cameraPlaneGraphic p,
+                    playerArrowGraphic p
+                ]
 
 old_drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 old_drawPlayer player gtp = do
