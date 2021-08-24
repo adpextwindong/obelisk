@@ -165,6 +165,7 @@ drawMouseLoc t = do
 --------------------------------------------------------------------------------
 
 -- | Evaluates the Shape Graphic and applies all the transformations
+-- | Defaults the affine transformation to the identity matrix if the Graphic root isn't an AffineT
 evalGraphic :: Graphic (Shape Double) -> Graphic (Shape CInt)
 evalGraphic (AffineT t s) = evalGraphic' t s
 evalGraphic s = evalGraphic' m22AffineIdD s
@@ -186,7 +187,6 @@ drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr ce
 
 --TODO FINISH PORTING THE REST TO THE NEW GRAPHIC API
 --------------------------------------------------------------------------------
-------------------------------------------------------------------
 
 translateToPDCenter :: CInt -> CInt -> M22Affine Double
 translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
