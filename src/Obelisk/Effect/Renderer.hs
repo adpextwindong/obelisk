@@ -227,13 +227,11 @@ worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim 
 playerGraphic :: PVars -> GridTransform -> Graphic (Shape Double)
 playerGraphic p gtp = AffineT gtp $ GroupPrim [
                                     playerCircleGraphic p,
-                                    -- cameraPlaneGraphic p gtp,
+                                    cameraPlaneGraphic p,
                                     playerArrowGraphic p
                                 ]
 
 
-cameraPlaneGraphic :: PVars -> GridTransform -> Graphic (Shape Double)
-cameraPlaneGraphic p gtp = undefined 
 
 old_drawPlayer :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 old_drawPlayer player gtp = do
@@ -307,6 +305,26 @@ old_drawCameraPlane player gtp = do
 
     let rightEnd = pointToScreenSpace gtp $ ppos + (edgeLength *^ (direction player + camera_plane player))
     drawLine screenRenderer (pointToScreenSpace gtp ppos) rightEnd gridColor
+
+cameraPlaneGraphic :: PVars -> Graphic (Shape Double)
+cameraPlaneGraphic p = do
+    let ppos = position p
+    let camTail = ppos + direction p - camera_plane p
+    let camHead = ppos + direction p + camera_plane p
+
+    let planeLine = Line camTail camHead white
+
+    let edgeLength = 10.0
+    let leftEnd = ppos + (edgeLength *^ (direction p - camera_plane p))
+    let leftCamEdgeLine = Line ppos leftEnd gridColor
+
+    let rightEnd = ppos + (edgeLength *^ (direction p + camera_plane p))
+    let rightCamEdgeLine = Line ppos rightEnd gridColor
+
+    GroupPrim [
+        Prim planeLine,
+        Prim leftCamEdgeLine,
+        Prim rightCamEdgeLine]
 
 old_drawPlayerCircle :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 old_drawPlayerCircle player gtp = do
