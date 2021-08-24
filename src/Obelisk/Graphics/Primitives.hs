@@ -8,9 +8,8 @@ import Linear.V2 ( V2 )
 import Foreign.C.Types (CInt)
 
 import Obelisk.Math.Homogenous
---Consider how we should handle pixels
 
---TODO for CONSIDERATION Should these be SDL.Pos or V2 a's ???
+--Consider how we should handle pixels
 data Shape a = Line (V2 a) (V2 a) SDL.Color
              | Circle (V2 a) SDL.Radius SDL.Color
              | FillTriangle (V2 a) (V2 a) (V2 a) SDL.Color
@@ -26,8 +25,6 @@ applyAffineTransformFloor t (FillCircle center radius color) = FillCircle (mapAf
 -- Takes a regular vector, wraps into a homogeonous coordinate system for applying an affine transformation, floors it to an integer to be used in a draw call render
 mapAft :: M22Affine Double -> V2 Double -> V2 CInt
 mapAft t = dropHomoCoords . transformFloor t . homoCoords 
-
---TODO finish other patterns
 
 --             | Triangle
 --             | Rectangle
