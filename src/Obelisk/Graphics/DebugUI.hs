@@ -22,6 +22,9 @@ red = SDL.V4 maxBound 0 0 maxBound
 arrowColor :: SDL.Color
 arrowColor = SDL.V4 255 51 51 maxBound
 
+-- One thing to note about this is that all of this should be done in world coordinates
+-- The Grid to player as center local -> screen AFT will be applied as an AffineT in the renderer
+
 worldGridGraphic :: CInt -> Graphic (Shape Double)
 worldGridGraphic ws = GroupPrim gridLines
     where
