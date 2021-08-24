@@ -18,10 +18,10 @@ data Shape a = Line (V2 a) (V2 a) SDL.Color
             deriving Show
 
 applyAffineTransformFloor :: M22Affine Double -> Shape Double -> Shape CInt
-applyAffineTransformFloor t (Line start end color) = Line (f start) (f end) color
-applyAffineTransformFloor t (FillTriangle v0 v1 v2 color) = FillTriangle (f v0) (f v1) (f v3) color
+applyAffineTransformFloor t (Line start end color) = Line (f t start) (f t end) color
+applyAffineTransformFloor t (FillTriangle v0 v1 v2 color) = FillTriangle (f t v0) (f t v1) (f t v2) color
 
-f = dropHomoCoords . transformFloor t . homoCoords 
+f t = dropHomoCoords . transformFloor t . homoCoords 
 
 --TODO finish other patterns
 

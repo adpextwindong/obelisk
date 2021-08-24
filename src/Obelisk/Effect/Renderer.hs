@@ -202,12 +202,13 @@ evalGraphic' t (GroupPrim gs) = EvaldGP $ fmap (evalGraphic' t) gs
 evalGraphic' t (AffineT t' s) = evalGraphic' (t' !*! t) s --TODO make sure this is the correct behavior when nesting transforms
 --TODO remaining patterns
 
+-- | Maps eval'd primitives to their SDLCanDraw draw calls
 drawGraphic :: SDLCanDraw m => Graphic (Shape CInt) -> m ()
 drawGraphic (EvaldGP evald_xs) = mapM_ drawGraphic evald_xs
-drawGraphic (EvaldP (Line start end color)) = do
-    screenRenderer <- asks cRenderer
-    drawLine screenRenderer start end color
-drawGraphic _ = undefined
+drawGraphic (EvaldP (Line start end color))           = (\sr -> drawLine sr start end color) =<< asks cRenderer
+drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center radius color) =<< asks cRenderer
+drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
+drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
 --TODO remaining patterns
 --------------------------------------------------------------------------------
 
