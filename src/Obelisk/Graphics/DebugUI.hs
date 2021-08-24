@@ -5,6 +5,8 @@ import Linear
 import Control.Lens
 import qualified SDL
 import qualified SDL.Primitive as SDL
+import qualified Data.Set as S
+import Control.Monad.Reader 
 
 import Obelisk.State
 
@@ -22,6 +24,19 @@ red = SDL.V4 maxBound 0 0 maxBound
 arrowColor :: SDL.Color
 arrowColor = SDL.V4 255 51 51 maxBound
 
+--GodBolt Colors
+backgroundColor :: SDL.Color
+backgroundColor = SDL.V4 34 34 34 maxBound
+filledTileColor :: SDL.Color
+filledTileColor = SDL.V4 51 51 102 maxBound
+doorTileColor :: SDL.Color
+doorTileColor = SDL.V4 102 51 102 maxBound
+
+wallTypeToColor :: WallType -> SDL.Color
+wallTypeToColor FW = filledTileColor
+wallTypeToColor EW = backgroundColor
+wallTypeToColor DW = doorTileColor
+
 -- One thing to note about this is that all of this should be done in world coordinates
 -- The Grid to player as center local -> screen AFT will be applied as an AffineT in the renderer
 
@@ -32,6 +47,25 @@ worldGridGraphic ws = GroupPrim gridLines
         verticalLines ws   = [Prim (Line (V2 x 0) (V2 x ws) gridColor) | x <- [0..ws]]
         horizontalLines ws = [Prim (Line (V2 0 y) (V2 ws y) gridColor) | y <- [0..ws]]
         gridLines = verticalLines worldSize ++ horizontalLines worldSize
+
+worldGridTilesGraphic :: WorldTiles -> S.Set (V2 Int) -> Graphic (Shape Double)
+worldGridTilesGraphic world visitedSet = do
+    let ws = worldSize world 
+    
+    let inds = [(x,y) | x <- [0..ws -1], y <- [0..ws - 1]]
+    let quads = [(V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0.. fromIntegral ws - 1], y <- [0.. fromIntegral ws - 1]]
+
+    let prims = zip inds quads <&> (\((x,y), (vA,vB,vC,vD)) -> do
+            let sampleColor = wallTypeToColor $ accessMap world (fromIntegral x) (fromIntegral y)
+            let tileColor = if S.member (V2 (fromIntegral x) (fromIntegral y)) visitedSet
+                --Lighten the tiles that get rayCasted
+                --TODO this should be a graphic highlight
+                then sampleColor + V4 20 20 20 0
+                else sampleColor
+
+            [Prim $ FillTriangle vA vB vC tileColor,
+             Prim $ FillTriangle vB vC vD tileColor])
+    GroupPrim $ concat prims
 
 playerGraphic :: PVars -> Graphic (Shape Double)
 playerGraphic p = GroupPrim [

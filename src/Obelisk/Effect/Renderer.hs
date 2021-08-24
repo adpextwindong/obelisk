@@ -107,10 +107,9 @@ drawDebug' gs = do
     -- old_drawGridTiles (world gs) tempVisitedSet gtp
 
     let new_grid = DUI.worldGridGraphic ws
+    let new_gridTiles = DUI.worldGridTilesGraphic (world gs) visitedSet
     let new_player = DUI.playerGraphic (player gs)
-    let new_ui = AffineT gtp $ GroupPrim [new_grid, new_player]
-    -- dprint new_grid
-
+    let new_ui = AffineT gtp $ GroupPrim [new_gridTiles, new_grid, new_player]
     drawGraphic $ evalGraphic new_ui
     
     -- old_drawRaycastIntersectionSimple (player gs) gtp
@@ -123,28 +122,6 @@ drawDebug' gs = do
 rayCount = 1 --TODO FIXME REVERT
 
 type GridTransform = M22Affine Double
-
--- TODO gridTilesGraphic :: WorldTiles -> S.Set (V2 Int) -> GridTransform -> Graphic Shape
-
-old_drawGridTiles :: (SDLCanDraw m) => WorldTiles -> S.Set (V2 Int) -> GridTransform -> m ()
-old_drawGridTiles world visitedSet t = do
-    let ws = worldSize world
-    screenRenderer <- asks cRenderer 
-
-    let projectVertToPD = dropHomoCoords . fmap floor . (t !*) . homoCoords . fmap fromIntegral
-    let inds = [(x,y) | x <- [0..ws -1], y <- [0..ws - 1]]
-    let quads = [blastFmap4Tupple projectVertToPD (V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0..ws - 1], y <- [0..ws - 1]] :: [(SDL.Pos,SDL.Pos,SDL.Pos,SDL.Pos)]
-
-    forM_ (zip inds quads) (\((x,y),(vA,vB,vC,vD)) -> do
-        let sampleColor = wallTypeToColor $ accessMap world (fromIntegral y) (fromIntegral x)
-        let tileColor = if S.member (V2 (fromIntegral x) (fromIntegral y)) visitedSet
-                        --Lighten the tiles that get rayCasted
-                        then sampleColor + V4 20 20 20 0
-                        else sampleColor 
-
-        fillTriangle screenRenderer vA vB vC tileColor
-        fillTriangle screenRenderer vB vC vD tileColor
-        )
 
 old_drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
 old_drawRaycastIntersectionSimple player t = do
