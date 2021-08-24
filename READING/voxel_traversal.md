@@ -6,3 +6,6 @@ Gyurgyik and Kellison do a treatment on [Amanatides & Woo's "fast voxel traversa
 [Smit's algorithm](Smits99EfficiencyIssuesForRayTracing.pdf)
 
 "Safer" implementation refers to [Williams05](Williams05AnefficientAndRobustRayBoxIntersectionAlgorithm.pdf)
+
+
+[Jack Kelly blog on a raycaster in haskell](http://jackkelly.name/blog/archives/2019/03/03/learning_to_raycast_in_haskell/index.html)
