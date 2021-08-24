@@ -223,15 +223,14 @@ worldGridGraphic ws worldGridTransform = AffineT worldGridTransform $ GroupPrim 
 --TODO FINISH PORTING THE REST TO THE NEW GRAPHIC API
 --------------------------------------------------------------------------------
 
+--TODO hoist GTP application to top level
 playerGraphic :: PVars -> GridTransform -> Graphic (Shape Double)
 playerGraphic p gtp = AffineT gtp $ GroupPrim [
-                                    -- playerCircleGraphic p,
+                                    playerCircleGraphic p,
                                     -- cameraPlaneGraphic p gtp,
                                     playerArrowGraphic p
                                 ]
 
-playerCircleGraphic :: PVars -> Graphic (Shape Double)
-playerCircleGraphic p = undefined 
 
 cameraPlaneGraphic :: PVars -> GridTransform -> Graphic (Shape Double)
 cameraPlaneGraphic p gtp = undefined 
@@ -318,6 +317,13 @@ old_drawPlayerCircle player gtp = do
     let circle_pos = dropHomoCoords . fmap floor . (t !*) . homoCoords $ V2 0.0 0.0
     let circle_radius = 3
     fillCircle screenRenderer circle_pos circle_radius white
+
+playerCircleGraphic :: PVars -> Graphic (Shape Double)
+playerCircleGraphic p = do
+    let px = position p ^._x
+    let py = position p ^._y
+    let circle_radius = 3
+    AffineT (translate px py) $ Prim (Circle (V2 0.0 0.0) circle_radius white)
 
 ------------------------------------------------------------------
 
