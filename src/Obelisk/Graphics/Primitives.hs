@@ -49,7 +49,7 @@ data Graphic a where
     Prim :: Shape Double -> Graphic (Shape Double)
     GroupPrim :: [Graphic (Shape Double)] -> Graphic (Shape Double)
     -- ColorPrim :: ColorEffect -> Graphic Shape -> Graphic Shape
-    AffineT :: M22Affine Double -> Graphic (Shape Double) -> Graphic (Shape Double)
+    AffineT :: M22Affine Double -> Graphic a -> Graphic a
     EvaldP :: Shape CInt -> Graphic (Shape CInt)
     EvaldGP :: [Graphic (Shape CInt)] -> Graphic (Shape CInt)
     --At evaluation we floor at the end
