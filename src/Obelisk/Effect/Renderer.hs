@@ -14,6 +14,8 @@ import Data.Bool
 import qualified Data.Set as S
 import qualified Data.Text as T
 
+import qualified Language.Haskell.Interpreter as I
+
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Debug
@@ -27,6 +29,7 @@ import Obelisk.Engine.Raycast
 
 import Obelisk.Graphics.Primitives
 import qualified Obelisk.Graphics.DebugUI as DUI
+
 
 --TODO this stuff is too low level for the renderer, we should move this shit out of here
 --once we're done with the debug UI we can have a similar layer for the actual game
@@ -80,7 +83,7 @@ fillBackground' = do
     surfaceFillScreenRect surface backgroundColor
 
 
-drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m) => Vars -> m ()
+drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m, I.MonadInterpreter m) => Vars -> m ()
 drawDebug' gs = do
     let ws = worldSize . world $ gs
     screenWidth <- asks cScreenWidth
@@ -111,7 +114,8 @@ drawDebug' gs = do
     let new_player = DUI.playerGraphic (player gs)
     let new_ui = AffineT gtp $ GroupPrim [new_gridTiles, new_grid, new_player]
     drawGraphic $ evalGraphic new_ui
-    
+
+    I.eval "3 + 5"
     -- old_drawRaycastIntersectionSimple (player gs) gtp
     -- old_drawRaycastIntersections (player gs) gtp
     -- _ <- drawMouseLoc gtp

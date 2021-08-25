@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
-
+{-# LANGUAGE StandaloneDeriving #-}
 module Obelisk where
 
 import Obelisk.Math.Homogenous
@@ -17,7 +17,6 @@ import Obelisk.Wrapper.SDLFont
 
 import Control.Monad.Reader
 import Control.Monad.State
-import Control.Monad.Catch
 
 import Control.Concurrent (threadDelay)
 import Foreign.C.Types ( CInt )
@@ -29,6 +28,9 @@ import qualified SDL.Video.Renderer as SDL
 
 import qualified SDL.Font
 
+import qualified Language.Haskell.Interpreter as I
+import Control.Monad.Catch
+import Control.Exception as ControlException
 
 import Data.Word
 import Linear
@@ -84,11 +86,19 @@ main = do
     SDL.destroyWindow window
     SDL.quit
 
-newtype Obelisk a = Obelisk (ReaderT Config (StateT Vars IO) a)
-    deriving (Functor, Applicative, Monad, MonadReader Config, MonadState Vars, MonadIO, MonadThrow, MonadCatch)
+newtype Obelisk a = Obelisk (ReaderT Config (StateT Vars (I.InterpreterT IO)) a)
+    deriving (Functor, Applicative, Monad, MonadReader Config, MonadState Vars, MonadIO, MonadThrow, MonadCatch, MonadMask)
 
-runObelisk :: Config -> Vars -> Obelisk a -> IO a
-runObelisk config v (Obelisk m) = evalStateT (runReaderT m config) v
+-- newtype TESTObelisk a = TESTObelisk (ReaderT Config (StateT Vars (I.InterpreterT IO)) a)
+
+runObelisk :: Config -> Vars -> Obelisk a -> IO (Either I.InterpreterError a)
+-- runObelisk config v (Obelisk m) = evalStateT (runReaderT m config) v
+runObelisk config v (Obelisk m) = I.runInterpreter (evalStateT (runReaderT m config) v)
+
+instance I.MonadInterpreter Obelisk where
+    fromSession = undefined
+    modifySessionRef = undefined
+    runGhc = undefined
 
 instance SDLRenderer Obelisk where
     updateWindowSurface = updateWindowSurface'
