@@ -47,21 +47,23 @@ mapAft t = dropHomoCoords . transformFloor t . homoCoords
     
 data Graphic a where
     Prim :: Shape Double -> Graphic (Shape Double)
-    GroupPrim :: [Graphic (Shape Double)] -> Graphic (Shape Double)
+    GroupPrim :: String -> [Graphic (Shape Double)] -> Graphic (Shape Double)
     -- ColorPrim :: ColorEffect -> Graphic Shape -> Graphic Shape
     AffineT :: M22Affine Double -> Graphic a -> Graphic a
     EvaldP :: Shape CInt -> Graphic (Shape CInt)
-    EvaldGP :: [Graphic (Shape CInt)] -> Graphic (Shape CInt)
+    EvaldGP :: String -> [Graphic (Shape CInt)] -> Graphic (Shape CInt)
     --At evaluation we floor at the end
 
+anonGP = GroupPrim ""
+anonEGP = EvaldGP ""
 instance Show (Graphic (Shape Double)) where
     show (Prim s) = "Prim " ++ show s
-    show (GroupPrim xs) = "GroupPrim " ++ show xs
+    show (GroupPrim label xs) = "GroupPrim "++ show label ++ show xs
     show (AffineT t s) = "AffineT " ++ show t ++ show s
 
 instance Show (Graphic (Shape CInt)) where
     show (EvaldP s) = "Evaluated Prim" ++ show s
-    show (EvaldGP gs) = "Evaluated GroupPrim" ++ show gs
+    show (EvaldGP label gs) = "Evaluated GroupPrim" ++ show label ++ show gs
 
 --TODO COLOR, EFFECTS, ANIMATIONS, SCENES LATER
 

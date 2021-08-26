@@ -109,7 +109,11 @@ drawDebug' gs = do
     let new_grid = DUI.worldGridGraphic ws
     let new_gridTiles = DUI.worldGridTilesGraphic (world gs) visitedSet
     let new_player = DUI.playerGraphic (player gs)
-    let new_ui = AffineT gtp $ GroupPrim [new_gridTiles, new_grid, new_player]
+    let new_midline_intersections = DUI.midlineRaycastIntersectionsGraphic (player gs)
+    
+    let new_ui = AffineT gtp $ GroupPrim "Debug UI" [new_gridTiles, new_grid, new_player,
+            new_midline_intersections]
+
     drawGraphic $ evalGraphic new_ui
     
     -- old_drawRaycastIntersectionSimple (player gs) gtp
@@ -122,27 +126,6 @@ drawDebug' gs = do
 rayCount = 1 --TODO FIXME REVERT
 
 type GridTransform = M22Affine Double
-
-old_drawRaycastIntersectionSimple :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-old_drawRaycastIntersectionSimple player t = do
-    let intersections = take 10 $ shootRay player (position player + direction player)
-    let intersectionPosXs = fmap (pointToScreenSpace t) $ intersectionPositions $ fmap fst intersections
-
-    screenRenderer <- asks cRenderer
-    forM_ intersectionPosXs (\pos -> do
-            circle screenRenderer pos 3 yellow
-        )
-
-old_drawRaycastIntersections :: (SDLCanDraw m) => PVars -> GridTransform -> m ()
-old_drawRaycastIntersections player t = do
-    -- let rayCount = 5 --TODO REMOVEME
-    let intersectionLimit = 10 --TODO REMOVEME
-    let rayPathIntersections = fmap ((fmap (pointToScreenSpace t). intersectionPositions . fmap fst) . take intersectionLimit) (genRays rayCount player)
-
-    screenRenderer <- asks cRenderer
-    forM_ rayPathIntersections (\intersections -> do
-        forM_ intersections (\pos -> do
-            circle screenRenderer pos 3 yellow))
 
 drawMouseLoc :: (SDLCanDraw m, SDLInput m, SDLFont m) => GridTransform -> m (Maybe (SDL.Rectangle CInt))
 drawMouseLoc t = do
@@ -173,12 +156,12 @@ evalGraphic s = evalGraphic' m22AffineIdD s
 -- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
 evalGraphic' :: M22Affine Double -> Graphic (Shape Double) -> Graphic (Shape CInt)
 evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
-evalGraphic' t (GroupPrim gs) = EvaldGP $ fmap (evalGraphic' t) gs
+evalGraphic' t (GroupPrim label gs) = EvaldGP label $ fmap (evalGraphic' t) gs
 evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! t') s --TODO make sure this is the correct behavior when nesting transforms
 
 -- | Maps eval'd primitives to their SDLCanDraw draw calls
 drawGraphic :: SDLCanDraw m => Graphic (Shape CInt) -> m ()
-drawGraphic (EvaldGP evald_xs) = mapM_ drawGraphic evald_xs
+drawGraphic (EvaldGP _ evald_xs) = mapM_ drawGraphic evald_xs
 drawGraphic (EvaldP (Line start end color))           = (\sr -> drawLine sr start end color) =<< asks cRenderer
 drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center radius color) =<< asks cRenderer
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer

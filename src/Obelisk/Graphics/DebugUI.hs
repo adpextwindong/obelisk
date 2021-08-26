@@ -13,7 +13,8 @@ import Obelisk.State
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate )
 import Obelisk.Graphics.Primitives
-
+import Obelisk.Engine.Raycast
+import Obelisk.Engine.DDA
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -23,6 +24,13 @@ red :: SDL.Color
 red = SDL.V4 maxBound 0 0 maxBound
 arrowColor :: SDL.Color
 arrowColor = SDL.V4 255 51 51 maxBound
+
+blue :: SDL.Color
+blue = SDL.V4 0 0 maxBound maxBound
+black :: SDL.Color
+black = SDL.V4 0 0 0 0
+yellow :: SDL.Color
+yellow = SDL.V4 255 255 0 maxBound
 
 --GodBolt Colors
 backgroundColor :: SDL.Color
@@ -41,7 +49,7 @@ wallTypeToColor DW = doorTileColor
 -- The Grid to player as center local -> screen AFT will be applied as an AffineT in the renderer
 
 worldGridGraphic :: CInt -> Graphic (Shape Double)
-worldGridGraphic ws = GroupPrim gridLines
+worldGridGraphic ws = GroupPrim "Grid Lines" gridLines
     where
         worldSize = fromIntegral ws
         verticalLines ws   = [Prim (Line (V2 x 0) (V2 x ws) gridColor) | x <- [0..ws]]
@@ -65,10 +73,10 @@ worldGridTilesGraphic world visitedSet = do
 
             [Prim $ FillTriangle vA vB vC tileColor,
              Prim $ FillTriangle vB vC vD tileColor])
-    GroupPrim $ concat prims
+    GroupPrim "World Grid Tiles" $ concat prims
 
 playerGraphic :: PVars -> Graphic (Shape Double)
-playerGraphic p = GroupPrim [
+playerGraphic p = GroupPrim "Player Graphic" [
                     playerCircleGraphic p,
                     cameraPlaneGraphic p,
                     playerArrowGraphic p
@@ -96,7 +104,7 @@ playerArrowGraphic player = do
 
     let arrowHeadDisplacementT = translate (1.05*dir_len - arrowLength) 0.0
 
-    let arrow = AffineT arrowT $ GroupPrim [
+    let arrow = AffineT arrowT $ GroupPrim "Player Arrow" [
                              arrowLine,
                              AffineT arrowHeadDisplacementT arrowHead
                           ]
@@ -118,7 +126,7 @@ cameraPlaneGraphic p = do
     let rightEnd = ppos + (edgeLength *^ (direction p + camera_plane p))
     let rightCamEdgeLine = Line ppos rightEnd gridColor
 
-    GroupPrim [
+    GroupPrim "Camera Graphic" [
         Prim planeLine,
         Prim leftCamEdgeLine,
         Prim rightCamEdgeLine]
@@ -130,3 +138,11 @@ playerCircleGraphic p = do
     let circle_radius = 3
     AffineT (translate px py) $ Prim (Circle (V2 0.0 0.0) circle_radius white)
 
+--Raycasting Diagnostics
+midlineRaycastIntersectionsGraphic :: PVars -> Graphic (Shape Double)
+midlineRaycastIntersectionsGraphic player = do
+    --TODO we need a function to take while it doesn't hit a wall
+    let intersections = take 10 $ shootRay player (position player + direction player)
+    let intersectionXS = intersectionPositions $ fmap fst intersections
+
+    GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersectionXS
