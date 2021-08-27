@@ -1,6 +1,9 @@
 module Obelisk.Engine.DDA2 where
 
 import Linear
+import Linear.V2
+import Control.Lens
+import Data.Functor
 
 --AmanatidesWoo Algorithmn
 --We need to get actual intersection positions
@@ -34,6 +37,7 @@ computeTmax px vx = if vx < 0
                     then (px - (fromIntegral (floor px))) / vx
                     else (fromIntegral (ceiling px) - px) / vx
 
+firstIntersection :: Double -> Double -> Double
 firstIntersection px vx = if vx < 0
                           then fromIntegral $ floor px
                           else fromIntegral $ ceiling px
@@ -45,3 +49,34 @@ signToPlusNegOne :: Double -> Double
 signToPlusNegOne x = if x < 0
                      then -1
                      else 1
+
+----------------------------------------------------------------
+
+naivePath :: V2 Double -> V2 Double -> [V2 Double]
+naivePath player direction = undefined
+
+-- All x's will end up at whole numbers on the rayline
+-- TODO make a test to make sure these lay on the line
+-- TODO reuse the code that handles correct flooring/rounding for conversion to tile indexes
+verticalIntersections :: V2 Double -> V2 Double -> [V2 Double]
+verticalIntersections p@(V2 px _) v@(V2 vx _) = vert_rayPoints
+    where
+        eInds = evalInds px vx
+        vert_rayPoints = fmap ((p +). (v ^*)) eInds
+
+-- All y's will end up at whole numbers on the rayline
+horizontalIntersections :: V2 Double -> V2 Double -> [V2 Double]
+horizontalIntersections p@(V2 _ py) v@(V2 _ vy) = undefined --TODO
+
+absDeltaFirst :: Double -> Double -> Double
+absDeltaFirst px vx = if vx < 0
+                   then px - (fromIntegral (floor px))
+                   else (fromIntegral (ceiling px)) - px
+
+--Eval the ray at these points and add player position to get the intersection points
+evalInds px vx = (\absf -> [absf, (absf + 1.0) ..]) (absDeltaFirst px vx)
+
+mergeIntersections :: V2 Double -> [V2 Double] -> [V2 Double] -> [V2 Double]
+mergeIntersections player (x:xs) (y:ys) = if distance player x < distance player y
+                                          then x : mergeIntersections player xs (y:ys)
+                                          else y : mergeIntersections player (x:xs) ys
