@@ -6,6 +6,7 @@ import Control.Lens
 import Data.Functor
 
 import Obelisk.Graphics.Primitives
+import Obelisk.Graphics.DebugUI
 
 --AmanatidesWoo Algorithmn
 --We need to get actual intersection positions
@@ -68,7 +69,10 @@ verticalIntersections p@(V2 px _) v@(V2 vx _) = vert_rayPoints
 
 -- All y's will end up at whole numbers on the rayline
 horizontalIntersections :: V2 Double -> V2 Double -> [V2 Double]
-horizontalIntersections p@(V2 _ py) v@(V2 _ vy) = undefined --TODO
+horizontalIntersections p@(V2 px py) v@(V2 _ vy) = horz_rayPoints --TODO
+    where
+        eInds = evalInds py vy
+        horz_rayPoints = fmap ((p +). ((swapScale v) ^*)) eInds
 
 absDeltaFirst :: Double -> Double -> Double
 absDeltaFirst px vx = if vx < 0
@@ -83,4 +87,19 @@ mergeIntersections player (x:xs) (y:ys) = if distance player x < distance player
                                           then x : mergeIntersections player xs (y:ys)
                                           else y : mergeIntersections player (x:xs) ys
 
-tgp =  GroupPrim "" $ (\c -> Prim (Circle c 1 (V4 255 255 255 255))) <$> [V2 x y |  x <- [0..10], y <- [0..10]]
+swapScale v@(V2 _ y) = (1.0/y) *^ v
+-- tgp =  GroupPrim "" $ (\c -> Prim (Circle c 1 (V4 255 255 255 255)))
+            -- <$> [V2 x y |  x <- [0..10], y <- [0..10]]
+
+
+p = V2 0.25 0.66
+-- p = V2 0 0
+r = V2 1 2
+
+tgp = anonGP [
+    worldGridGraphic 10,
+    Prim $ Circle p 1 white,
+    anonGP $ take 5 $ (\c -> Prim $ Circle c 1 blue) <$> verticalIntersections p r,
+    anonGP $ take 5 $ (\c -> Prim $ Circle c 1 red) <$> horizontalIntersections p r]
+
+--TODO determine set of visited voxels
