@@ -14,6 +14,7 @@ import Obelisk.Manager.Input
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
+import Obelisk.Graphics.Primitives
 
 import Control.Monad.Reader
 import Control.Monad.State
@@ -84,6 +85,39 @@ main = do
     SDL.destroyWindow window
     SDL.quit
 
+grender :: Graphic (Shape Double) -> IO ()
+grender g = do
+    SDL.initialize [SDL.InitVideo]
+    SDL.Font.initialize
+    let title = "Graphic Renderer Test"
+
+    font <- SDL.Font.load "resources/arial.ttf" 16
+    window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
+    SDL.showWindow window
+    screenSurface <- SDL.getWindowSurface window
+    SDL.updateWindowSurface window
+
+    screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
+
+    let hs = (window, screenSurface, screenRenderer)
+
+    let cfg = Config {
+                cWindow = window,
+                cRenderer = screenRenderer,
+                cSurface = screenSurface,
+                cScreenWidth = initialScreenWidth,
+                cScreenHeight = initialScreenHeight,
+                cFont = font
+            }
+
+    runObelisk cfg initVars (grenderLoop g)
+
+    SDL.Font.free font
+    SDL.freeSurface screenSurface
+    SDL.destroyWindow window
+    SDL.quit
+
+
 newtype Obelisk a = Obelisk (ReaderT Config (StateT Vars IO) a)
     deriving (Functor, Applicative, Monad, MonadReader Config, MonadState Vars, MonadIO, MonadThrow, MonadCatch)
 
@@ -116,6 +150,7 @@ instance Renderer Obelisk where
     drawScreen = drawScreen'
     fillBackground = fillBackground'
     drawDebug = drawDebug'
+    drawGraphicDebug = drawGraphicDebug'
 
 instance Debug Obelisk where
     printGS = printGS'

@@ -60,6 +60,7 @@ class Monad m => Renderer m where
     drawScreen :: m ()
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
+    drawGraphicDebug :: Graphic (Shape Double) -> m ()
 
 --TODO consider SDLFont being in this
 type SDLCanDraw m = (SDLRenderer m, MonadReader Config m)
@@ -79,25 +80,19 @@ fillBackground' = do
     surface <- asks cSurface
     surfaceFillScreenRect surface backgroundColor
 
+drawGraphicDebug' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic (Shape Double) -> m ()
+drawGraphicDebug' g = do
+    -- Grid To Player as center Local to Screen Affine Transformation
+    let gtp = centerScreenOnWorldGrid 10 640 480
+    drawGraphic $ evalGraphic $ AffineT gtp g
 
 drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m) => Vars -> m ()
 drawDebug' gs = do
     let ws = worldSize . world $ gs
     screenWidth <- asks cScreenWidth
     screenHeight <- asks cScreenHeight
-
-    let zoomLimiter = 0.95
-    let zoomFactor = fromIntegral screenHeight / fromIntegral ws * zoomLimiter
-
-    --TODO rotation focus mechanism
-    let rotationFactor = bool 0.0 (vectorAngle. direction $ player gs) $ rotateToPView gs
-    let focus = bool Nothing (Just (position . player $ gs)) $ rotateToPView gs
-
-    let tPDCenter = translateToPDCenter screenWidth screenHeight
-
     -- Grid To Player as center Local to Screen Affine Transformation
-    let gtp = gridT ws zoomFactor rotationFactor focus tPDCenter
-    --dprint gtp
+    let gtp = centerScreenOnWorldGrid ws screenWidth screenHeight
 
     let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
     -- old_drawGridTiles (world gs) visitedSet gtp --TODO REVERT
@@ -203,3 +198,17 @@ pdToWorldT gridTransform = inv33 gridTransform
 
 pdToWorldPos t (SDL.P pos) = dropHomoCoords . ((pdToWorldT t) !*) . homoCoords $ pos
 pdToGridPos t (SDL.P pos) = dropHomoCoords . (fmap floor) . ((pdToWorldT t) !*) . homoCoords $ pos
+
+-- Grid To Player as center Local to Screen Affine Transformation
+--The gtp
+centerScreenOnWorldGrid :: CInt -> CInt -> CInt -> GridTransform
+centerScreenOnWorldGrid ws screenWidth screenHeight = gridT ws zoomFactor rotationFactor focus tPDCenter 
+    where
+    --TODO rotation focus mechanism
+    -- let rotationFactor = bool 0.0 (vectorAngle. direction $ player gs) $ rotateToPView gs
+    -- let focus = bool Nothing (Just (position . player $ gs)) $ rotateToPView gs
+        zoomLimiter = 0.95
+        zoomFactor = fromIntegral screenHeight / fromIntegral ws * zoomLimiter
+        rotationFactor = 0.0
+        focus = Nothing
+        tPDCenter = translateToPDCenter screenWidth screenHeight

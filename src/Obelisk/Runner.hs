@@ -16,7 +16,27 @@ import Obelisk.Wrapper.SDLInput
 import Obelisk.Engine.Input
 import Obelisk.Manager.Input
 import Obelisk.Math.Homogenous
+import Obelisk.Graphics.Primitives
 
+grenderLoop :: ( MonadReader Config m
+            , MonadState Vars m
+            , SDLInput m
+            , HasInput m
+            , Debug m
+            , Renderer m ) => Graphic (Shape Double) -> m ()
+grenderLoop g = do
+    updateInput
+    clearScreen
+    fillBackground
+
+    input <- getInput
+    let quitSignal = iQuit input
+
+    drawGraphicDebug g
+    drawScreen
+    fillBackground
+
+    unless quitSignal (grenderLoop g)
 
 mainLoop :: ( MonadReader Config m
             , MonadState Vars m

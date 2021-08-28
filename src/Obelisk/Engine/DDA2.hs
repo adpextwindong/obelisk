@@ -5,6 +5,8 @@ import Linear.V2
 import Control.Lens
 import Data.Functor
 
+import Obelisk.Graphics.Primitives
+
 --AmanatidesWoo Algorithmn
 --We need to get actual intersection positions
 
@@ -80,3 +82,5 @@ mergeIntersections :: V2 Double -> [V2 Double] -> [V2 Double] -> [V2 Double]
 mergeIntersections player (x:xs) (y:ys) = if distance player x < distance player y
                                           then x : mergeIntersections player xs (y:ys)
                                           else y : mergeIntersections player (x:xs) ys
+
+tgp =  GroupPrim "" $ (\c -> Prim (Circle c 1 (V4 255 255 255 255))) <$> [V2 x y |  x <- [0..10], y <- [0..10]]
