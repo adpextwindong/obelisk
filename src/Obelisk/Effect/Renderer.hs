@@ -109,6 +109,7 @@ drawDebug' gs = do
     let new_ui = AffineT gtp $ GroupPrim "Debug UI" [new_gridTiles, new_grid, new_player,
             new_midline_intersections]
 
+    -- dprint $ vectorAngle $ direction (player gs)
     drawGraphic $ evalGraphic new_ui
     
     -- old_drawRaycastIntersectionSimple (player gs) gtp

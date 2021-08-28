@@ -69,6 +69,8 @@ boxMap = WorldTiles map 10
                  take 10 rFW
                 ]
 
+emptyMap = WorldTiles (listArray (0, 99) rEW) 10
+
 data Vars = Vars {
                 player :: PVars,
                 world :: WorldTiles,
