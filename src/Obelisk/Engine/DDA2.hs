@@ -99,6 +99,11 @@ horizontalIntersections p r = yForm p r
 -- xStep r t = t *^ r ^* (1/ abs (r^._x))
 
 --TODO test these forms with rays in all directions
+
+{-
+$\hat{p} - \Delta\hat{v} = < I , \_>$
+Find the integer solutions of this form
+-}
 xForm p r = [((i - p^._x)/(r^._x)) *^ r + p | i <- fmap (signToPlusNegOne (r^._x) *) [1.00..10.0]]
 yForm p r = [((i - p^._y)/(r^._y)) *^ r + p | i <- fmap (signToPlusNegOne (r^._y) *) [1.00..10.0]]
 
