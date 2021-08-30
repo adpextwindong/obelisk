@@ -103,8 +103,16 @@ horizontalIntersections p r = yForm p r
 {-
 $\hat{p} - \Delta\hat{v} = < I , \_>$
 Find the integer solutions of this form
+
+px + delta*vx = Ix
+delta * vx = Ix - Px
+delta = (Ix - Px) / Vx
+
+We compute delta for every i'th intersection on the grid we're looking for and scale r and add it to the player's original position
 -}
+xForm :: V2 Double -> V2 Double -> [V2 Double]
 xForm p r = [((i - p^._x)/(r^._x)) *^ r + p | i <- fmap (signToPlusNegOne (r^._x) *) [1.00..10.0]]
+yForm :: V2 Double -> V2 Double -> [V2 Double]
 yForm p r = [((i - p^._y)/(r^._y)) *^ r + p | i <- fmap (signToPlusNegOne (r^._y) *) [1.00..10.0]]
 
 
