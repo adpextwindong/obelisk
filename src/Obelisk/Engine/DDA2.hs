@@ -119,6 +119,9 @@ yForm p r = [((i - p^._y)/(r^._y)) *^ r + p | i <- fmap (signToPlusNegOne (r^._y
 --TODO it might be simpler to utilize Linear.Affine
 --We could write a property test that says these points all trivially appear to be on the ray when affine translated by the player point?
 --At this point lets start using QuickCheck or something to start testing this stuff
+--NOTE: Also make use of Linear.Epsilon
+
+
 
 -- verticalPoints :: V2 Double -> V2 Double -> [V2 Double]
 
