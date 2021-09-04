@@ -2,6 +2,11 @@ module Obelisk.Engine.DDA2 where
 
 import Linear
 import Linear.V2
+import Linear.Vector
+import Linear.Metric
+import Linear.Epsilon
+import Linear.Affine
+
 import Control.Lens
 import Data.Functor
 import qualified Data.Set as S
@@ -10,6 +15,7 @@ import Obelisk.Graphics.Primitives
 import Obelisk.Graphics.DebugUI
 import Obelisk.State (emptyMap)
 import SDL.Primitive (horizontalLine)
+import Obelisk.Math.Homogenous
 
 --AmanatidesWoo Algorithmn
 --We need to get actual intersection positions
@@ -121,8 +127,17 @@ yForm p r = [((i - p^._y)/(r^._y)) *^ r + p | i <- fmap (signToPlusNegOne (r^._y
 --At this point lets start using QuickCheck or something to start testing this stuff
 --NOTE: Also make use of Linear.Epsilon
 
+onRayRatio :: V2 Double -> V2 Double -> V2 Double -> Bool
+onRayRatio ray player point = v2RatiosSame ray (point - player) && dir ray == dir diffRay
+    where diffRay = point - player
+          dir = fmap signToPlusNegOne
 
+--TODO pitfall handling
+v2RatiosSame (V2 a b) (V2 c d) = a/b == c/d
 
+tr = V2 1 1 :: V2 Double
+tp = V2 2 2 :: V2 Double
+tXp = V2 5 5 :: V2 Double
 -- verticalPoints :: V2 Double -> V2 Double -> [V2 Double]
 
 deltaFirst :: Double -> Double -> Double 
