@@ -13,3 +13,6 @@ Ideally I would like to make a more functional version that works that can be us
 [Dino-Rush](https://github.com/jxv/dino-rush)
 
 [Dino-Rush blog](http://jxv.io/blog/2018-02-28-A-Game-in-Haskell.html)
+
+## Raycasting math
+[This write up appeared recently](https://www.reddit.com/r/programming/comments/pmsyag/so_i_published_my_first_article_on_ray_casting_in/)
