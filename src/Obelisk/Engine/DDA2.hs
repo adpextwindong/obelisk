@@ -121,6 +121,43 @@ xForm p r = [((i - p^._x)/(r^._x)) *^ r + p | i <- fmap (signToPlusNegOne (r^._x
 yForm :: V2 Double -> V2 Double -> [V2 Double]
 yForm p r = [((i - p^._y)/(r^._y)) *^ r + p | i <- fmap (signToPlusNegOne (r^._y) *) [1.00..10.0]]
 
+--Given the Player and the Ray, compute the XIntersections along the path of the ray from the player.
+nXForm :: V2 Double -> V2 Double -> [V2 Double]
+nXForm p r = ((p +) . (*^ nr)) <$> stepScales
+    where
+        nr = normalize r
+        firstStep = deltaFirst (p^._x) (nr ^._x)
+        stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- [0.0 .. 10.0]]
+
+testNXForm :: [V2 Double] -> [Bool]
+testNXForm = \xs -> tpNXForm <$> xs
+
+txs = nXForm (V2 0.3333 0.42) (V2 2 2)
+tpNXForm = (\v -> v^._x == fromIntegral (round (v^._x)))
+
+t_xValsChecked = (\v -> v^._x) <$> txs
+--NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Double value for distance handling.
+--5.000000000000001
+--28.999999999999996
+
+{-TODO maybe Ray should be
+
+data Ray = V2 Double
+         | YAxis
+         | XAxis
+
+This way we can nicely handle X = 0, Y = 0 just incase.
+-}
+
+--TODO test with different rays and positions.
+--TODO test that nYForm and nXForm gives intersections on gridlines along the ray from the player instead of bullshit.
+nYForm :: V2 Double -> V2 Double -> [V2 Double]
+nYForm p r = ((p +) . (*^ nr)) <$> stepScales
+    where
+        nr = normalize r
+        firstStep = deltaFirst (p^._y) (nr ^._y)
+        stepScales = [(firstStep + y) / (abs (nr ^._y)) | y <- [0.0 .. 10.0]]
+
 
 --TODO it might be simpler to utilize Linear.Affine
 --We could write a property test that says these points all trivially appear to be on the ray when affine translated by the player point?
