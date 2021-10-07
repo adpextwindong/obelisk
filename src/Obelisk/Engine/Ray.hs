@@ -1,4 +1,4 @@
-module Obelisk.Engine.DDA2 where
+module Obelisk.Engine.Ray where
 
 import Linear
 import Linear.V2

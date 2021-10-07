@@ -20,7 +20,7 @@ library
       Obelisk.Effect.Renderer
       Obelisk.Effect.Debug
       Obelisk.Engine.DDA
-      Obelisk.Engine.DDA2
+      Obelisk.Engine.Ray
       Obelisk.Engine.Raycast
       Obelisk.Engine.Input
       Obelisk.Graphics.Primitives
