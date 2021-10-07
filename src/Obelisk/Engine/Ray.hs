@@ -103,6 +103,8 @@ TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
 --TODO determine set of visited voxels
 
 --Utilize the new Ray
+--TODO make a version that takes in the world so we don't waste time allocing for fat ass lists
+--TODO benchmark this
 genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
 genRays screenWidth player worldSize = fmap (shootRay' worldSize (position player)) rayHeads
     where
@@ -117,9 +119,6 @@ visitedPositions gs steps = S.fromList $ take takeLength $ rayVisitedIndexes
 
 lenPassthrough :: [WallType] -> Int
 lenPassthrough = length . takeWhile (/= FW)
-
--- visitedIndexes :: RayPath -> [V2 Int]
--- visitedIndexes = fmap (fmap floor) . intersectionPositions . fmap fst
 
 wallSamples :: Vars -> [V2 Int] -> [WallType]
 wallSamples gs [] = []
