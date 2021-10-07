@@ -38,7 +38,7 @@ xRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
-        stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- [0.0 .. 10.0]]
+        stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- [0.0 .. 10.0]] --TODO unbound this once everything is kosher so it can scale to any worldsize
 
 
 yRayGridIntersections :: V2 Double -> V2 Double -> [V2 Double]
@@ -46,7 +46,7 @@ yRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
-        stepScales = [(firstStep + y) / (abs (nr ^._y)) | y <- [0.0 .. 10.0]]
+        stepScales = [(firstStep + y) / (abs (nr ^._y)) | y <- [0.0 .. 10.0]] --TODO unbound this once everythign is kosher so it can scale to any worldsize
 
 deltaFirst :: Double -> Double -> Double 
 deltaFirst px vx = if vx < 0
