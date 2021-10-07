@@ -22,8 +22,7 @@ import Obelisk.Math.Homogenous
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
-import Obelisk.Engine.DDA
-import Obelisk.Engine.Raycast (visitedPositions, genRays)
+import Obelisk.Engine.Ray (visitedPositions, genRays)
 
 import Obelisk.Graphics.Primitives
 import qualified Obelisk.Graphics.DebugUI as DUI
@@ -94,7 +93,10 @@ drawDebug' gs = do
     -- Grid To Player as center Local to Screen Affine Transformation
     let gtp = centerScreenOnWorldGrid ws screenWidth screenHeight
 
-    let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
+    -- let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
+    let visitedSet = S.unions $ visitedPositions gs <$> genRays (rayCount) (player gs) (fromIntegral ws)
+    --TODO redo the old debugui for all the rays we cast.
+
     -- old_drawGridTiles (world gs) visitedSet gtp --TODO REVERT
     -- dprint visitedSet
 
@@ -104,7 +106,7 @@ drawDebug' gs = do
     let new_grid = DUI.worldGridGraphic ws
     let new_gridTiles = DUI.worldGridTilesGraphic (world gs) visitedSet
     let new_player = DUI.playerGraphic (player gs)
-    let new_midline_intersections = DUI.midlineRaycastIntersectionsGraphic (player gs)
+    let new_midline_intersections = DUI.midlineRaycastIntersectionsGraphic (player gs) ws
     
     let new_ui = AffineT gtp $ GroupPrim "Debug UI" [new_gridTiles, new_grid, new_player,
             new_midline_intersections]
@@ -119,7 +121,7 @@ drawDebug' gs = do
     return ()
 
 ---------------------------------------------------------------
-rayCount = 1 --TODO FIXME REVERT
+rayCount = 10 --TODO FIXME REVERT
 
 type GridTransform = M22Affine Double
 

@@ -19,9 +19,7 @@ library
       Obelisk.State
       Obelisk.Effect.Renderer
       Obelisk.Effect.Debug
-      Obelisk.Engine.DDA
       Obelisk.Engine.Ray
-      Obelisk.Engine.Raycast
       Obelisk.Engine.Input
       Obelisk.Graphics.Primitives
       Obelisk.Graphics.DebugUI

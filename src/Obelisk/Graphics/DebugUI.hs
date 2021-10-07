@@ -13,8 +13,7 @@ import Obelisk.State
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate )
 import Obelisk.Graphics.Primitives
-import Obelisk.Engine.Raycast
-import Obelisk.Engine.DDA
+import Obelisk.Engine.Ray (shootRay', clipWorld, xRayGridIntersections, yRayGridIntersections)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -139,10 +138,23 @@ playerCircleGraphic p = do
     AffineT (translate px py) $ Prim (Circle (V2 0.0 0.0) circle_radius white)
 
 --Raycasting Diagnostics
-midlineRaycastIntersectionsGraphic :: PVars -> Graphic (Shape Double)
-midlineRaycastIntersectionsGraphic player = do
-    --TODO we need a function to take while it doesn't hit a wall
-    let intersections = take 10 $ shootRay player (position player + direction player)
-    let intersectionXS = intersectionPositions $ fmap fst intersections
+midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic (Shape Double)
+midlineRaycastIntersectionsGraphic player ws = do
+    let intersections = fmap fst $ shootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Double]
+    GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersections
 
-    GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersectionXS
+
+--Test with grender for Ray
+single_raycast_graphic =
+    let p = V2 5.25 5.66
+        r = V2 (1.0) (1.0)
+        path = shootRay' (fromIntegral 10) p r
+        vints = clipWorld 10 $ xRayGridIntersections p r
+        hints = clipWorld 10 $ yRayGridIntersections p r
+        visitedSet = S.fromList $ fmap snd path
+        in anonGP [
+            worldGridTilesGraphic emptyMap visitedSet,
+            worldGridGraphic 10, --TODO unbound
+            Prim $ Circle p 1 white,
+            anonGP $ (\c -> Prim $ Circle c 1 blue) <$> vints,
+            anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]

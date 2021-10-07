@@ -12,8 +12,9 @@ import Data.Functor
 import qualified Data.Set as S
 import Foreign.C.Types
 
+import Obelisk.State
 import Obelisk.Graphics.Primitives
-import Obelisk.Graphics.DebugUI
+-- import Obelisk.Graphics.DebugUI
 import Obelisk.State (emptyMap)
 import SDL.Primitive (horizontalLine)
 import Obelisk.Math.Homogenous
@@ -54,11 +55,11 @@ deltaFirst px vx = if vx < 0
                    else fromIntegral (ceiling px) - px
 
 --Lets test the ray regularly without concerning ourselves with the bumping into correct tile for wall positions. Maybe an epsilon aware rounder could work.
-naivePath :: Int -> V2 Double -> V2 Double -> [(V2 Double, V2 Int)]
-naivePath ws player direction = (epsilonBump direction) <$> mergeIntersections player vints hints
+shootRay' :: Int -> V2 Double -> V2 Double -> [(V2 Double, V2 Int)]
+shootRay' ws playerpos direction = (epsilonBump direction) <$> mergeIntersections playerpos vints hints
     where
-        vints = clipWorld (fromIntegral ws) $ xRayGridIntersections player direction
-        hints = clipWorld (fromIntegral ws) $ yRayGridIntersections player direction
+        vints = clipWorld (fromIntegral ws) $ xRayGridIntersections playerpos direction
+        hints = clipWorld (fromIntegral ws) $ yRayGridIntersections playerpos direction
 
 --NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Double value for distance handling.
 --5.000000000000001
@@ -74,9 +75,9 @@ epsilonBump ray result = (result,bumped)
         y = truncate $ result ^._y + (epsilon * signum ray ^._y)
 
 mergeIntersections :: V2 Double -> [V2 Double] -> [V2 Double] -> [V2 Double]
-mergeIntersections player (x:xs) (y:ys) = if distance player x < distance player y
-                                          then x : mergeIntersections player xs (y:ys)
-                                          else y : mergeIntersections player (x:xs) ys
+mergeIntersections playerpos (x:xs) (y:ys) = if distance playerpos x < distance playerpos y
+                                          then x : mergeIntersections playerpos xs (y:ys)
+                                          else y : mergeIntersections playerpos (x:xs) ys
 mergeIntersections _ [] ys = ys
 mergeIntersections _ xs [] = xs
 
@@ -90,30 +91,36 @@ clipWorld ws = takeWhile (\v@(V2 x y) -> x <= fromIntegral ws && y <= fromIntegr
 TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
 
 -}
-p = V2 5.25 5.66
 -- p = V2 0 0
-r = V2 (1.0) (1.0)
 
-worldSize = 10
-
-vints = clipWorld worldSize $ xRayGridIntersections p r
-hints = clipWorld worldSize $ yRayGridIntersections p r
-
-path = naivePath (fromIntegral worldSize) p r
-
-wholeFloatE v = (v - fromIntegral (floor v)) < epsilon
-v2OR :: V2 Bool -> Bool
-v2OR (V2 x y) = x || y
-path_test path = or $ fmap (v2OR . (fmap wholeFloatE) . fst) path --This should be true if all either member of the V2 Double of the path is on a gridline.
-
-visitedSet = S.fromList $ fmap snd path
-
---Test with grender
-tgp = anonGP [
-    worldGridTilesGraphic emptyMap visitedSet,
-    worldGridGraphic worldSize,
-    Prim $ Circle p 1 white,
-    anonGP $ (\c -> Prim $ Circle c 1 blue) <$> vints,
-    anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]
+-- wholeFloatE v = (v - fromIntegral (floor v)) < epsilon
+-- v2OR :: V2 Bool -> Bool
+-- v2OR (V2 x y) = x || y
+-- path_test path = or $ fmap (v2OR . (fmap wholeFloatE) . fst) path --This should be true if all either member of the V2 Double of the path is on a gridline.
 
 --TODO determine set of visited voxels
+
+--Utilize the new Ray
+genRays :: CInt -> PVars -> Int -> [[(V2 Double, V2 Int)]]
+genRays screenWidth player worldSize = fmap (shootRay' worldSize (position player)) rayHeads
+    where
+        cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth]]
+        rayHeads = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Double]
+
+visitedPositions :: Vars -> [(V2 Double, V2 Int)] -> S.Set (V2 Int)
+visitedPositions gs steps = S.fromList $ take takeLength $ rayVisitedIndexes
+    where
+        rayVisitedIndexes = fmap snd steps
+        takeLength = lenPassthrough (wallSamples gs rayVisitedIndexes)
+
+lenPassthrough :: [WallType] -> Int
+lenPassthrough = length . takeWhile (/= FW)
+
+-- visitedIndexes :: RayPath -> [V2 Int]
+-- visitedIndexes = fmap (fmap floor) . intersectionPositions . fmap fst
+
+wallSamples :: Vars -> [V2 Int] -> [WallType]
+wallSamples gs [] = []
+wallSamples gs (r:rs) = if inBounds gs r
+                        then checkAt gs r : wallSamples gs rs
+                        else []
