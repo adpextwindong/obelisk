@@ -37,7 +37,7 @@ nXForm :: V2 Double -> V2 Double -> [V2 Double]
 nXForm p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
-        firstStep = deltaFirst (p^._x) (nr ^._x)
+        firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
         stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- [0.0 .. 10.0]]
 
 testNXForm :: [V2 Double] -> [Bool]
@@ -66,7 +66,7 @@ nYForm :: V2 Double -> V2 Double -> [V2 Double]
 nYForm p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
-        firstStep = deltaFirst (p^._y) (nr ^._y)
+        firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
         stepScales = [(firstStep + y) / (abs (nr ^._y)) | y <- [0.0 .. 10.0]]
 
 deltaFirst :: Double -> Double -> Double 
