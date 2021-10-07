@@ -59,7 +59,7 @@ class Monad m => Renderer m where
     drawScreen :: m ()
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
-    drawGraphicDebug :: Graphic (Shape Double) -> m ()
+    drawGraphicDebug :: Graphic (Shape Float) -> m ()
 
 --TODO consider SDLFont being in this
 type SDLCanDraw m = (SDLRenderer m, MonadReader Config m)
@@ -79,7 +79,7 @@ fillBackground' = do
     surface <- asks cSurface
     surfaceFillScreenRect surface backgroundColor
 
-drawGraphicDebug' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic (Shape Double) -> m ()
+drawGraphicDebug' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic (Shape Float) -> m ()
 drawGraphicDebug' g = do
     -- Grid To Player as center Local to Screen Affine Transformation
     let gtp = centerScreenOnWorldGrid 10 640 480
@@ -94,7 +94,8 @@ drawDebug' gs = do
     let gtp = centerScreenOnWorldGrid ws screenWidth screenHeight
 
     -- let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
-    let visitedSet = S.unions $ visitedPositions gs <$> genRays (rayCount) (player gs) (fromIntegral ws)
+    let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs) (fromIntegral ws)
+    --TODO benchmark genRays
     --TODO redo the old debugui for all the rays we cast.
 
     -- old_drawGridTiles (world gs) visitedSet gtp --TODO REVERT
@@ -121,9 +122,9 @@ drawDebug' gs = do
     return ()
 
 ---------------------------------------------------------------
-rayCount = 10 --TODO FIXME REVERT
+rayCount = 320 --TODO FIXME REVERT
 
-type GridTransform = M22Affine Double
+type GridTransform = M22Affine Float
 
 drawMouseLoc :: (SDLCanDraw m, SDLInput m, SDLFont m) => GridTransform -> m (Maybe (SDL.Rectangle CInt))
 drawMouseLoc t = do
@@ -147,12 +148,12 @@ drawMouseLoc t = do
 
 -- | Evaluates the Shape Graphic and applies all the transformations
 -- | Defaults the affine transformation to the identity matrix if the Graphic root isn't an AffineT
-evalGraphic :: Graphic (Shape Double) -> Graphic (Shape CInt)
+evalGraphic :: Graphic (Shape Float) -> Graphic (Shape CInt)
 evalGraphic (AffineT t s) = evalGraphic' t s
 evalGraphic s = evalGraphic' m22AffineIdD s
 
 -- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
-evalGraphic' :: M22Affine Double -> Graphic (Shape Double) -> Graphic (Shape CInt)
+evalGraphic' :: M22Affine Float -> Graphic (Shape Float) -> Graphic (Shape CInt)
 evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
 evalGraphic' t (GroupPrim label gs) = EvaldGP label $ fmap (evalGraphic' t) gs
 evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! t') s --TODO make sure this is the correct behavior when nesting transforms
@@ -169,21 +170,21 @@ drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr ce
 --TODO FINISH PORTING THE REST TO THE NEW GRAPHIC API
 --------------------------------------------------------------------------------
 
-translateToPDCenter :: CInt -> CInt -> M22Affine Double
+translateToPDCenter :: CInt -> CInt -> M22Affine Float
 translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
 
-gridT :: CInt -> Double -> Double -> Maybe (V2 Double) -> M22Affine Double -> GridTransform
+gridT :: CInt -> Float -> Float -> Maybe (V2 Float) -> M22Affine Float -> GridTransform
 gridT worldSize zoomFactor rotationFactor Nothing translateToPDCenter = translateToPDCenter !*! rotationT !*! zoomT zoomFactor !*! centerToLocalOrigin
     where
         delta = fromIntegral worldSize / 2
-        centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Double
+        centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Float
         rotationT = rotation rotationFactor
 
 gridT worldSize zoomFactor rotationFactor (Just focus) translateToPDCenter = translateToPDCenter !*! zt !*! rotationT !*! playerToLocalOrigin
     where
         zt = zoomT zoomFactor
         wsMid = fromIntegral worldSize / 2.0
-        playerToLocalOrigin = translate (-focus ^._x) (-focus ^._y)  :: M22Affine Double
+        playerToLocalOrigin = translate (-focus ^._x) (-focus ^._y)  :: M22Affine Float
         rotationT = rotation ((-pi/2.0) - rotationFactor)
 
 blastFmapPair :: (t -> b) -> (t, t) -> (b, b)
@@ -193,10 +194,10 @@ blastFmap3Tupple f (a,b,c) = (f a, f b, f c)
 blastFmap4Tupple :: (t -> d) -> (t, t, t, t) -> (d, d, d, d)
 blastFmap4Tupple f (a,b,c,d) = (f a, f b, f c, f d)
 
-pointToScreenSpace :: GridTransform -> V2 Double -> V2 CInt
+pointToScreenSpace :: GridTransform -> V2 Float -> V2 CInt
 pointToScreenSpace t = dropHomoCoords . fmap floor . (t !*) . homoCoords
 
-pdToWorldT :: M22Affine Double -> M22Affine Double
+pdToWorldT :: M22Affine Float -> M22Affine Float
 pdToWorldT gridTransform = inv33 gridTransform
 
 pdToWorldPos t (SDL.P pos) = dropHomoCoords . ((pdToWorldT t) !*) . homoCoords $ pos

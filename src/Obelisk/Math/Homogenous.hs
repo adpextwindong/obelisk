@@ -18,37 +18,37 @@ translate x y = V3 (V3 1 0 x)
                    (V3 0 1 y)
                    (V3 0 0 1)
 
-rotation :: Double -> V3 (V3 Double)
+rotation :: Float -> V3 (V3 Float)
 rotation theta = V3 (V3 (cos theta) (-sin theta) 0)
                     (V3 (sin theta) (cos theta)  0)
                     (V3  0           0           1)
 
-rotation2 :: Double -> V2 (V2 Double)
+rotation2 :: Float -> V2 (V2 Float)
 rotation2 theta = V2 (V2 (cos theta) (-sin theta))
                     (V2 (sin theta) (cos theta))
 
-rotateAround :: Double -> V2 Double -> V3 (V3 Double)
+rotateAround :: Float -> V2 Float -> V3 (V3 Float)
 rotateAround theta (V2 x y) = translate x y !*! rotation theta !*! translate (-x) (-y)
 
 type M22Affine t = V3 (V3 t) -- TODO use this type alias??
 
-m22AffineIdD = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: M22Affine Double
+m22AffineIdD = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: M22Affine Float
 idv3 = V3 (V3 1 0 0) (V3 0 1 0) (V3 0 0 1) :: V3 (V3 CInt)
 
 -- applyAffineTransform :: M22Affine CInt -> [Line] -> [Line]
 -- applyAffineTransform t = fmap (bimap (t !* ) (t !*))
 
-appDTFloor :: M22Affine Double -> [Line] -> [Line]
+appDTFloor :: M22Affine Float -> [Line] -> [Line]
 appDTFloor t = fmap (bimap f f)
-    where f = doubleTransformFloor t
+    where f = floatTransformFloor t
 
-doubleTransformFloor :: RealFrac a => V3 (V3 a) -> V3 CInt -> V3 CInt
-doubleTransformFloor t = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
+floatTransformFloor :: RealFrac a => V3 (V3 a) -> V3 CInt -> V3 CInt
+floatTransformFloor t = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
 
 transformFloor t = fmap floor . (t !*)
 
 -- foo t = fmap floor . (t !*) . fmap fromIntegral :: V3 CInt -> V3 CInt
---Convert to doubles, apply the transform then floor it
+--Convert to Floats, apply the transform then floor it
 
 homoCoords :: (Num a) => V2 a -> HV2 a
 homoCoords (V2 x y) = V3 x y 1
@@ -57,5 +57,5 @@ homoCoords (V2 x y) = V3 x y 1
 dropHomoCoords :: (Num a) => HV2 a -> V2 a
 dropHomoCoords (V3 x y _) = V2 x y
 
-apDT :: (Integral a) => M22Affine Double ->  HV2 Double -> V2 a
+apDT :: (Integral a) => M22Affine Float ->  HV2 Float -> V2 a
 apDT t =  dropHomoCoords . fmap floor . (t !*)

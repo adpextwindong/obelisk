@@ -12,9 +12,9 @@ import Data.Array
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
 data PVars = PVars {
-                position :: V2 Double,
-                direction :: V2 Double,
-                camera_plane :: V2 Double
+                position :: V2 Float,
+                direction :: V2 Float,
+                camera_plane :: V2 Float
              } deriving (Show)
 
 data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall

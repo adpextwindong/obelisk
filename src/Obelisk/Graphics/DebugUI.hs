@@ -47,7 +47,7 @@ wallTypeToColor DW = doorTileColor
 -- One thing to note about this is that all of this should be done in world coordinates
 -- The Grid to player as center local -> screen AFT will be applied as an AffineT in the renderer
 
-worldGridGraphic :: CInt -> Graphic (Shape Double)
+worldGridGraphic :: CInt -> Graphic (Shape Float)
 worldGridGraphic ws = GroupPrim "Grid Lines" gridLines
     where
         worldSize = fromIntegral ws
@@ -55,7 +55,7 @@ worldGridGraphic ws = GroupPrim "Grid Lines" gridLines
         horizontalLines ws = [Prim (Line (V2 0 y) (V2 ws y) gridColor) | y <- [0..ws]]
         gridLines = verticalLines worldSize ++ horizontalLines worldSize
 
-worldGridTilesGraphic :: WorldTiles -> S.Set (V2 Int) -> Graphic (Shape Double)
+worldGridTilesGraphic :: WorldTiles -> S.Set (V2 Int) -> Graphic (Shape Float)
 worldGridTilesGraphic world visitedSet = do
     let ws = worldSize world 
     
@@ -74,14 +74,14 @@ worldGridTilesGraphic world visitedSet = do
              Prim $ FillTriangle vB vC vD tileColor])
     GroupPrim "World Grid Tiles" $ concat prims
 
-playerGraphic :: PVars -> Graphic (Shape Double)
+playerGraphic :: PVars -> Graphic (Shape Float)
 playerGraphic p = GroupPrim "Player Graphic" [
                     playerCircleGraphic p,
                     cameraPlaneGraphic p,
                     playerArrowGraphic p
                 ]
 
-playerArrowGraphic :: PVars -> Graphic (Shape Double)
+playerArrowGraphic :: PVars -> Graphic (Shape Float)
 playerArrowGraphic player = do
     let playerT = translate (position player^._x) (position player^._y)
     let arrowT = playerT !*! rotation (vectorAngle . direction $ player)
@@ -110,7 +110,7 @@ playerArrowGraphic player = do
 
     arrow
 
-cameraPlaneGraphic :: PVars -> Graphic (Shape Double)
+cameraPlaneGraphic :: PVars -> Graphic (Shape Float)
 cameraPlaneGraphic p = do
     let ppos = position p
     let camTail = ppos + direction p - camera_plane p
@@ -130,7 +130,7 @@ cameraPlaneGraphic p = do
         Prim leftCamEdgeLine,
         Prim rightCamEdgeLine]
 
-playerCircleGraphic :: PVars -> Graphic (Shape Double)
+playerCircleGraphic :: PVars -> Graphic (Shape Float)
 playerCircleGraphic p = do
     let px = position p ^._x
     let py = position p ^._y
@@ -138,9 +138,9 @@ playerCircleGraphic p = do
     AffineT (translate px py) $ Prim (Circle (V2 0.0 0.0) circle_radius white)
 
 --Raycasting Diagnostics
-midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic (Shape Double)
+midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic (Shape Float)
 midlineRaycastIntersectionsGraphic player ws = do
-    let intersections = fmap fst $ shootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Double]
+    let intersections = fmap fst $ shootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Float]
     GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersections
 
 

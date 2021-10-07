@@ -23,7 +23,7 @@ grenderLoop :: ( MonadReader Config m
             , SDLInput m
             , HasInput m
             , Debug m
-            , Renderer m ) => Graphic (Shape Double) -> m ()
+            , Renderer m ) => Graphic (Shape Float) -> m ()
 grenderLoop g = do
     updateInput
     clearScreen
@@ -53,7 +53,7 @@ mainLoop = do
     --TODO process input update to rotation
     input <- getInput
     old_gs <- get
-    let dir = direction $ player old_gs :: V2 Double
+    let dir = direction $ player old_gs :: V2 Float
     let cplane = camera_plane $ player old_gs
 
     let rotationT = rotation2 0.05

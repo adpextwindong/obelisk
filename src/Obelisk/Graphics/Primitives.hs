@@ -16,14 +16,14 @@ data Shape a = Line (V2 a) (V2 a) SDL.Color
              | FillCircle (V2 a) SDL.Radius SDL.Color
             deriving Show
 
-applyAffineTransformFloor :: M22Affine Double -> Shape Double -> Shape CInt
+applyAffineTransformFloor :: M22Affine Float -> Shape Float -> Shape CInt
 applyAffineTransformFloor t (Line start end color)           = Line (mapAft t start) (mapAft t end) color
 applyAffineTransformFloor t (Circle center radius color)     = Circle (mapAft t center) radius color
 applyAffineTransformFloor t (FillTriangle v0 v1 v2 color)    = FillTriangle (mapAft t v0) (mapAft t v1) (mapAft t v2) color
 applyAffineTransformFloor t (FillCircle center radius color) = FillCircle (mapAft t center) radius color
 
 -- Takes a regular vector, wraps into a homogeonous coordinate system for applying an affine transformation, floors it to an integer to be used in a draw call render
-mapAft :: M22Affine Double -> V2 Double -> V2 CInt
+mapAft :: M22Affine Float -> V2 Float -> V2 CInt
 mapAft t = dropHomoCoords . transformFloor t . homoCoords 
 
 --             | Triangle
@@ -46,17 +46,17 @@ mapAft t = dropHomoCoords . transformFloor t . homoCoords
 --     deriving Show
     
 data Graphic a where
-    Prim :: Shape Double -> Graphic (Shape Double)
-    GroupPrim :: String -> [Graphic (Shape Double)] -> Graphic (Shape Double)
+    Prim :: Shape Float -> Graphic (Shape Float)
+    GroupPrim :: String -> [Graphic (Shape Float)] -> Graphic (Shape Float)
     -- ColorPrim :: ColorEffect -> Graphic Shape -> Graphic Shape
-    AffineT :: M22Affine Double -> Graphic a -> Graphic a
+    AffineT :: M22Affine Float -> Graphic a -> Graphic a
     EvaldP :: Shape CInt -> Graphic (Shape CInt)
     EvaldGP :: String -> [Graphic (Shape CInt)] -> Graphic (Shape CInt)
     --At evaluation we floor at the end
 
 anonGP = GroupPrim ""
 anonEGP = EvaldGP ""
-instance Show (Graphic (Shape Double)) where
+instance Show (Graphic (Shape Float)) where
     show (Prim s) = "Prim " ++ show s
     show (GroupPrim label xs) = "GroupPrim "++ show label ++ show xs
     show (AffineT t s) = "AffineT " ++ show t ++ show s
@@ -68,9 +68,9 @@ instance Show (Graphic (Shape CInt)) where
 --TODO COLOR, EFFECTS, ANIMATIONS, SCENES LATER
 
 -- | Time signal. Goes from 0 to 1, inclusive.
-type Time = Double
+type Time = Float
 -- | Duration of an animation or effect. Usually measured in seconds.
-type Duration = Double
+type Duration = Float
 
 -- data Animation = Animation Duration (Time -> Graphic Shape)
 

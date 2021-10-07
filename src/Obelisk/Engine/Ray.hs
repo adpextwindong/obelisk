@@ -20,7 +20,7 @@ import SDL.Primitive (horizontalLine)
 import Obelisk.Math.Homogenous
 
 --Positions in world space the raycaster will actually being checking
-type DDAStep = V2 Double
+type DDAStep = V2 Float
 
 {-
 
@@ -34,47 +34,49 @@ StepScales are t values where there is a grid intersection.
 This code assumes walls are space 1.0f apart. Abs for firstStep ensures negative direction intersections are found correctly.
 
 -}
-xRayGridIntersections :: V2 Double -> V2 Double -> [V2 Double]
+baseSteps = [0.0 ..]
+
+xRayGridIntersections :: V2 Float -> V2 Float -> [V2 Float]
 xRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
-        stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- [0.0 .. 10.0]] --TODO unbound this once everything is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- baseSteps] --TODO unbound this once everything is kosher so it can scale to any worldsize
 
 
-yRayGridIntersections :: V2 Double -> V2 Double -> [V2 Double]
+yRayGridIntersections :: V2 Float -> V2 Float -> [V2 Float]
 yRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
-        stepScales = [(firstStep + y) / (abs (nr ^._y)) | y <- [0.0 .. 10.0]] --TODO unbound this once everythign is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + y) / (abs (nr ^._y)) | y <- baseSteps] --TODO unbound this once everythign is kosher so it can scale to any worldsize
 
-deltaFirst :: Double -> Double -> Double 
+deltaFirst :: Float -> Float -> Float 
 deltaFirst px vx = if vx < 0
                    then fromIntegral (floor px) - px
                    else fromIntegral (ceiling px) - px
 
 --Lets test the ray regularly without concerning ourselves with the bumping into correct tile for wall positions. Maybe an epsilon aware rounder could work.
-shootRay' :: Int -> V2 Double -> V2 Double -> [(V2 Double, V2 Int)]
+shootRay' :: Int -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
 shootRay' ws playerpos direction = (epsilonBump direction) <$> mergeIntersections playerpos vints hints
     where
         vints = clipWorld (fromIntegral ws) $ xRayGridIntersections playerpos direction
         hints = clipWorld (fromIntegral ws) $ yRayGridIntersections playerpos direction
 
---NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Double value for distance handling.
+--NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Float value for distance handling.
 --5.000000000000001
 --28.999999999999996
 
 epsilon = 0.00001 --TODO maybe lift this to the math module
 
-epsilonBump :: V2 Double -> V2 Double -> (V2 Double, V2 Int)
+epsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
 epsilonBump ray result = (result,bumped)
     where
         bumped = V2 x y
         x = truncate $ result ^._x + (epsilon * signum ray ^._x) --Is this neccessary?
         y = truncate $ result ^._y + (epsilon * signum ray ^._y)
 
-mergeIntersections :: V2 Double -> [V2 Double] -> [V2 Double] -> [V2 Double]
+mergeIntersections :: V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
 mergeIntersections playerpos (x:xs) (y:ys) = if distance playerpos x < distance playerpos y
                                           then x : mergeIntersections playerpos xs (y:ys)
                                           else y : mergeIntersections playerpos (x:xs) ys
@@ -82,7 +84,7 @@ mergeIntersections _ [] ys = ys
 mergeIntersections _ xs [] = xs
 
 --Takes a list while its members are still in the world bounding box
-clipWorld :: CInt -> [V2 Double] -> [V2 Double]
+clipWorld :: CInt -> [V2 Float] -> [V2 Float]
 clipWorld ws = takeWhile (\v@(V2 x y) -> x <= fromIntegral ws && y <= fromIntegral ws
                                             && x >= 0 && y >= 0)
 
@@ -96,18 +98,18 @@ TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
 -- wholeFloatE v = (v - fromIntegral (floor v)) < epsilon
 -- v2OR :: V2 Bool -> Bool
 -- v2OR (V2 x y) = x || y
--- path_test path = or $ fmap (v2OR . (fmap wholeFloatE) . fst) path --This should be true if all either member of the V2 Double of the path is on a gridline.
+-- path_test path = or $ fmap (v2OR . (fmap wholeFloatE) . fst) path --This should be true if all either member of the V2 Float of the path is on a gridline.
 
 --TODO determine set of visited voxels
 
 --Utilize the new Ray
-genRays :: CInt -> PVars -> Int -> [[(V2 Double, V2 Int)]]
+genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
 genRays screenWidth player worldSize = fmap (shootRay' worldSize (position player)) rayHeads
     where
         cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth]]
-        rayHeads = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Double]
+        rayHeads = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Float]
 
-visitedPositions :: Vars -> [(V2 Double, V2 Int)] -> S.Set (V2 Int)
+visitedPositions :: Vars -> [(V2 Float, V2 Int)] -> S.Set (V2 Int)
 visitedPositions gs steps = S.fromList $ take takeLength $ rayVisitedIndexes
     where
         rayVisitedIndexes = fmap snd steps

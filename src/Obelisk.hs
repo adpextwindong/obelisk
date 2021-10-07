@@ -85,7 +85,7 @@ main = do
     SDL.destroyWindow window
     SDL.quit
 
-grender :: Graphic (Shape Double) -> IO ()
+grender :: Graphic (Shape Float) -> IO ()
 grender g = do
     SDL.initialize [SDL.InitVideo]
     SDL.Font.initialize
