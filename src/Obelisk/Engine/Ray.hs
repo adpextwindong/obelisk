@@ -22,48 +22,27 @@ import Obelisk.Math.Homogenous
 type DDAStep = V2 Double
 
 {-
-$\hat{p} - \Delta\hat{v} = < I , \_>$
-Find the integer solutions of this form
 
-px + delta*vx = Ix
-delta * vx = Ix - Px
-delta = (Ix - Px) / Vx
+Given the Player and the Ray, compute the XIntersections along the path of the ray from the player.
 
-We compute delta for every i'th intersection on the grid we're looking for and scale r and add it to the player's original position
+From Physically Based Rendering 2.5, Parametric form of the Ray.
+r(t) = o + td
+In our case o, the ray origin is the player position p and the ray direction is r.
+
+StepScales are t values where there is a grid intersection.
+This code assumes walls are space 1.0f apart. Abs for firstStep ensures negative direction intersections are found correctly.
+
 -}
-
---Given the Player and the Ray, compute the XIntersections along the path of the ray from the player.
-nXForm :: V2 Double -> V2 Double -> [V2 Double]
-nXForm p r = ((p +) . (*^ nr)) <$> stepScales
+xRayGridIntersections :: V2 Double -> V2 Double -> [V2 Double]
+xRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
         stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- [0.0 .. 10.0]]
 
-testNXForm :: [V2 Double] -> [Bool]
-testNXForm = \xs -> tpNXForm <$> xs
 
-txs = nXForm (V2 0.3333 0.42) (V2 2 2)
-tpNXForm = (\v -> v^._x == fromIntegral (round (v^._x)))
-
-t_xValsChecked = (\v -> v^._x) <$> txs
---NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Double value for distance handling.
---5.000000000000001
---28.999999999999996
-
-{-TODO maybe Ray should be
-
-data Ray = V2 Double
-         | YAxis
-         | XAxis
-
-This way we can nicely handle X = 0, Y = 0 just incase.
--}
-
---TODO test with different rays and positions.
---TODO test that nYForm and nXForm gives intersections on gridlines along the ray from the player instead of bullshit.
-nYForm :: V2 Double -> V2 Double -> [V2 Double]
-nYForm p r = ((p +) . (*^ nr)) <$> stepScales
+yRayGridIntersections :: V2 Double -> V2 Double -> [V2 Double]
+yRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
@@ -78,10 +57,14 @@ deltaFirst px vx = if vx < 0
 naivePath :: Int -> V2 Double -> V2 Double -> [(V2 Double, V2 Int)]
 naivePath ws player direction = (epsilonBump direction) <$> mergeIntersections player vints hints
     where
-        vints = clipWorld (fromIntegral ws) $ verticalIntersections player direction
-        hints = clipWorld (fromIntegral ws) $ horizontalIntersections player direction
+        vints = clipWorld (fromIntegral ws) $ xRayGridIntersections player direction
+        hints = clipWorld (fromIntegral ws) $ yRayGridIntersections player direction
 
-epsilon = 0.00001
+--NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Double value for distance handling.
+--5.000000000000001
+--28.999999999999996
+
+epsilon = 0.00001 --TODO maybe lift this to the math module
 
 epsilonBump :: V2 Double -> V2 Double -> (V2 Double, V2 Int)
 epsilonBump ray result = (result,bumped)
@@ -89,9 +72,6 @@ epsilonBump ray result = (result,bumped)
         bumped = V2 x y
         x = truncate $ result ^._x + (epsilon * signum ray ^._x) --Is this neccessary?
         y = truncate $ result ^._y + (epsilon * signum ray ^._y)
-
-verticalIntersections = nXForm
-horizontalIntersections = nYForm
 
 mergeIntersections :: V2 Double -> [V2 Double] -> [V2 Double] -> [V2 Double]
 mergeIntersections player (x:xs) (y:ys) = if distance player x < distance player y
@@ -105,17 +85,20 @@ clipWorld :: CInt -> [V2 Double] -> [V2 Double]
 clipWorld ws = takeWhile (\v@(V2 x y) -> x <= fromIntegral ws && y <= fromIntegral ws
                                             && x >= 0 && y >= 0)
 
+{-
+
+TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
+
+-}
 p = V2 5.25 5.66
 -- p = V2 0 0
-r = V2 (1.0) (2.0)
+r = V2 (1.0) (1.0)
 
--- foo = 
 worldSize = 10
 
-vints = clipWorld worldSize $ verticalIntersections p r
-hints = clipWorld worldSize $ horizontalIntersections p r
+vints = clipWorld worldSize $ xRayGridIntersections p r
+hints = clipWorld worldSize $ yRayGridIntersections p r
 
---Test naivePath then naiveBumpPath
 path = naivePath (fromIntegral worldSize) p r
 
 wholeFloatE v = (v - fromIntegral (floor v)) < epsilon
@@ -123,7 +106,6 @@ v2OR :: V2 Bool -> Bool
 v2OR (V2 x y) = x || y
 path_test path = or $ fmap (v2OR . (fmap wholeFloatE) . fst) path --This should be true if all either member of the V2 Double of the path is on a gridline.
 
--- bumpPath = naiveBumpPath (fromIntegral worldSize) p r
 visitedSet = S.fromList $ fmap snd path
 
 --Test with grender
