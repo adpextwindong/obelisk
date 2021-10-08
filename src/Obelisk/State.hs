@@ -8,7 +8,8 @@ import Control.Lens
 import Prelude hiding (map)
 import Linear
 import Foreign.C.Types
-import Data.Array
+-- import Data.Array
+import Data.Vector.Unboxed as U (Vector, (!), fromList, fromListN)
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
 data PVars = PVars {
@@ -19,7 +20,8 @@ data PVars = PVars {
 
 
 data WorldTiles = WorldTiles {
-                    mapTiles :: Array Int WallType,
+                    -- mapTiles :: Array Int WallType,
+                    mapTiles :: U.Vector WallType,
                     worldSize :: CInt
                   }
     deriving Show
@@ -45,7 +47,7 @@ rEW = repeat EW
 --ACCESSED godBoltMap !! y !! x style
 godboltMap :: WorldTiles
 godboltMap = WorldTiles map 10
-    where map = listArray (0, 10*10 - 1) $ concat [take 10 rFW,
+    where map = fromList $ concat [take 10 rFW,
               FW : take 3 rEW ++ [FW] ++ take 4 rEW ++ [FW],
               FW : take 3 rEW ++ [FW] ++ take 4 rEW ++ [FW],
               take 3 rFW ++ [DW] ++ [FW] ++ take 4 rEW ++ [FW],
@@ -58,7 +60,7 @@ godboltMap = WorldTiles map 10
 
 boxMap :: WorldTiles
 boxMap = WorldTiles map 10
-    where map = listArray (0, 99) $ concat [take 10 rFW,
+    where map = fromList $ concat [take 10 rFW,
                  FW : take 8 rEW ++ [FW],
                  FW : take 8 rEW ++ [FW],
                  FW : take 8 rEW ++ [FW],
@@ -72,9 +74,9 @@ boxMap = WorldTiles map 10
 
 boxMap64 :: WorldTiles
 boxMap64 = WorldTiles map 64
-    where map = listArray (0, 4095) $ take 64 rFW ++ concat (replicate 62 (FW : take 62 rEW ++ [FW])) ++ take 64 rFW
+    where map = fromList $ take 64 rFW ++ concat (replicate 62 (FW : take 62 rEW ++ [FW])) ++ take 64 rFW
 
-emptyMap = WorldTiles (listArray (0, 99) rEW) 10
+emptyMap = WorldTiles (fromListN 100 rEW) 10
 
 data Vars = Vars {
                 player :: PVars,
