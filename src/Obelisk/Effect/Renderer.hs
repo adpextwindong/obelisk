@@ -16,6 +16,7 @@ import qualified Data.Text as T
 
 import Obelisk.Config
 import Obelisk.State
+import Obelisk.Types.Wall
 import Obelisk.Effect.Debug
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous

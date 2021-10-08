@@ -3,7 +3,7 @@ module Obelisk.State where
 
 import Obelisk.Math.Homogenous
 import Obelisk.Engine.Input
-
+import Obelisk.Types.Wall
 import Control.Lens
 import Prelude hiding (map)
 import Linear
@@ -17,8 +17,6 @@ data PVars = PVars {
                 camera_plane :: V2 Float
              } deriving (Show)
 
-data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
-    deriving (Show, Eq)
 
 data WorldTiles = WorldTiles {
                     mapTiles :: Array Int WallType,

@@ -11,6 +11,7 @@ import qualified Data.Set as S
 import Foreign.C.Types ( CInt )
 
 import Obelisk.State
+import Obelisk.Types.Wall
 -- import Obelisk.Graphics.DebugUI
 import Obelisk.State (emptyMap)
 import SDL.Primitive (horizontalLine)

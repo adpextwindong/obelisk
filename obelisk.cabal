@@ -24,6 +24,7 @@ library
       Obelisk.Graphics.Primitives
       Obelisk.Graphics.DebugUI
       Obelisk.Manager.Input
+      Obelisk.Types.Wall
       Obelisk.Math.Homogenous
       Obelisk.Math.Vector
       Obelisk.Wrapper.SDLInput
@@ -34,6 +35,8 @@ library
   build-depends:
       base >=4.7 && <5
       , array >= 0.5.4.0
+      , vector >= 0.12.3.1
+      , vector-th-unbox >= 0.2.1.9
       , random >= 1.1.0
       , sdl2 >= 2.5.3.0
       , text >= 1.2.4.1

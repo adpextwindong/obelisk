@@ -9,6 +9,7 @@ import qualified Data.Set as S
 import Control.Monad.Reader 
 
 import Obelisk.State
+import Obelisk.Types.Wall
 
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate )
