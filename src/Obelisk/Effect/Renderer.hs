@@ -94,7 +94,8 @@ drawDebug' gs = do
     let gtp = centerScreenOnWorldGrid ws screenWidth screenHeight
 
     -- let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs)
-    let visitedSet = S.unions $ visitedPositions gs <$> genRays rayCount (player gs) (fromIntegral ws)
+    let rays = genRays 320 (player gs) (fromIntegral ws)
+    let visitedSet = S.unions $ visitedPositions gs <$> rays
     --TODO benchmark genRays
     --TODO redo the old debugui for all the rays we cast.
 
@@ -122,7 +123,7 @@ drawDebug' gs = do
     return ()
 
 ---------------------------------------------------------------
-rayCount = 320 --TODO FIXME REVERT
+-- rayCount = 320 --TODO FIXME REVERT
 
 type GridTransform = M22Affine Float
 

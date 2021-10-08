@@ -13,13 +13,13 @@ build-type:     Simple
 library
   exposed-modules:
       Obelisk
+      Obelisk.Engine.Ray
+      Obelisk.State
   other-modules:
       Obelisk.Config
       Obelisk.Runner
-      Obelisk.State
       Obelisk.Effect.Renderer
       Obelisk.Effect.Debug
-      Obelisk.Engine.Ray
       Obelisk.Engine.Input
       Obelisk.Graphics.Primitives
       Obelisk.Graphics.DebugUI
@@ -57,3 +57,14 @@ executable obelisk-exe
     , obelisk
 
   default-language: Haskell2010
+
+executable rayBench
+    main-is: rayBench.hs
+    hs-source-dirs:
+        benchmark
+    ghc-options: -threaded -rtsopts -with-rtsopts=-N
+    build-depends:
+        base >= 4.7 && <5
+        , obelisk
+        , criterion
+        , linear >= 1.21.6

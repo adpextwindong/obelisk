@@ -20,3 +20,8 @@ I'd like to simply mutate a stack of things I'm playing with so I can see if I'm
 
 ### DEV BUILD
 Nix and Nix-shell setup to make things more consistent
+
+
+### CODE PAGE
+
+Make sure [code page 65001](https://stackoverflow.com/a/25373117) is set. For some reason hPutChar in Criterion yakks cause codepage 437 is set. The .ghci file should handle it.

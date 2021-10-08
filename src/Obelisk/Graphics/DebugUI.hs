@@ -140,15 +140,15 @@ playerCircleGraphic p = do
 --Raycasting Diagnostics
 midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic (Shape Float)
 midlineRaycastIntersectionsGraphic player ws = do
-    let intersections = fmap fst $ shootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Float]
+    let intersections = fst <$> shootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Float]
     GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersections
 
-
 --Test with grender for Ray
-single_raycast_graphic =
+singleRaycastGraphic :: Graphic (Shape Float)
+singleRaycastGraphic =
     let p = V2 5.25 5.66
         r = V2 (1.0) (1.0)
-        path = shootRay' (fromIntegral 10) p r
+        path = shootRay' 10 p r
         vints = clipWorld 10 $ xRayGridIntersections p r
         hints = clipWorld 10 $ yRayGridIntersections p r
         visitedSet = S.fromList $ fmap snd path
