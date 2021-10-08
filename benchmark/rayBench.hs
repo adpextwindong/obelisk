@@ -11,17 +11,27 @@ p = PVars (V2 2.5 6.5) dir cam
         dir = V2 0.9304581537328835 (-0.36639817705888417)
         cam = V2 0.36639817705888417 0.9304581537328835
 
+b = boxMap
+b64 = boxMap64
+
 main :: IO ()
 main = defaultMain [
-    bgroup "genRays" [
-        bench "r1920 w10" $ nf (genRays 1920 p) 10,
-        bench "r1024 w10" $ nf (genRays 1024 p) 10,
-        bench "r640 w10" $ nf (genRays 640 p) 10,
-        bench "r320 w10" $ nf (genRays 320 p) 10,
-        bench "r240 w10" $ nf (genRays 240 p) 10,
-        bench "r1920 w64" $ nf (genRays 1920 p) 64,
-        bench "r1024 w64" $ nf (genRays 1024 p) 64,
-        bench "r640 w64" $ nf (genRays 640 p) 64,
-        bench "r320 w64" $ nf (genRays 320 p) 64,
-        bench "r240 w64" $ nf (genRays 240 p) 64]
-        ]
+    bgroup "rayCasting" [
+        bgroup "genRays" [
+            bench "r640 w10" $ nf (genRays 640 p) 10,
+            bench "r320 w10" $ nf (genRays 320 p) 10,
+            bench "r240 w10" $ nf (genRays 240 p) 10,
+
+            bench "r640 w64" $ nf (genRays 640 p) 64,
+            bench "r320 w64" $ nf (genRays 320 p) 64,
+            bench "r240 w64" $ nf (genRays 240 p) 64],
+
+        bgroup "rayCastScreen" [
+            bench "r640 w10" $ nf (rayCastScreen 640 p) b,
+            bench "r320 w10" $ nf (rayCastScreen 320 p) b,
+            bench "r320 w10" $ nf (rayCastScreen 240 p) b,
+
+            bench "r640 w64" $ nf (rayCastScreen 640 p) b64,
+            bench "r340 w64" $ nf (rayCastScreen 320 p) b64,
+            bench "r640 w64" $ nf (rayCastScreen 240 p) b64]
+    ]]

@@ -26,6 +26,9 @@ data WorldTiles = WorldTiles {
                   }
     deriving Show
 
+accessMapV :: WorldTiles -> V2 Int -> WallType
+accessMapV w (V2 x y) = accessMap w x y
+
 accessMap :: WorldTiles -> Int -> Int -> WallType
 accessMap world x y = mapTiles world ! ((x * fromIntegral (worldSize world)) + y)
 
@@ -68,6 +71,10 @@ boxMap = WorldTiles map 10
                  FW : take 8 rEW ++ [FW],
                  take 10 rFW
                 ]
+
+boxMap64 :: WorldTiles
+boxMap64 = WorldTiles map 64
+    where map = listArray (0, 4095) $ take 64 rFW ++ concat (replicate 62 (FW : take 62 rEW ++ [FW])) ++ take 64 rFW
 
 emptyMap = WorldTiles (listArray (0, 99) rEW) 10
 

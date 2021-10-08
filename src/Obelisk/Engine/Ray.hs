@@ -1,23 +1,18 @@
 module Obelisk.Engine.Ray where
 
-import Linear
 import Linear.V2
-import Linear.Vector
-import Linear.Metric
-import Linear.Epsilon
-import Linear.Affine
+import Linear.Vector ( (*^), (^*) )
+import Linear.Metric ( Metric(distance), normalize )
+import Debug.Trace (trace)
 
-import Control.Lens
-import Data.Functor
+import Control.Lens ( (^.) )
 import qualified Data.Set as S
-import Foreign.C.Types
+import Foreign.C.Types ( CInt )
 
 import Obelisk.State
-import Obelisk.Graphics.Primitives
 -- import Obelisk.Graphics.DebugUI
 import Obelisk.State (emptyMap)
 import SDL.Primitive (horizontalLine)
-import Obelisk.Math.Homogenous
 
 --Positions in world space the raycaster will actually being checking
 type DDAStep = V2 Float
@@ -83,6 +78,24 @@ mergeIntersections playerpos (x:xs) (y:ys) = if distance playerpos x < distance 
 mergeIntersections _ [] ys = ys
 mergeIntersections _ xs [] = xs
 
+sampleWalkRayPaths :: WorldTiles -> V2 Float -> V2 Float -> [V2 Float] -> Maybe (V2 Float, V2 Int)
+sampleWalkRayPaths _ _ _ [] = Nothing
+-- sampleWalkRayPaths world playerpos ray (step:path) | trace ("Ray " ++ show ray ++  " step " ++ show step ++ " epsilonBump " ++ show (epsilonBump ray step)) False = undefined --Trace trick
+sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkInds == FW
+                                                     then Just cPair
+                                                     else sampleWalkRayPaths world playerpos ray path
+    where
+        --TODO we should distinguish ray with a newtype
+        cPair@(checkSpot,checkInds) = epsilonBump ray step
+
+--Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
+--Building the vision set might be a waste of time. Considering we could 
+rayCast' :: WorldTiles -> V2 Float -> V2 Float -> Maybe (V2 Float, V2 Int)
+rayCast' world p r = sampleWalkRayPaths world p r (mergeIntersections p vints hints)
+    where
+        vints = clipWorld (fromIntegral (worldSize world)) $ xRayGridIntersections p r
+        hints = clipWorld (fromIntegral (worldSize world)) $ yRayGridIntersections p r
+
 --Takes a list while its members are still in the world bounding box
 clipWorld :: CInt -> [V2 Float] -> [V2 Float]
 clipWorld ws = takeWhile (\v@(V2 x y) -> x <= fromIntegral ws && y <= fromIntegral ws
@@ -106,21 +119,17 @@ TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
 --TODO make a version that takes in the world so we don't waste time allocing for fat ass lists
 --TODO benchmark this
 genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
-genRays screenWidth player worldSize = fmap (shootRay' worldSize (position player)) rayHeads
-    where
-        rayHeads = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
+genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rayHeads screenWidth player
 
 --TODO fix cameraPlaneSweep so it uniformly gives back n elements spaced across -1 to 1 inclusive
 cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth - 1]]
 
---Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
---Building the vision set might be a waste of time. Considering we could 
-rayCast' :: WorldTiles -> V2 Float -> V2 Float -> (V2 Float, S.Set (V2 Int))
-rayCast' = undefined
+rayHeads :: CInt -> PVars -> [V2 Float]
+rayHeads screenWidth player = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
+--Returns the final sample location of the rays
+rayCastScreen :: CInt -> PVars -> WorldTiles -> [Maybe (V2 Float, V2 Int)]
+rayCastScreen screenWidth player world = rayCast' world (position player) <$> rayHeads screenWidth player
 
---Returns the final sample location of the rays and their visited tiles
-rayCastScreen :: CInt -> PVars -> WorldTiles -> ([V2 Float], S.Set (V2 Int))
-rayCastScreen = undefined
 
 {-
 Note:
