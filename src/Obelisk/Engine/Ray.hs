@@ -108,8 +108,29 @@ TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
 genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
 genRays screenWidth player worldSize = fmap (shootRay' worldSize (position player)) rayHeads
     where
-        cameraPlaneSweep = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth]]
-        rayHeads = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Float]
+        rayHeads = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
+
+--TODO fix cameraPlaneSweep so it uniformly gives back n elements spaced across -1 to 1 inclusive
+cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth - 1]]
+
+--Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
+--Building the vision set might be a waste of time. Considering we could 
+rayCast' :: WorldTiles -> V2 Float -> V2 Float -> (V2 Float, S.Set (V2 Int))
+rayCast' = undefined
+
+--Returns the final sample location of the rays and their visited tiles
+rayCastScreen :: CInt -> PVars -> WorldTiles -> ([V2 Float], S.Set (V2 Int))
+rayCastScreen = undefined
+
+{-
+Note:
+
+Buidling up this pathlist and unioning the set is a lot of work. We could just sample the wallhit.
+
+If we really need a visited set for debug/sprite visibility we can consider making a 2D BitVector in ST and setting it true as we walk through.
+
+TODO ST Ref rayCastWithVis
+-}
 
 visitedPositions :: Vars -> [(V2 Float, V2 Int)] -> S.Set (V2 Int)
 visitedPositions gs steps = S.fromList $ take takeLength rayVisitedIndexes
