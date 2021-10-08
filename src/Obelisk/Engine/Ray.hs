@@ -37,28 +37,28 @@ This code assumes walls are space 1.0f apart. Abs for firstStep ensures negative
 baseSteps = [0.0 ..]
 
 xRayGridIntersections :: V2 Float -> V2 Float -> [V2 Float]
-xRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
+xRayGridIntersections p r = (p +) . (*^ nr) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
-        stepScales = [(firstStep + x) / (abs (nr ^._x)) | x <- baseSteps] --TODO unbound this once everything is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + x) / abs (nr ^._x) | x <- baseSteps] --TODO unbound this once everything is kosher so it can scale to any worldsize
 
 
 yRayGridIntersections :: V2 Float -> V2 Float -> [V2 Float]
-yRayGridIntersections p r = ((p +) . (*^ nr)) <$> stepScales
+yRayGridIntersections p r = (p +) . (*^ nr) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
-        stepScales = [(firstStep + y) / (abs (nr ^._y)) | y <- baseSteps] --TODO unbound this once everythign is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + y) / abs (nr ^._y) | y <- baseSteps] --TODO unbound this once everythign is kosher so it can scale to any worldsize
 
-deltaFirst :: Float -> Float -> Float 
+deltaFirst :: Float -> Float -> Float
 deltaFirst px vx = if vx < 0
                    then fromIntegral (floor px) - px
                    else fromIntegral (ceiling px) - px
 
 --Lets test the ray regularly without concerning ourselves with the bumping into correct tile for wall positions. Maybe an epsilon aware rounder could work.
 shootRay' :: Int -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
-shootRay' ws playerpos direction = (epsilonBump direction) <$> mergeIntersections playerpos vints hints
+shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections playerpos vints hints
     where
         vints = clipWorld (fromIntegral ws) $ xRayGridIntersections playerpos direction
         hints = clipWorld (fromIntegral ws) $ yRayGridIntersections playerpos direction
@@ -112,7 +112,7 @@ genRays screenWidth player worldSize = fmap (shootRay' worldSize (position playe
         rayHeads = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep] :: [V2 Float]
 
 visitedPositions :: Vars -> [(V2 Float, V2 Int)] -> S.Set (V2 Int)
-visitedPositions gs steps = S.fromList $ take takeLength $ rayVisitedIndexes
+visitedPositions gs steps = S.fromList $ take takeLength rayVisitedIndexes
     where
         rayVisitedIndexes = fmap snd steps
         takeLength = lenPassthrough (wallSamples gs rayVisitedIndexes)
