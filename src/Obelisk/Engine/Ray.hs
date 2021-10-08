@@ -1,3 +1,4 @@
+{-# LANGUAGE MagicHash #-}
 module Obelisk.Engine.Ray where
 
 import Linear.V2
