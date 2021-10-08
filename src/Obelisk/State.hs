@@ -8,7 +8,7 @@ import Control.Lens
 import Prelude hiding (map)
 import Linear
 import Foreign.C.Types
-import Data.Array
+import Data.Array.Unboxed
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
 data PVars = PVars {
