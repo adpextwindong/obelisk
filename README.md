@@ -8,7 +8,6 @@ This project is meant to serve as a reference engine for teaching with as much o
 
 ### Raycasting
 
-Fix DDA code
 Get wall renderering working
 
 ### Debug Tooling
@@ -25,3 +24,15 @@ Nix and Nix-shell setup to make things more consistent
 ### CODE PAGE
 
 Make sure [code page 65001](https://stackoverflow.com/a/25373117) is set. For some reason hPutChar in Criterion yakks cause codepage 437 is set. The .ghci file should handle it.
+
+### Benching
+
+Profiling raybench
+```
+./RayBench +RTS -p
+```
+```
+Profiteur raybench.prof
+```
+
+TODO fprof-auto costcenters for Ray.hs
