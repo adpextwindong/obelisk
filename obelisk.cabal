@@ -50,9 +50,9 @@ library
       , containers >= 0.6.5.1
       , ghc-prim >= 0.5.3
   ghc-options:
-    -ddump-simpl
-    -fforce-recomp
-    -dsuppress-all
+    -- -ddump-simpl
+    -- -fforce-recomp
+    -- -dsuppress-all
   default-language: Haskell2010
 
 executable obelisk-exe
