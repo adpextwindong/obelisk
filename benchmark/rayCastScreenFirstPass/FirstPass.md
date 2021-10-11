@@ -439,3 +439,54 @@ time                 1.276 ms   (1.263 ms .. 1.290 ms)
 mean                 1.261 ms   (1.255 ms .. 1.268 ms)
 std dev              23.06 μs   (18.57 μs .. 28.97 μs)
 ```
+
+### Checking the regression of the Inline pragmas
+
+Lets remove these 4 inline pragmas to get a rough idea of their total effect.
+
+No inlines:
+--INTEL
+```
+benchmarking rayCasting/rayCastScreen/r640 w64
+time                 4.168 ms   (4.137 ms .. 4.198 ms)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 4.224 ms   (4.203 ms .. 4.249 ms)
+std dev              72.12 μs   (59.94 μs .. 92.59 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 2.114 ms   (2.106 ms .. 2.122 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 2.112 ms   (2.103 ms .. 2.121 ms)
+std dev              30.92 μs   (23.69 μs .. 42.48 μs)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 1.576 ms   (1.568 ms .. 1.582 ms)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 1.590 ms   (1.579 ms .. 1.631 ms)
+std dev              62.88 μs   (15.57 μs .. 130.5 μs)
+variance introduced by outliers: 26% (moderately inflated)
+```
+
+Inlined
+```
+benchmarking rayCasting/rayCastScreen/r640 w64
+time                 3.300 ms   (3.276 ms .. 3.328 ms)
+                     0.999 R²   (0.998 R² .. 1.000 R²)
+mean                 3.328 ms   (3.311 ms .. 3.353 ms)
+std dev              67.75 μs   (47.53 μs .. 104.2 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 1.665 ms   (1.656 ms .. 1.673 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 1.672 ms   (1.665 ms .. 1.683 ms)
+std dev              29.14 μs   (18.00 μs .. 53.23 μs)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 1.339 ms   (1.285 ms .. 1.376 ms)
+                     0.995 R²   (0.993 R² .. 0.997 R²)
+mean                 1.267 ms   (1.254 ms .. 1.285 ms)
+std dev              50.56 μs   (35.01 μs .. 66.94 μs)
+variance introduced by outliers: 28% (moderately inflated)
+```
+
+So yes, we did achieve a 20% speedup from inlining those 4 small functions that were still in the hotloop.

@@ -72,6 +72,10 @@ shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections 
 
 epsilon = 0.00001 --TODO maybe lift this to the math module
 
+--This function is for bumping the grid index into the right spot. I have to read physically based rendering some more.
+--Some of the math in computing the stepscales leads to values like 28.999999999999996 (when it should be 29 in terms of integers).
+--To make sure it checks index 29 which it is close enough to with an epsilon test we add epsilon in the direction of the ray so it truncates properly.
+--TODO double check Round in GHC.Real
 {-# INLINE epsilonBump #-}
 epsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
 epsilonBump ray result = (result,bumped)
