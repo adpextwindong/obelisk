@@ -14,7 +14,7 @@ import Obelisk.Types.Wall
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate )
 import Obelisk.Graphics.Primitives
-import Obelisk.Engine.Ray (shootRay', clipWorld, xRayGridIntersections, yRayGridIntersections)
+import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -150,8 +150,9 @@ singleRaycastGraphic =
     let p = V2 5.25 5.66
         r = V2 (1.0) (1.0)
         path = shootRay' 10 p r
-        vints = clipWorld 10 $ xRayGridIntersections p r
-        hints = clipWorld 10 $ yRayGridIntersections p r
+        vints = xRayGridIntersections p r $ baseStepsBounded 10 (p ^._x) (r ^._x)
+        hints = yRayGridIntersections p r $ baseStepsBounded 10 (p ^._y) (r ^._y)
+
         visitedSet = S.fromList $ fmap snd path
         in anonGP [
             worldGridTilesGraphic emptyMap visitedSet,

@@ -31,22 +31,31 @@ StepScales are t values where there is a grid intersection.
 This code assumes walls are space 1.0f apart. Abs for firstStep ensures negative direction intersections are found correctly.
 
 -}
+baseSteps :: [Float]
 baseSteps = [0.0 ..]
 
-xRayGridIntersections :: V2 Float -> V2 Float -> [V2 Float]
-xRayGridIntersections p r = (p +) . (*^ nr) <$> stepScales
+upperBound :: Int -> Float -> Float -> Int
+upperBound worldSize axisPosition axisRay = if axisRay > 0
+                                            then floor $ fromIntegral worldSize - axisPosition
+                                            else floor axisPosition
+
+baseStepsBounded :: Int -> Float -> Float -> [Float]
+baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axisPosition axisRay) baseSteps
+
+xRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
+xRayGridIntersections p r bss = (p +) . (*^ nr) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
-        stepScales = [(firstStep + x) / abs (nr ^._x) | x <- baseSteps] --TODO unbound this once everything is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + x) / abs (nr ^._x) | x <- bss] --TODO unbound this once everything is kosher so it can scale to any worldsize
 
 
-yRayGridIntersections :: V2 Float -> V2 Float -> [V2 Float]
-yRayGridIntersections p r = (p +) . (*^ nr) <$> stepScales
+yRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
+yRayGridIntersections p r bss = (p +) . (*^ nr) <$> stepScales
     where
         nr = normalize r
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
-        stepScales = [(firstStep + y) / abs (nr ^._y) | y <- baseSteps] --TODO unbound this once everythign is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + y) / abs (nr ^._y) | y <- bss] --TODO unbound this once everythign is kosher so it can scale to any worldsize
 
 deltaFirst :: Float -> Float -> Float
 deltaFirst px vx = if vx < 0
@@ -57,8 +66,8 @@ deltaFirst px vx = if vx < 0
 shootRay' :: Int -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
 shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections playerpos vints hints
     where
-        vints = clipWorld (fromIntegral ws) $ xRayGridIntersections playerpos direction
-        hints = clipWorld (fromIntegral ws) $ yRayGridIntersections playerpos direction
+        vints = xRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._x) (direction ^._x))
+        hints = yRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._y) (direction ^._y))
 
 --NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Float value for distance handling.
 --5.000000000000001
@@ -95,13 +104,13 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
 rayCast' :: WorldTiles -> V2 Float -> V2 Float -> Maybe (V2 Float, V2 Int)
 rayCast' world p r = sampleWalkRayPaths world p r (mergeIntersections p vints hints)
     where
-        vints = clipWorld (fromIntegral (worldSize world)) $ xRayGridIntersections p r
-        hints = clipWorld (fromIntegral (worldSize world)) $ yRayGridIntersections p r
+        vints = xRayGridIntersections p r (baseStepsBounded (fromIntegral $ worldSize world) (p ^._x) (r ^._x))
+        hints = yRayGridIntersections p r (baseStepsBounded (fromIntegral $ worldSize world) (p ^._y) (r ^._y))
 
 --Takes a list while its members are still in the world bounding box
-clipWorld :: CInt -> [V2 Float] -> [V2 Float]
-clipWorld ws = takeWhile (\v@(V2 x y) -> x <= fromIntegral ws && y <= fromIntegral ws
-                                            && x >= 0 && y >= 0)
+-- clipWorld :: CInt -> [V2 Float] -> [V2 Float]
+-- clipWorld ws = takeWhile (\v@(V2 x y) -> x <= fromIntegral ws && y <= fromIntegral ws
+--                                             && x >= 0 && y >= 0)
 
 {-
 
