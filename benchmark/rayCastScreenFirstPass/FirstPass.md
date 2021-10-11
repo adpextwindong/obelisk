@@ -71,7 +71,7 @@ Inline Pragma
 
 ## Cheap Micro Optimizations
 
-### Clipworld
+### Removing Clipworld and bounding grid traversal
 
 So we can just bound the traversal to within the world grid instead of infinitely. We use Data.Sequence from `containers` to avoid rebuilding the step sequence and take a bounded amount in logn time.
 
@@ -229,6 +229,7 @@ yRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(56,1)-(60,65
 accessMapV            Obelisk.State      src\Obelisk\State.hs:28:1-39                 3.7    3.5
 ```
 
+### Lifting Normalize
 Great now we can move onto lifting normalize.
 
 Diff
@@ -290,3 +291,48 @@ yRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(55,1)-(58,65
 accessMapV            Obelisk.State      src\Obelisk\State.hs:28:1-39                 3.4    3.6
 ```
 
+### Dropping the square root
+
+Linear provides a quadrance of difference.
+
+```haskell
+mergeIntersections :: V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
+mergeIntersections playerpos (x:xs) (y:ys) = if qd playerpos x < qd playerpos y
+                                             then x : mergeIntersections playerpos xs (y:ys)
+                                             else y : mergeIntersections playerpos (x:xs) ys
+```
+
+```
+benchmarking rayCasting/rayCastScreen/r640 w64
+time                 4.132 ms   (4.092 ms .. 4.168 ms)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 4.169 ms   (4.147 ms .. 4.212 ms)
+std dev              88.51 μs   (58.25 μs .. 156.3 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 2.087 ms   (2.077 ms .. 2.098 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 2.083 ms   (2.075 ms .. 2.090 ms)
+std dev              25.35 μs   (21.42 μs .. 30.94 μs)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 1.540 ms   (1.530 ms .. 1.554 ms)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 1.558 ms   (1.550 ms .. 1.570 ms)
+std dev              34.43 μs   (25.35 μs .. 46.95 μs)
+variance introduced by outliers: 11% (moderately inflated)
+```
+
+```
+COST CENTRE           MODULE             SRC                                        %time %alloc
+
+xRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(48,1)-(51,65)    21.1   30.4
+sampleWalkRayPaths    Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(93,1)-(100,58)   19.5    7.8
+mergeIntersections    Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(86,1)-(90,31)    19.1   15.1
+epsilonBump           Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(79,1)-(83,64)    14.1   13.2
+baseStepsBounded      Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:43:1-108           6.6   13.3
+accessMapV            Obelisk.State      src\Obelisk\State.hs:28:1-39                 6.6    7.5
+yRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(55,1)-(58,65)     5.7    9.3
+accessMap             Obelisk.State      src\Obelisk\State.hs:31:1-81                 3.9    0.0
+rayCastScreen         Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:142:1-105          1.0    1.3
+```

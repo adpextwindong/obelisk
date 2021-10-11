@@ -3,7 +3,7 @@ module Obelisk.Engine.Ray where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
-import Linear.Metric ( Metric(distance), normalize )
+import Linear.Metric ( qd, normalize )
 import Debug.Trace (trace)
 
 import Control.Lens ( (^.) )
@@ -83,9 +83,9 @@ epsilonBump ray result = (result,bumped)
         y = truncate $ result ^._y + (epsilon * signum ray ^._y)
 
 mergeIntersections :: V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
-mergeIntersections playerpos (x:xs) (y:ys) = if distance playerpos x < distance playerpos y
-                                          then x : mergeIntersections playerpos xs (y:ys)
-                                          else y : mergeIntersections playerpos (x:xs) ys
+mergeIntersections playerpos (x:xs) (y:ys) = if qd playerpos x < qd playerpos y
+                                             then x : mergeIntersections playerpos xs (y:ys)
+                                             else y : mergeIntersections playerpos (x:xs) ys
 mergeIntersections _ [] ys = ys
 mergeIntersections _ xs [] = xs
 
