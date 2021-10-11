@@ -344,3 +344,98 @@ yRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(55,1)-(58,65
 accessMap             Obelisk.State      src\Obelisk\State.hs:31:1-81                 3.9    0.0
 rayCastScreen         Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:142:1-105          1.0    1.3
 ```
+
+### Inline Pragma on epsilonBump
+
+Before
+--INTEL
+```
+benchmarking rayCasting/rayCastScreen/r640 w64
+time                 4.243 ms   (4.208 ms .. 4.273 ms)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 4.286 ms   (4.275 ms .. 4.297 ms)
+std dev              36.19 μs   (28.85 μs .. 46.43 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 2.145 ms   (2.136 ms .. 2.153 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 2.147 ms   (2.139 ms .. 2.158 ms)
+std dev              31.67 μs   (23.52 μs .. 47.57 μs)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 1.639 ms   (1.613 ms .. 1.682 ms)
+                     0.997 R²   (0.995 R² .. 0.999 R²)
+mean                 1.627 ms   (1.616 ms .. 1.646 ms)
+std dev              49.35 μs   (32.95 μs .. 72.14 μs)
+variance introduced by outliers: 17% (moderately inflated)
+```
+
+After
+--INTEL
+```
+benchmarking rayCasting/rayCastScreen/r640 w64
+time                 3.824 ms   (3.809 ms .. 3.839 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 3.844 ms   (3.831 ms .. 3.856 ms)
+std dev              41.23 μs   (34.19 μs .. 52.23 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 1.923 ms   (1.916 ms .. 1.930 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 1.931 ms   (1.924 ms .. 1.937 ms)
+std dev              22.26 μs   (17.90 μs .. 27.88 μs)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 1.444 ms   (1.438 ms .. 1.449 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 1.448 ms   (1.444 ms .. 1.455 ms)
+std dev              19.01 μs   (12.60 μs .. 33.17 μs)
+```
+
+### Inline Pragma on deltaFirst
+
+--INTEL
+```
+benchmarking rayCasting/rayCastScreen/r640 w64
+time                 3.728 ms   (3.698 ms .. 3.752 ms)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 3.759 ms   (3.748 ms .. 3.783 ms)
+std dev              48.47 μs   (32.79 μs .. 82.89 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 1.889 ms   (1.882 ms .. 1.897 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 1.884 ms   (1.879 ms .. 1.890 ms)
+std dev              17.61 μs   (14.81 μs .. 21.55 μs)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 1.426 ms   (1.407 ms .. 1.446 ms)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 1.419 ms   (1.413 ms .. 1.428 ms)
+std dev              24.67 μs   (17.89 μs .. 36.40 μs)
+```
+
+This change might be negligible.
+
+### Inline Pragma on accessMapV and accessMap
+
+--INTEL
+```
+benchmarking rayCasting/rayCastScreen/r640 w64
+time                 3.300 ms   (3.283 ms .. 3.316 ms)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 3.357 ms   (3.340 ms .. 3.378 ms)
+std dev              62.55 μs   (49.52 μs .. 79.44 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 1.673 ms   (1.664 ms .. 1.682 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 1.670 ms   (1.664 ms .. 1.677 ms)
+std dev              22.10 μs   (17.63 μs .. 29.79 μs)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 1.276 ms   (1.263 ms .. 1.290 ms)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 1.261 ms   (1.255 ms .. 1.268 ms)
+std dev              23.06 μs   (18.57 μs .. 28.97 μs)
+```

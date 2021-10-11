@@ -57,6 +57,7 @@ yRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
         stepScales = [(firstStep + y) / abs (nr ^._y) | y <- bss] --TODO unbound this once everythign is kosher so it can scale to any worldsize
 
+{-# INLINE deltaFirst #-}
 deltaFirst :: Float -> Float -> Float
 deltaFirst px vx = if vx < 0
                    then fromIntegral (floor px) - px
@@ -71,6 +72,7 @@ shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections 
 
 epsilon = 0.00001 --TODO maybe lift this to the math module
 
+{-# INLINE epsilonBump #-}
 epsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
 epsilonBump ray result = (result,bumped)
     where

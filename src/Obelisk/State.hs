@@ -24,9 +24,11 @@ data WorldTiles = WorldTiles {
                   }
     deriving Show
 
+{-# INLINE accessMapV #-}
 accessMapV :: WorldTiles -> V2 Int -> WallType
 accessMapV w (V2 x y) = accessMap w x y
 
+{-# INLINE accessMap #-}
 accessMap :: WorldTiles -> Int -> Int -> WallType
 accessMap world x y = mapTiles world ! ((x * fromIntegral (worldSize world)) + y)
 
