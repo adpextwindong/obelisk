@@ -1,122 +1,205 @@
-Resolving dependencies...
-Build profile: -w ghc-8.8.4 -O1
-In order, the following will be built (use -v for more details):
- - obelisk-0.1.0.0 (lib) (configuration changed)
- - obelisk-0.1.0.0 (exe:rayBench) (configuration changed)
- - obelisk-0.1.0.0 (exe:obelisk-exe) (configuration changed)
-Configuring library for obelisk-0.1.0.0..
-Preprocessing library for obelisk-0.1.0.0..
-Building library for obelisk-0.1.0.0..
-[ 9 of 17] Compiling Obelisk.Engine.Ray ( src\Obelisk\Engine\Ray.hs, C:\cygwin64\home\tcrar\dev\obelisk\dist-newstyle\build\x86_64-windows\ghc-8.8.4\obelisk-0.1.0.0\build\Obelisk\Engine\Ray.o )
+[ 9 of 17] Compiling Obelisk.Engine.Ray ( src\Obelisk\Engine\Ray.hs, C:\cygwin64\home\takumi\dev\obelisk\dist-newstyle\build\x86_64-windows\ghc-8.8.4\obelisk-0.1.0.0\build\Obelisk\Engine\Ray.o )
 
 ==================== Tidy Core ====================
 Result size of Tidy Core
-  = {terms: 1,601, types: 1,663, coercions: 9, joins: 7/24}
+  = {terms: 1,873, types: 1,815, coercions: 6, joins: 7/46}
 
 -- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
 lenPassthrough1 = I# 0#
 
 Rec {
 -- RHS size: {terms: 19, types: 9, coercions: 0, joins: 0/0}
-$wgo_rK8F
-  = \ w_sJIn ww_sJIr ->
-      case w_sJIn of {
-        [] -> I# ww_sJIr;
-        : y_a9mO ys_a9mP ->
-          case y_a9mO of {
-            __DEFAULT -> $wgo_rK8F ys_a9mP (+# ww_sJIr 1#);
-            FW -> I# ww_sJIr
+$wgo_rKm5
+  = \ w_sJMx ww_sJMB ->
+      case w_sJMx of {
+        [] -> I# ww_sJMB;
+        : y_a9mw ys_a9mx ->
+          case y_a9mw of {
+            __DEFAULT -> $wgo_rKm5 ys_a9mx (+# ww_sJMB 1#);
+            FW -> I# ww_sJMB
           }
       }
 end Rec }
 
 -- RHS size: {terms: 4, types: 2, coercions: 0, joins: 0/0}
-lenPassthrough = \ x_a9ku -> $wgo_rK8F x_a9ku 0#
-
--- RHS size: {terms: 44, types: 22, coercions: 1, joins: 0/0}
-clipWorld
-  = \ ws_aI51 eta_B1 ->
-      takeWhile
-        (\ v_aI52 ->
-           case v_aI52 of { V2 x_aI53 y_aI54 ->
-           case y_aI54 of { F# x1_sJX9 ->
-           case x_aI53 of { F# x2_sJXc ->
-           case ws_aI51 `cast` <Co:1> of { I32# x#_ajEP ->
-           case leFloat# x2_sJXc (int2Float# x#_ajEP) of {
-             __DEFAULT -> False;
-             1# ->
-               case leFloat# x1_sJX9 (int2Float# x#_ajEP) of {
-                 __DEFAULT -> False;
-                 1# ->
-                   case geFloat# x2_sJXc 0.0# of {
-                     __DEFAULT -> False;
-                     1# -> tagToEnum# (geFloat# x1_sJX9 0.0#)
-                   }
-               }
-           }
-           }
-           }
-           }
-           })
-        eta_B1
+lenPassthrough = \ x_a9kc -> $wgo_rKm5 x_a9kc 0#
 
 -- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
 baseSteps = $w$cenumFrom1 0.0#
 
--- RHS size: {terms: 113, types: 28, coercions: 0, joins: 0/2}
-$wdeltaFirst
-  = \ ww_sJIA ww1_sJIE ->
-      case ltFloat# ww1_sJIE 0.0# of {
+-- RHS size: {terms: 85, types: 25, coercions: 0, joins: 0/5}
+$wbaseStepsBounded
+  = \ w_sJME ww_sJMJ ww1_sJMN ->
+      case gtFloat# ww1_sJMN 0.0# of {
         __DEFAULT ->
-          case decodeFloat_Int# (negateFloat# ww_sJIA) of
-          { (# ipv_aIBy, ipv1_aIBz #) ->
-          case <# ipv1_aIBz 0# of {
+          let { n_aIxj = float2Int# ww_sJMJ } in
+          case ltFloat# ww_sJMJ (int2Float# n_aIxj) of {
             __DEFAULT ->
-              case doubleFromInteger
-                     (negateInteger (shiftLInteger (smallInteger ipv_aIBy) ipv1_aIBz))
-              of wild_ajPM
-              { __DEFAULT ->
-              minusFloat# (double2Float# wild_ajPM) ww_sJIA
+              case <# 0# n_aIxj of {
+                __DEFAULT -> [];
+                1# -> $wunsafeTake n_aIxj baseSteps
               };
             1# ->
-              let { s_sIMp = negateInt# ipv1_aIBz } in
-              case ># s_sIMp 23# of {
+              let { y_atDN = -# n_aIxj 1# } in
+              case <# 0# y_atDN of {
+                __DEFAULT -> [];
+                1# -> $wunsafeTake y_atDN baseSteps
+              }
+          };
+        1# ->
+          case w_sJME of { I# i_ajT5 ->
+          let { x_aIxk = minusFloat# (int2Float# i_ajT5) ww_sJMJ } in
+          let { n_sIIf = float2Int# x_aIxk } in
+          case ltFloat# x_aIxk (int2Float# n_sIIf) of {
+            __DEFAULT ->
+              case <# 0# n_sIIf of {
+                __DEFAULT -> [];
+                1# -> $wunsafeTake n_sIIf baseSteps
+              };
+            1# ->
+              let { y_atDN = -# n_sIIf 1# } in
+              case <# 0# y_atDN of {
+                __DEFAULT -> [];
+                1# -> $wunsafeTake y_atDN baseSteps
+              }
+          }
+          }
+      }
+
+-- RHS size: {terms: 13, types: 7, coercions: 0, joins: 0/0}
+baseStepsBounded
+  = \ w_sJME w1_sJMF w2_sJMG ->
+      case w1_sJMF of { F# ww1_sJMJ ->
+      case w2_sJMG of { F# ww3_sJMN ->
+      $wbaseStepsBounded w_sJME ww1_sJMJ ww3_sJMN
+      }
+      }
+
+Rec {
+-- RHS size: {terms: 90, types: 57, coercions: 0, joins: 0/4}
+mergeIntersections
+  = \ playerpos_aI1c ds_dIr2 ds1_dIr3 ->
+      case ds_dIr2 of wild_XE {
+        [] -> ds1_dIr3;
+        : x_aI1d xs_aI1e ->
+          case ds1_dIr3 of wild1_Xi {
+            [] -> wild_XE;
+            : y_aI1f ys_aI1g ->
+              case playerpos_aI1c of ww8_aIzM { V2 ww9_aIzO ww10_aIzP ->
+              case ww9_aIzO of { F# x1_sK6z ->
+              case ww10_aIzP of { F# x2_sK6C ->
+              case x_aI1d of ww11_aIzR { V2 ww12_aIzT ww13_aIzU ->
+              case ww12_aIzT of { F# x3_sK6t ->
+              case ww13_aIzU of { F# x4_sK6w ->
+              case y_aI1f of ww1_XIDP { V2 ww2_XIDT ww3_XIDV ->
+              case ww2_XIDT of { F# x5_sK6F ->
+              case ww3_XIDV of { F# x6_sK6I ->
+              let { dt2_sIT9 = plusFloat# x1_sK6z (negateFloat# x3_sK6t) } in
+              let { dt3_sITb = plusFloat# x2_sK6C (negateFloat# x4_sK6w) } in
+              let { dt1_sITh = plusFloat# x1_sK6z (negateFloat# x5_sK6F) } in
+              let { dt5_sITi = plusFloat# x2_sK6C (negateFloat# x6_sK6I) } in
+              case ltFloat#
+                     (plusFloat#
+                        (timesFloat# dt2_sIT9 dt2_sIT9) (timesFloat# dt3_sITb dt3_sITb))
+                     (plusFloat#
+                        (timesFloat# dt1_sITh dt1_sITh) (timesFloat# dt5_sITi dt5_sITi))
+              of {
+                __DEFAULT ->
+                  : ww1_XIDP (mergeIntersections ww8_aIzM wild_XE ys_aI1g);
+                1# -> : ww11_aIzR (mergeIntersections ww8_aIzM xs_aI1e wild1_Xi)
+              }
+              }
+              }
+              }
+              }
+              }
+              }
+              }
+              }
+              }
+          }
+      }
+end Rec }
+
+-- RHS size: {terms: 55, types: 15, coercions: 0, joins: 0/3}
+upperBound
+  = \ w_sJMT w1_sJMU w2_sJMV ->
+      case w1_sJMU of { F# ww1_sJMY ->
+      case w2_sJMV of { F# ww3_sJN2 ->
+      case gtFloat# ww3_sJN2 0.0# of {
+        __DEFAULT ->
+          let { n_aIxj = float2Int# ww1_sJMY } in
+          case ltFloat# ww1_sJMY (int2Float# n_aIxj) of {
+            __DEFAULT -> I# n_aIxj;
+            1# -> I# (-# n_aIxj 1#)
+          };
+        1# ->
+          case w_sJMT of { I# i_ajT5 ->
+          let { x_aIxk = minusFloat# (int2Float# i_ajT5) ww1_sJMY } in
+          let { n_sIIu = float2Int# x_aIxk } in
+          case ltFloat# x_aIxk (int2Float# n_sIIu) of {
+            __DEFAULT -> I# n_sIIu;
+            1# -> I# (-# n_sIIu 1#)
+          }
+          }
+      }
+      }
+      }
+
+-- RHS size: {terms: 113, types: 28, coercions: 0, joins: 0/2}
+$wdeltaFirst
+  = \ ww_sJNc ww1_sJNg ->
+      case ltFloat# ww1_sJNg 0.0# of {
+        __DEFAULT ->
+          case decodeFloat_Int# (negateFloat# ww_sJNc) of
+          { (# ipv_aIwF, ipv1_aIwG #) ->
+          case <# ipv1_aIwG 0# of {
+            __DEFAULT ->
+              case doubleFromInteger
+                     (negateInteger (shiftLInteger (smallInteger ipv_aIwF) ipv1_aIwG))
+              of wild_ajPu
+              { __DEFAULT ->
+              minusFloat# (double2Float# wild_ajPu) ww_sJNc
+              };
+            1# ->
+              let { s_sIIw = negateInt# ipv1_aIwG } in
+              case ># s_sIIw 23# of {
                 __DEFAULT ->
                   case doubleFromInteger
-                         (negateInteger (smallInteger (uncheckedIShiftRA# ipv_aIBy s_sIMp)))
-                  of wild_ajPM
+                         (negateInteger (smallInteger (uncheckedIShiftRA# ipv_aIwF s_sIIw)))
+                  of wild_ajPu
                   { __DEFAULT ->
-                  minusFloat# (double2Float# wild_ajPM) ww_sJIA
+                  minusFloat# (double2Float# wild_ajPu) ww_sJNc
                   };
                 1# ->
-                  case <# ipv_aIBy 0# of {
-                    __DEFAULT -> minusFloat# 0.0# ww_sJIA;
-                    1# -> minusFloat# 1.0# ww_sJIA
+                  case <# ipv_aIwF 0# of {
+                    __DEFAULT -> minusFloat# 0.0# ww_sJNc;
+                    1# -> minusFloat# 1.0# ww_sJNc
                   }
               }
           }
           };
         1# ->
-          case decodeFloat_Int# ww_sJIA of { (# ipv_aIBT, ipv1_aIBU #) ->
-          case <# ipv1_aIBU 0# of {
+          case decodeFloat_Int# ww_sJNc of { (# ipv_aIx0, ipv1_aIx1 #) ->
+          case <# ipv1_aIx1 0# of {
             __DEFAULT ->
               case doubleFromInteger
-                     (shiftLInteger (smallInteger ipv_aIBT) ipv1_aIBU)
-              of wild_ajPM
+                     (shiftLInteger (smallInteger ipv_aIx0) ipv1_aIx1)
+              of wild_ajPu
               { __DEFAULT ->
-              minusFloat# (double2Float# wild_ajPM) ww_sJIA
+              minusFloat# (double2Float# wild_ajPu) ww_sJNc
               };
             1# ->
-              let { s_sIMr = negateInt# ipv1_aIBU } in
-              case ># s_sIMr 23# of {
+              let { s_sIIy = negateInt# ipv1_aIx1 } in
+              case ># s_sIIy 23# of {
                 __DEFAULT ->
                   minusFloat#
-                    (double2Float# (int2Double# (uncheckedIShiftRA# ipv_aIBT s_sIMr)))
-                    ww_sJIA;
+                    (double2Float# (int2Double# (uncheckedIShiftRA# ipv_aIx0 s_sIIy)))
+                    ww_sJNc;
                 1# ->
-                  case <# ipv_aIBT 0# of {
-                    __DEFAULT -> minusFloat# 0.0# ww_sJIA;
-                    1# -> minusFloat# -1.0# ww_sJIA
+                  case <# ipv_aIx0 0# of {
+                    __DEFAULT -> minusFloat# 0.0# ww_sJNc;
+                    1# -> minusFloat# -1.0# ww_sJNc
                   }
               }
           }
@@ -125,108 +208,51 @@ $wdeltaFirst
 
 -- RHS size: {terms: 15, types: 7, coercions: 0, joins: 0/0}
 deltaFirst
-  = \ w_sJIw w1_sJIx ->
-      case w_sJIw of { F# ww1_sJIA ->
-      case w1_sJIx of { F# ww3_sJIE ->
-      case $wdeltaFirst ww1_sJIA ww3_sJIE of ww4_sJII { __DEFAULT ->
-      F# ww4_sJII
+  = \ w_sJN8 w1_sJN9 ->
+      case w_sJN8 of { F# ww1_sJNc ->
+      case w1_sJN9 of { F# ww3_sJNg ->
+      case $wdeltaFirst ww1_sJNc ww3_sJNg of ww4_sJNk { __DEFAULT ->
+      F# ww4_sJNk
       }
       }
       }
 
--- RHS size: {terms: 86, types: 60, coercions: 0, joins: 0/3}
-xRayGridIntersections
-  = \ p_aI3o r_aI3p ->
-      let {
-        nr_sIMj
-          = $wnormalize
-              $fFloatingFloat $fMetricV2 $fEpsilonFloat_$cnearZero r_aI3p } in
-      let {
-        firstStep_sIMi
-          = case p_aI3o of { V2 a1_aIzh b_aIzi ->
-            case a1_aIzh of { F# ww1_sJXf ->
-            case nr_sIMj of { V2 a2_XIAy b1_XIAA ->
-            case a2_XIAy of { F# ww3_sJXi ->
-            case $wdeltaFirst ww1_sJXf ww3_sJXi of ww4_sJII { __DEFAULT ->
-            F# (fabsFloat# ww4_sJII)
-            }
-            }
-            }
-            }
-            } } in
-      letrec {
-        go3_a9mI
-          = \ ds_a9mJ ->
-              case ds_a9mJ of {
-                [] -> [];
-                : y_a9mO ys_a9mP ->
-                  : (case p_aI3o of { V2 a1_aIzD b1_aIzE ->
-                     case a1_aIzD of { F# x_sJXr ->
-                     case b1_aIzE of { F# x1_sJXu ->
-                     case nr_sIMj of { V2 a2_XICG b2_XICI ->
-                     case a2_XICG of { F# y1_sJXl ->
-                     case b2_XICI of { F# y2_sJXo ->
-                     case firstStep_sIMi of { F# x2_ajOn ->
-                     case y_a9mO of { F# y3_ajOr ->
-                     case divideFloat# (plusFloat# x2_ajOn y3_ajOr) (fabsFloat# y1_sJXl)
-                     of wild9_aICV
-                     { __DEFAULT ->
-                     V2
-                       (F# (plusFloat# x_sJXr (timesFloat# wild9_aICV y1_sJXl)))
-                       (F# (plusFloat# x1_sJXu (timesFloat# wild9_aICV y2_sJXo)))
-                     }
-                     }
-                     }
-                     }
-                     }
-                     }
-                     }
-                     }
-                     })
-                    (go3_a9mI ys_a9mP)
-              }; } in
-      go3_a9mI baseSteps
-
--- RHS size: {terms: 86, types: 60, coercions: 0, joins: 0/3}
+-- RHS size: {terms: 81, types: 58, coercions: 0, joins: 0/2}
 yRayGridIntersections
-  = \ p_aI4j r_aI4k ->
+  = \ p_aI0U nr_aI0V bss_aI0W ->
       let {
-        nr_sIMb
-          = $wnormalize
-              $fFloatingFloat $fMetricV2 $fEpsilonFloat_$cnearZero r_aI4k } in
-      let {
-        firstStep_sIMa
-          = case p_aI4j of { V2 a1_aIAc b_aIAd ->
-            case b_aIAd of { F# ww1_sJXx ->
-            case nr_sIMb of { V2 a2_XIBu b1_XIBw ->
-            case b1_XIBw of { F# ww3_sJXA ->
-            case $wdeltaFirst ww1_sJXx ww3_sJXA of ww4_sJII { __DEFAULT ->
-            F# (fabsFloat# ww4_sJII)
+        firstStep_sIIo
+          = case p_aI0U of { V2 a1_aIv9 b_aIva ->
+            case b_aIva of { F# ww1_sK6L ->
+            case nr_aI0V of { V2 a2_XIwx b1_XIwz ->
+            case b1_XIwz of { F# ww3_sK6O ->
+            case $wdeltaFirst ww1_sK6L ww3_sK6O of ww4_sJNk { __DEFAULT ->
+            F# (fabsFloat# ww4_sJNk)
             }
             }
             }
             }
             } } in
       letrec {
-        go3_a9mI
-          = \ ds_a9mJ ->
-              case ds_a9mJ of {
+        go3_a9mq
+          = \ ds_a9mr ->
+              case ds_a9mr of {
                 [] -> [];
-                : y_a9mO ys_a9mP ->
-                  : (case p_aI4j of { V2 a1_aIzD b1_aIzE ->
-                     case a1_aIzD of { F# x_sJXJ ->
-                     case b1_aIzE of { F# x1_sJXM ->
-                     case nr_sIMb of { V2 a2_XICM b2_XICO ->
-                     case a2_XICM of { F# y1_sJXD ->
-                     case b2_XICO of { F# y2_sJXG ->
-                     case firstStep_sIMa of { F# x2_ajOn ->
-                     case y_a9mO of { F# y3_ajOr ->
-                     case divideFloat# (plusFloat# x2_ajOn y3_ajOr) (fabsFloat# y2_sJXG)
-                     of wild9_aICV
+                : y_a9mw ys_a9mx ->
+                  : (case p_aI0U of { V2 a1_aIuA b1_aIuB ->
+                     case a1_aIuA of { F# x_sK6X ->
+                     case b1_aIuB of { F# x1_sK70 ->
+                     case nr_aI0V of { V2 a2_XIxG b2_XIxI ->
+                     case a2_XIxG of { F# y1_sK6R ->
+                     case b2_XIxI of { F# y2_sK6U ->
+                     case firstStep_sIIo of { F# x2_ajO5 ->
+                     case y_a9mw of { F# y3_ajO9 ->
+                     case divideFloat# (plusFloat# x2_ajO5 y3_ajO9) (fabsFloat# y2_sK6U)
+                     of wild9_aIxZ
                      { __DEFAULT ->
                      V2
-                       (F# (plusFloat# x_sJXJ (timesFloat# wild9_aICV y1_sJXD)))
-                       (F# (plusFloat# x1_sJXM (timesFloat# wild9_aICV y2_sJXG)))
+                       (F# (plusFloat# x_sK6X (timesFloat# wild9_aIxZ y1_sK6R)))
+                       (F# (plusFloat# x1_sK70 (timesFloat# wild9_aIxZ y2_sK6U)))
                      }
                      }
                      }
@@ -236,47 +262,96 @@ yRayGridIntersections
                      }
                      }
                      })
-                    (go3_a9mI ys_a9mP)
+                    (go3_a9mq ys_a9mx)
               }; } in
-      go3_a9mI baseSteps
+      go3_a9mq bss_aI0W
+
+-- RHS size: {terms: 81, types: 58, coercions: 0, joins: 0/2}
+xRayGridIntersections
+  = \ p_aHZZ nr_aI00 bss_aI01 ->
+      let {
+        firstStep_sIIi
+          = case p_aHZZ of { V2 a1_aIue b_aIuf ->
+            case a1_aIue of { F# ww1_sK73 ->
+            case nr_aI00 of { V2 a2_XIvD b1_XIvF ->
+            case a2_XIvD of { F# ww3_sK76 ->
+            case $wdeltaFirst ww1_sK73 ww3_sK76 of ww4_sJNk { __DEFAULT ->
+            F# (fabsFloat# ww4_sJNk)
+            }
+            }
+            }
+            }
+            } } in
+      letrec {
+        go3_a9mq
+          = \ ds_a9mr ->
+              case ds_a9mr of {
+                [] -> [];
+                : y_a9mw ys_a9mx ->
+                  : (case p_aHZZ of { V2 a1_aIuA b1_aIuB ->
+                     case a1_aIuA of { F# x_sK7f ->
+                     case b1_aIuB of { F# x1_sK7i ->
+                     case nr_aI00 of { V2 a2_XIxF b2_XIxH ->
+                     case a2_XIxF of { F# y1_sK79 ->
+                     case b2_XIxH of { F# y2_sK7c ->
+                     case firstStep_sIIi of { F# x2_ajO5 ->
+                     case y_a9mw of { F# y3_ajO9 ->
+                     case divideFloat# (plusFloat# x2_ajO5 y3_ajO9) (fabsFloat# y1_sK79)
+                     of wild9_aIxZ
+                     { __DEFAULT ->
+                     V2
+                       (F# (plusFloat# x_sK7f (timesFloat# wild9_aIxZ y1_sK79)))
+                       (F# (plusFloat# x1_sK7i (timesFloat# wild9_aIxZ y2_sK7c)))
+                     }
+                     }
+                     }
+                     }
+                     }
+                     }
+                     }
+                     }
+                     })
+                    (go3_a9mq ys_a9mx)
+              }; } in
+      go3_a9mq bss_aI01
 
 -- RHS size: {terms: 95, types: 37, coercions: 0, joins: 1/1}
 $wepsilonBump
-  = \ w_sJJ0 w1_sJJ1 ->
-      (# w1_sJJ1,
-         case w1_sJJ1 of { V2 a1_aIzh b_aIzi ->
-         case a1_aIzh of { F# x_sJXP ->
-         case b_aIzi of { F# x1_sJXY ->
-         case w_sJJ0 of { V2 a2_aIzD b1_aIzE ->
-         case a2_aIzD of { F# x2_sJXS ->
-         case b1_aIzE of { F# x3_sJXV ->
+  = \ w_sJNE w1_sJNF ->
+      (# w1_sJNF,
+         case w1_sJNF of { V2 a1_aIue b_aIuf ->
+         case a1_aIue of { F# x_sK7l ->
+         case b_aIuf of { F# x1_sK7u ->
+         case w_sJNE of { V2 a2_aIuA b1_aIuB ->
+         case a2_aIuA of { F# x2_sK7o ->
+         case b1_aIuB of { F# x3_sK7r ->
          join {
-           $w$j_sJIZ ww_sJIX
-             = case gtFloat# x3_sJXV 0.0# of {
+           $w$j_sJND ww_sJNB
+             = case gtFloat# x3_sK7r 0.0# of {
                  __DEFAULT ->
-                   case ltFloat# x3_sJXV 0.0# of {
+                   case ltFloat# x3_sK7r 0.0# of {
                      __DEFAULT ->
                        V2
-                         (I# (float2Int# (plusFloat# x_sJXP (timesFloat# 1.0e-5# ww_sJIX))))
+                         (I# (float2Int# (plusFloat# x_sK7l (timesFloat# 1.0e-5# ww_sJNB))))
                          (I#
-                            (float2Int# (plusFloat# x1_sJXY (timesFloat# 1.0e-5# x3_sJXV))));
+                            (float2Int# (plusFloat# x1_sK7u (timesFloat# 1.0e-5# x3_sK7r))));
                      1# ->
                        V2
-                         (I# (float2Int# (plusFloat# x_sJXP (timesFloat# 1.0e-5# ww_sJIX))))
-                         (I# (float2Int# (plusFloat# x1_sJXY -1.0e-5#)))
+                         (I# (float2Int# (plusFloat# x_sK7l (timesFloat# 1.0e-5# ww_sJNB))))
+                         (I# (float2Int# (plusFloat# x1_sK7u -1.0e-5#)))
                    };
                  1# ->
                    V2
-                     (I# (float2Int# (plusFloat# x_sJXP (timesFloat# 1.0e-5# ww_sJIX))))
-                     (I# (float2Int# (plusFloat# x1_sJXY 1.0e-5#)))
+                     (I# (float2Int# (plusFloat# x_sK7l (timesFloat# 1.0e-5# ww_sJNB))))
+                     (I# (float2Int# (plusFloat# x1_sK7u 1.0e-5#)))
                } } in
-         case gtFloat# x2_sJXS 0.0# of {
+         case gtFloat# x2_sK7o 0.0# of {
            __DEFAULT ->
-             case ltFloat# x2_sJXS 0.0# of {
-               __DEFAULT -> jump $w$j_sJIZ x2_sJXS;
-               1# -> jump $w$j_sJIZ -1.0#
+             case ltFloat# x2_sK7o 0.0# of {
+               __DEFAULT -> jump $w$j_sJND x2_sK7o;
+               1# -> jump $w$j_sJND -1.0#
              };
-           1# -> jump $w$j_sJIZ 1.0#
+           1# -> jump $w$j_sJND 1.0#
          }
          }
          }
@@ -287,39 +362,82 @@ $wepsilonBump
 
 -- RHS size: {terms: 10, types: 19, coercions: 0, joins: 0/0}
 epsilonBump
-  = \ w_sJJ0 w1_sJJ1 ->
-      case $wepsilonBump w_sJJ0 w1_sJJ1 of { (# ww1_sJKH, ww2_sJKI #) ->
-      (ww1_sJKH, ww2_sJKI)
+  = \ w_sJNE w1_sJNF ->
+      case $wepsilonBump w_sJNE w1_sJNF of { (# ww1_sJQ7, ww2_sJQ8 #) ->
+      (ww1_sJQ7, ww2_sJQ8)
+      }
+
+-- RHS size: {terms: 51, types: 39, coercions: 0, joins: 0/6}
+$wshootRay'
+  = \ w_sJNK ww_sJNS ww1_sJNX ww2_sJO5 ww3_sJOa ->
+      let { direction_sJS8 = F# ww3_sJOa } in
+      let { direction1_sJS7 = F# ww2_sJO5 } in
+      let { direction2_aI14 = V2 direction1_sJS7 direction_sJS8 } in
+      let { playerpos_sJS6 = F# ww1_sJNX } in
+      let { playerpos1_sJS5 = F# ww_sJNS } in
+      let { playerpos2_aI13 = V2 playerpos1_sJS5 playerpos_sJS6 } in
+      map
+        (\ w1_sJNF ->
+           case $wepsilonBump direction2_aI14 w1_sJNF of
+           { (# ww5_sJQ7, ww6_sJQ8 #) ->
+           (ww5_sJQ7, ww6_sJQ8)
+           })
+        (mergeIntersections
+           playerpos2_aI13
+           (xRayGridIntersections
+              playerpos2_aI13
+              direction2_aI14
+              ($wbaseStepsBounded w_sJNK ww_sJNS ww2_sJO5))
+           (yRayGridIntersections
+              playerpos2_aI13
+              direction2_aI14
+              ($wbaseStepsBounded w_sJNK ww1_sJNX ww3_sJOa)))
+
+-- RHS size: {terms: 27, types: 21, coercions: 0, joins: 0/0}
+shootRay'
+  = \ w_sJNK w1_sJNL w2_sJNM ->
+      case w1_sJNL of { V2 ww1_sJNP ww2_sJNU ->
+      case ww1_sJNP of { F# ww4_sK7x ->
+      case ww2_sJNU of { F# ww6_sK7A ->
+      case w2_sJNM of { V2 ww8_sJO2 ww9_sJO7 ->
+      case ww8_sJO2 of { F# ww11_sK7D ->
+      case ww9_sJO7 of { F# ww13_sK7G ->
+      $wshootRay' w_sJNK ww4_sK7x ww6_sK7A ww11_sK7D ww13_sK7G
+      }
+      }
+      }
+      }
+      }
       }
 
 Rec {
 -- RHS size: {terms: 56, types: 67, coercions: 1, joins: 0/0}
 $wsampleWalkRayPaths
-  = \ w_sJJ6 w1_sJJ8 w2_sJJ9 ->
-      case w2_sJJ9 of {
+  = \ w_sJOe w1_sJOg w2_sJOh ->
+      case w2_sJOh of {
         [] -> Nothing;
-        : step_aI4R path_aI4S ->
-          case $wepsilonBump w1_sJJ8 step_aI4R of
-          { (# ww1_sJKH, ww2_sJKI #) ->
-          case ww2_sJKI of wild1_X2H { V2 x1_aCJs y_aCJt ->
-          case x1_aCJs of { I# ww15_sJY7 ->
-          case y_aCJt of { I# ww17_sJYa ->
-          case w_sJJ6 of ww3_sFtB { WorldTiles ww4_sFtC ww5_sFtS ->
-          case ww4_sFtC of { Array ww7_sFtF ww8_sFtK ww9_sFtP ww10_sFtQ ->
-          case ww7_sFtF of { I# ww12_sJY1 ->
-          case ww8_sFtK of { I# ww20_sJY4 ->
-          case ww5_sFtS `cast` <Co:1> of { I32# ww22_sFtV ->
+        : step_aI1m path_aI1n ->
+          case $wepsilonBump w1_sJOg step_aI1m of
+          { (# ww1_sJQ7, ww2_sJQ8 #) ->
+          case ww2_sJQ8 of wild1_X2H { V2 x1_aCHt y_aCHu ->
+          case x1_aCHt of { I# ww15_sK7P ->
+          case y_aCHu of { I# ww17_sK7S ->
+          case w_sJOe of ww3_sFs7 { WorldTiles ww4_sFs8 ww5_sFso ->
+          case ww4_sFs8 of { Array ww7_sFsb ww8_sFsg ww9_sFsl ww10_sFsm ->
+          case ww7_sFsb of { I# ww12_sK7J ->
+          case ww8_sFsg of { I# ww20_sK7M ->
+          case ww5_sFso `cast` <Co:1> of { I32# ww22_sFsr ->
           case $waccessMap
-                 ww12_sJY1
-                 ww20_sJY4
-                 ww9_sFtP
-                 ww10_sFtQ
-                 ww22_sFtV
-                 ww15_sJY7
-                 ww17_sJYa
+                 ww12_sK7J
+                 ww20_sK7M
+                 ww9_sFsl
+                 ww10_sFsm
+                 ww22_sFsr
+                 ww15_sK7P
+                 ww17_sK7S
           of {
-            __DEFAULT -> $wsampleWalkRayPaths ww3_sFtB w1_sJJ8 path_aI4S;
-            FW -> Just (ww1_sJKH, wild1_X2H)
+            __DEFAULT -> $wsampleWalkRayPaths ww3_sFs7 w1_sJOg path_aI1n;
+            FW -> Just (ww1_sJQ7, wild1_X2H)
           }
           }
           }
@@ -335,89 +453,58 @@ end Rec }
 
 -- RHS size: {terms: 8, types: 8, coercions: 0, joins: 0/0}
 sampleWalkRayPaths
-  = \ w_sJJ6 _ w2_sJJ8 w3_sJJ9 ->
-      $wsampleWalkRayPaths w_sJJ6 w2_sJJ8 w3_sJJ9
+  = \ w_sJOe _ w2_sJOg w3_sJOh ->
+      $wsampleWalkRayPaths w_sJOe w2_sJOg w3_sJOh
 
-Rec {
--- RHS size: {terms: 45, types: 35, coercions: 0, joins: 0/0}
-mergeIntersections
-  = \ playerpos_aI4B ds_dIuQ ds1_dIuR ->
-      case ds_dIuQ of wild_XB {
-        [] -> ds1_dIuR;
-        : x_aI4C xs_aI4D ->
-          case ds1_dIuR of wild1_Xe {
-            [] -> wild_XB;
-            : y_aI4E ys_aI4F ->
-              case $w$cdistance $fFractionalFloat sqrtFloat playerpos_aI4B x_aI4C
-              of
-              { F# x1_aIxp ->
-              case $w$cdistance $fFractionalFloat sqrtFloat playerpos_aI4B y_aI4E
-              of
-              { F# y1_aIxt ->
-              case ltFloat# x1_aIxp y1_aIxt of {
-                __DEFAULT ->
-                  : y_aI4E (mergeIntersections playerpos_aI4B wild_XB ys_aI4F);
-                1# -> : x_aI4C (mergeIntersections playerpos_aI4B xs_aI4D wild1_Xe)
-              }
-              }
-              }
-          }
-      }
-end Rec }
-
--- RHS size: {terms: 28, types: 16, coercions: 4, joins: 0/0}
-shootRay'
-  = \ ws_aI4r playerpos_aI4s direction_aI4t ->
-      map
-        (epsilonBump direction_aI4t)
-        (mergeIntersections
-           playerpos_aI4s
-           (clipWorld
-              (case ws_aI4r of { I# x#_ajDu ->
-               (I32# (narrow32Int# x#_ajDu)) `cast` <Co:2>
-               })
-              (xRayGridIntersections playerpos_aI4s direction_aI4t))
-           (clipWorld
-              (case ws_aI4r of { I# x#_ajDu ->
-               (I32# (narrow32Int# x#_ajDu)) `cast` <Co:2>
-               })
-              (yRayGridIntersections playerpos_aI4s direction_aI4t)))
-
--- RHS size: {terms: 24, types: 15, coercions: 0, joins: 0/0}
-rayCast'
-  = \ world_aI4W p_aI4X r_aI4Y ->
+-- RHS size: {terms: 58, types: 29, coercions: 2, joins: 0/6}
+$wrayCast'
+  = \ w_sJOj ww_sJOr ww1_sJOw ww2_sJOE ww3_sJOJ ->
+      let { r_sJSA = F# ww3_sJOJ } in
+      let { r1_sJSz = F# ww2_sJOE } in
+      let { r2_aI1t = V2 r1_sJSz r_sJSA } in
+      let { p_sJSy = F# ww1_sJOw } in
+      let { p1_sJSx = F# ww_sJOr } in
+      let { p2_aI1s = V2 p1_sJSx p_sJSy } in
       $wsampleWalkRayPaths
-        world_aI4W
-        r_aI4Y
+        w_sJOj
+        r2_aI1t
         (mergeIntersections
-           p_aI4X
-           (clipWorld
-              (case world_aI4W of { WorldTiles ds1_dEkB ds2_dEkC -> ds2_dEkC })
-              (xRayGridIntersections p_aI4X r_aI4Y))
-           (clipWorld
-              (case world_aI4W of { WorldTiles ds1_dEkB ds2_dEkC -> ds2_dEkC })
-              (yRayGridIntersections p_aI4X r_aI4Y)))
+           p2_aI1s
+           (xRayGridIntersections
+              p2_aI1s
+              r2_aI1t
+              ($wbaseStepsBounded
+                 (case w_sJOj of { WorldTiles ds1_dEj7 ds2_dEj8 ->
+                  case ds2_dEj8 `cast` <Co:1> of { I32# x#_ajEx -> I# x#_ajEx }
+                  })
+                 ww_sJOr
+                 ww2_sJOE))
+           (yRayGridIntersections
+              p2_aI1s
+              r2_aI1t
+              ($wbaseStepsBounded
+                 (case w_sJOj of { WorldTiles ds1_dEj7 ds2_dEj8 ->
+                  case ds2_dEj8 `cast` <Co:1> of { I32# x#_ajEx -> I# x#_ajEx }
+                  })
+                 ww1_sJOw
+                 ww3_sJOJ)))
 
--- RHS size: {terms: 25, types: 13, coercions: 0, joins: 0/0}
-playerPointOrdering
-  = \ playerpos_aI4L x_aI4M y_aI4N ->
-      case $w$cdistance $fFractionalFloat sqrtFloat playerpos_aI4L x_aI4M
-      of
-      { F# x1_aIxp ->
-      case $w$cdistance $fFractionalFloat sqrtFloat playerpos_aI4L y_aI4N
-      of
-      { F# y1_aIxt ->
-      case ltFloat# x1_aIxp y1_aIxt of {
-        __DEFAULT -> GT;
-        1# -> LT
+-- RHS size: {terms: 27, types: 21, coercions: 0, joins: 0/0}
+rayCast'
+  = \ w_sJOj w1_sJOk w2_sJOl ->
+      case w1_sJOk of { V2 ww1_sJOo ww2_sJOt ->
+      case ww1_sJOo of { F# ww4_sK7V ->
+      case ww2_sJOt of { F# ww6_sK7Y ->
+      case w2_sJOl of { V2 ww8_sJOB ww9_sJOG ->
+      case ww8_sJOB of { F# ww11_sK81 ->
+      case ww9_sJOG of { F# ww13_sK84 ->
+      $wrayCast' w_sJOj ww4_sK7V ww6_sK7Y ww11_sK81 ww13_sK84
       }
       }
       }
-
--- RHS size: {terms: 8, types: 10, coercions: 0, joins: 0/0}
-mergeIntersections2
-  = \ playerpos_aI4I xs_aI4J ys_aI4K ->
-      mergeBy (playerPointOrdering playerpos_aI4I) xs_aI4J ys_aI4K
+      }
+      }
+      }
 
 -- RHS size: {terms: 1, types: 0, coercions: 0, joins: 0/0}
 $trModule2 = "Obelisk.Engine.Ray"#
@@ -437,39 +524,39 @@ $trModule = Module $trModule3 $trModule1
 Rec {
 -- RHS size: {terms: 74, types: 54, coercions: 1, joins: 0/0}
 wallSamples
-  = \ gs_aI5A ds_dIm4 ->
-      case ds_dIm4 of {
+  = \ gs_aI21 ds_dIij ->
+      case ds_dIij of {
         [] -> [];
-        : r_aI5C rs_aI5D ->
-          case r_aI5C of { V2 ww1_sFuP ww2_sFuU ->
-          case ww1_sFuP of { I# ww4_sJYd ->
-          case ww2_sFuU of { I# ww6_sJYg ->
-          case >=# ww4_sJYd 0# of {
+        : r_aI23 rs_aI24 ->
+          case r_aI23 of { V2 ww1_sFtl ww2_sFtq ->
+          case ww1_sFtl of { I# ww4_sK87 ->
+          case ww2_sFtq of { I# ww6_sK8a ->
+          case >=# ww4_sK87 0# of {
             __DEFAULT -> [];
             1# ->
-              case >=# ww6_sJYg 0# of {
+              case >=# ww6_sK8a 0# of {
                 __DEFAULT -> [];
                 1# ->
-                  case gs_aI5A of wild1_X1s
-                  { Vars ds1_dEkj ds2_dEkk ds3_dEkl ds4_dEkm ->
-                  case ds2_dEkk of { WorldTiles ds5_dEkB ds6_dEkC ->
-                  case ds6_dEkC `cast` <Co:1> of { I32# x#_ajEP ->
-                  case <# ww4_sJYd x#_ajEP of {
+                  case gs_aI21 of wild1_X1s
+                  { Vars ds1_dEiP ds2_dEiQ ds3_dEiR ds4_dEiS ->
+                  case ds2_dEiQ of { WorldTiles ds5_dEj7 ds6_dEj8 ->
+                  case ds6_dEj8 `cast` <Co:1> of { I32# x#_ajEx ->
+                  case <# ww4_sK87 x#_ajEx of {
                     __DEFAULT -> [];
                     1# ->
-                      case <# ww6_sJYg x#_ajEP of {
+                      case <# ww6_sK8a x#_ajEx of {
                         __DEFAULT -> [];
                         1# ->
-                          : (case ds5_dEkB of
-                             { Array ww8_sFtF ww9_sFtK ww10_sFtP ww11_sFtQ ->
-                             case ww8_sFtF of { I# ww13_sJYj ->
-                             case ww9_sFtK of { I# ww15_sJYm ->
+                          : (case ds5_dEj7 of
+                             { Array ww8_sFsb ww9_sFsg ww10_sFsl ww11_sFsm ->
+                             case ww8_sFsb of { I# ww13_sK8d ->
+                             case ww9_sFsg of { I# ww15_sK8g ->
                              $waccessMap
-                               ww13_sJYj ww15_sJYm ww10_sFtP ww11_sFtQ x#_ajEP ww4_sJYd ww6_sJYg
+                               ww13_sK8d ww15_sK8g ww10_sFsl ww11_sFsm x#_ajEx ww4_sK87 ww6_sK8a
                              }
                              }
                              })
-                            (wallSamples wild1_X1s rs_aI5D)
+                            (wallSamples wild1_X1s rs_aI24)
                       }
                   }
                   }
@@ -502,125 +589,151 @@ cameraPlaneSweep4 = :% cameraPlaneSweep5 cameraPlaneSweep1
 cameraPlaneSweep_$scameraPlaneSweep
   = \ eta_B1 ->
       let {
-        lvl_sIQl
-          = case eta_B1 `cast` <Co:1> of { I32# x#_ajEP ->
-            F# (int2Float# x#_ajEP)
+        lvl_sIM0
+          = case eta_B1 `cast` <Co:1> of { I32# x#_ajEx ->
+            F# (int2Float# x#_ajEx)
             } } in
       letrec {
-        go3_a9mI
-          = \ ds_a9mJ ->
-              case ds_a9mJ of {
+        go3_a9mq
+          = \ ds_a9mr ->
+              case ds_a9mr of {
                 [] -> [];
-                : y_a9mO ys_a9mP ->
-                  : (case y_a9mO of { F# x_aICP ->
-                     case lvl_sIQl of { F# y1_aICT ->
-                     case divideFloat# x_aICP y1_aICT of wild3_aICV { __DEFAULT ->
-                     F# (minusFloat# (plusFloat# wild3_aICV wild3_aICV) 1.0#)
+                : y_a9mw ys_a9mx ->
+                  : (case y_a9mw of { F# x_aIxT ->
+                     case lvl_sIM0 of { F# y1_aIxX ->
+                     case divideFloat# x_aIxT y1_aIxX of wild3_aIxZ { __DEFAULT ->
+                     F# (minusFloat# (plusFloat# wild3_aIxZ wild3_aIxZ) 1.0#)
                      }
                      }
                      })
-                    (go3_a9mI ys_a9mP)
+                    (go3_a9mq ys_a9mx)
               }; } in
-      go3_a9mI
+      go3_a9mq
         ($w$cenumFromTo1
            0.0#
-           (case eta_B1 `cast` <Co:1> of { I32# x#_ajEP ->
-            F# (minusFloat# (int2Float# x#_ajEP) 1.0#)
+           (case eta_B1 `cast` <Co:1> of { I32# x#_ajEx ->
+            F# (minusFloat# (int2Float# x#_ajEx) 1.0#)
             }))
 
 -- RHS size: {terms: 56, types: 60, coercions: 0, joins: 0/5}
 $wcameraPlaneSweep
-  = \ @ a_sJJs @ a1_sJJt w_sJJu w1_sJJv ww_sJJG w2_sJJx ->
-      let { lvl_sIQx = fromRational w1_sJJv cameraPlaneSweep4 } in
-      let { lvl1_sIQC = fromRational w1_sJJv cameraPlaneSweep3 } in
-      let { $dNum_sIMt = $p1Fractional w1_sJJv } in
+  = \ @ a_sJOS @ a1_sJOT w_sJOU w1_sJOV ww_sJP6 w2_sJOX ->
+      let { lvl_sIMc = fromRational w1_sJOV cameraPlaneSweep4 } in
+      let { lvl1_sIMh = fromRational w1_sJOV cameraPlaneSweep3 } in
+      let { $dNum_sIIA = $p1Fractional w1_sJOV } in
       let {
-        lvl2_sIQy
-          = case $dNum_sIMt of
-            { C:Num ww2_ajwD ww3_ajwE ww4_ajwF ww5_ajwG ww6_ajwH ww7_ajwI
-                    ww8_ajwJ ->
-            ww8_ajwJ (toInteger w_sJJu w2_sJJx)
+        lvl2_sIMd
+          = case $dNum_sIIA of
+            { C:Num ww2_ajwl ww3_ajwm ww4_ajwn ww5_ajwo ww6_ajwp ww7_ajwq
+                    ww8_ajwr ->
+            ww8_ajwr (toInteger w_sJOU w2_sJOX)
             } } in
       letrec {
-        go3_a9mI
-          = \ ds_a9mJ ->
-              case ds_a9mJ of {
+        go3_a9mq
+          = \ ds_a9mr ->
+              case ds_a9mr of {
                 [] -> [];
-                : y_a9mO ys_a9mP ->
-                  : (- $dNum_sIMt
-                       (* $dNum_sIMt lvl_sIQx (/ w1_sJJv y_a9mO lvl2_sIQy))
-                       lvl1_sIQC)
-                    (go3_a9mI ys_a9mP)
+                : y_a9mw ys_a9mx ->
+                  : (- $dNum_sIIA
+                       (* $dNum_sIIA lvl_sIMc (/ w1_sJOV y_a9mw lvl2_sIMd))
+                       lvl1_sIMh)
+                    (go3_a9mq ys_a9mx)
               }; } in
-      go3_a9mI
-        (ww_sJJG
-           (fromInteger $dNum_sIMt cameraPlaneSweep2)
-           (- $dNum_sIMt
-              lvl2_sIQy
-              (fromInteger $dNum_sIMt cameraPlaneSweep1)))
+      go3_a9mq
+        (ww_sJP6
+           (fromInteger $dNum_sIIA cameraPlaneSweep2)
+           (- $dNum_sIIA
+              lvl2_sIMd
+              (fromInteger $dNum_sIIA cameraPlaneSweep1)))
 
 -- RHS size: {terms: 14, types: 39, coercions: 0, joins: 0/0}
 cameraPlaneSweep
-  = \ @ a_sJJs @ a1_sJJt w_sJJu w1_sJJv w2_sJJw w3_sJJx ->
-      case w2_sJJw of
-      { C:Enum ww1_sJJA ww2_sJJB ww3_sJJC ww4_sJJD ww5_sJJE ww6_sJJF
-               ww7_sJJG ww8_sJJH ->
-      $wcameraPlaneSweep w_sJJu w1_sJJv ww7_sJJG w3_sJJx
+  = \ @ a_sJOS @ a1_sJOT w_sJOU w1_sJOV w2_sJOW w3_sJOX ->
+      case w2_sJOW of
+      { C:Enum ww1_sJP0 ww2_sJP1 ww3_sJP2 ww4_sJP3 ww5_sJP4 ww6_sJP5
+               ww7_sJP6 ww8_sJP7 ->
+      $wcameraPlaneSweep w_sJOU w1_sJOV ww7_sJP6 w3_sJOX
       }
 
--- RHS size: {terms: 52, types: 44, coercions: 0, joins: 0/1}
+-- RHS size: {terms: 56, types: 46, coercions: 0, joins: 0/1}
 rayHeads
-  = \ screenWidth_aI5a player_aI5b ->
+  = \ screenWidth_aI1B player_aI1C ->
       letrec {
-        go3_a9mI
-          = \ ds_a9mJ ->
-              case ds_a9mJ of {
+        go3_a9mq
+          = \ ds_a9mr ->
+              case ds_a9mr of {
                 [] -> [];
-                : y_a9mO ys_a9mP ->
-                  : (case player_aI5b of { PVars ds1_dEkI ds2_dEkJ ds3_dEkK ->
-                     case ds2_dEkJ of { V2 a1_aIzD b1_aIzE ->
-                     case a1_aIzD of { F# x_sJYv ->
-                     case b1_aIzE of { F# x1_sJYy ->
-                     case ds3_dEkK of { V2 a2_XICW b2_XICY ->
-                     case a2_XICW of { F# x2_sJYp ->
-                     case b2_XICY of { F# x3_sJYs ->
-                     case y_a9mO of { F# y1_ajNn ->
-                     V2
-                       (F# (plusFloat# x_sJYv (timesFloat# x2_sJYp y1_ajNn)))
-                       (F# (plusFloat# x1_sJYy (timesFloat# x3_sJYs y1_ajNn)))
-                     }
-                     }
-                     }
-                     }
-                     }
-                     }
-                     }
-                     })
-                    (go3_a9mI ys_a9mP)
+                : y_a9mw ys_a9mx ->
+                  : ($wnormalize
+                       $fFloatingFloat
+                       $fMetricV2
+                       $fEpsilonFloat_$cnearZero
+                       (case player_aI1C of { PVars ds1_dEje ds2_dEjf ds3_dEjg ->
+                        case ds2_dEjf of { V2 a1_aIuA b1_aIuB ->
+                        case a1_aIuA of { F# x_sK8p ->
+                        case b1_aIuB of { F# x1_sK8s ->
+                        case ds3_dEjg of { V2 a2_XIy0 b2_XIy2 ->
+                        case a2_XIy0 of { F# x2_sK8j ->
+                        case b2_XIy2 of { F# x3_sK8m ->
+                        case y_a9mw of { F# y1_ajN5 ->
+                        V2
+                          (F# (plusFloat# x_sK8p (timesFloat# x2_sK8j y1_ajN5)))
+                          (F# (plusFloat# x1_sK8s (timesFloat# x3_sK8m y1_ajN5)))
+                        }
+                        }
+                        }
+                        }
+                        }
+                        }
+                        }
+                        }))
+                    (go3_a9mq ys_a9mx)
               }; } in
-      go3_a9mI (cameraPlaneSweep_$scameraPlaneSweep screenWidth_aI5a)
+      go3_a9mq (cameraPlaneSweep_$scameraPlaneSweep screenWidth_aI1B)
 
--- RHS size: {terms: 13, types: 18, coercions: 0, joins: 0/0}
+-- RHS size: {terms: 35, types: 36, coercions: 0, joins: 0/0}
 genRays
-  = \ screenWidth_aI55 player_aI56 worldSize_aI57 ->
+  = \ screenWidth_aI1w player_aI1x worldSize_aI1y ->
       map
-        (shootRay'
-           worldSize_aI57
-           (case player_aI56 of { PVars ds1_dEkE ds2_dEkF ds3_dEkG ->
-            ds1_dEkE
-            }))
-        (rayHeads screenWidth_aI55 player_aI56)
+        (\ w_sJNM ->
+           case player_aI1x of { PVars ds1_dEja ds2_dEjb ds3_dEjc ->
+           case ds1_dEja of { V2 ww1_sJNP ww2_sJNU ->
+           case ww1_sJNP of { F# ww4_sK8v ->
+           case ww2_sJNU of { F# ww6_sK8y ->
+           case w_sJNM of { V2 ww8_sJO2 ww9_sJO7 ->
+           case ww8_sJO2 of { F# ww11_sK8B ->
+           case ww9_sJO7 of { F# ww13_sK8E ->
+           $wshootRay' worldSize_aI1y ww4_sK8v ww6_sK8y ww11_sK8B ww13_sK8E
+           }
+           }
+           }
+           }
+           }
+           }
+           })
+        (rayHeads screenWidth_aI1w player_aI1x)
 
--- RHS size: {terms: 13, types: 18, coercions: 0, joins: 0/0}
+-- RHS size: {terms: 35, types: 36, coercions: 0, joins: 0/0}
 rayCastScreen
-  = \ screenWidth_aI5d player_aI5e world_aI5f ->
+  = \ screenWidth_aI1E player_aI1F world_aI1G ->
       map
-        (rayCast'
-           world_aI5f
-           (case player_aI5e of { PVars ds1_dEkE ds2_dEkF ds3_dEkG ->
-            ds1_dEkE
-            }))
-        (rayHeads screenWidth_aI5d player_aI5e)
+        (\ w_sJOl ->
+           case player_aI1F of { PVars ds1_dEja ds2_dEjb ds3_dEjc ->
+           case ds1_dEja of { V2 ww1_sJOo ww2_sJOt ->
+           case ww1_sJOo of { F# ww4_sK8H ->
+           case ww2_sJOt of { F# ww6_sK8K ->
+           case w_sJOl of { V2 ww8_sJOB ww9_sJOG ->
+           case ww8_sJOB of { F# ww11_sK8N ->
+           case ww9_sJOG of { F# ww13_sK8Q ->
+           $wrayCast' world_aI1G ww4_sK8H ww6_sK8K ww11_sK8N ww13_sK8Q
+           }
+           }
+           }
+           }
+           }
+           }
+           })
+        (rayHeads screenWidth_aI1E player_aI1F)
 
 -- RHS size: {terms: 2, types: 0, coercions: 0, joins: 0/0}
 epsilon = F# 1.0e-5#
@@ -628,103 +741,103 @@ epsilon = F# 1.0e-5#
 Rec {
 -- RHS size: {terms: 108, types: 78, coercions: 0, joins: 2/2}
 $w$sgo4
-  = \ w_sJJN ww_sJJV ww1_sJK0 w1_sJJP ->
-      case w1_sJJP of wild_aIOn {
-        Bin dt_aIOp y_aIOq l_aIOr r_aIOs ->
-          case y_aIOq of wild1_sJYM { V2 b1_sJYN b2_sJYO ->
-          case b1_sJYN of { I# y#_sJYR ->
-          case b2_sJYO of { I# y#1_sJYU ->
+  = \ w_sJPd ww_sJPl ww1_sJPq w1_sJPf ->
+      case w1_sJPf of wild_aIKu {
+        Bin dt_aIKw y_aIKx l_aIKy r_aIKz ->
+          case y_aIKx of wild1_sK94 { V2 b1_sK95 b2_sK96 ->
+          case b1_sK95 of { I# y#_sK99 ->
+          case b2_sK96 of { I# y#1_sK9c ->
           join {
-            $j_sITp
-              = case $w$sgo4 w_sJJN ww_sJJV ww1_sJK0 l_aIOr of l'_aIOx
+            $j_sIPi
+              = case $w$sgo4 w_sJPd ww_sJPl ww1_sJPq l_aIKy of l'_aIKE
                 { __DEFAULT ->
-                case reallyUnsafePtrEquality# l'_aIOx l_aIOr of {
-                  __DEFAULT -> balanceL wild1_sJYM l'_aIOx r_aIOs;
-                  1# -> wild_aIOn
+                case reallyUnsafePtrEquality# l'_aIKE l_aIKy of {
+                  __DEFAULT -> balanceL wild1_sK94 l'_aIKE r_aIKz;
+                  1# -> wild_aIKu
                 }
                 } } in
-          case <# ww_sJJV y#_sJYR of {
+          case <# ww_sJPl y#_sK99 of {
             __DEFAULT ->
               join {
-                $j1_sITr
-                  = case $w$sgo4 w_sJJN ww_sJJV ww1_sJK0 r_aIOs of r'_aIOF
+                $j1_sIPk
+                  = case $w$sgo4 w_sJPd ww_sJPl ww1_sJPq r_aIKz of r'_aIKM
                     { __DEFAULT ->
-                    case reallyUnsafePtrEquality# r'_aIOF r_aIOs of {
-                      __DEFAULT -> balanceR wild1_sJYM l_aIOr r'_aIOF;
-                      1# -> wild_aIOn
+                    case reallyUnsafePtrEquality# r'_aIKM r_aIKz of {
+                      __DEFAULT -> balanceR wild1_sK94 l_aIKy r'_aIKM;
+                      1# -> wild_aIKu
                     }
                     } } in
-              case ==# ww_sJJV y#_sJYR of {
-                __DEFAULT -> jump $j1_sITr;
+              case ==# ww_sJPl y#_sK99 of {
+                __DEFAULT -> jump $j1_sIPk;
                 1# ->
-                  case <# ww1_sJK0 y#1_sJYU of {
+                  case <# ww1_sJPq y#1_sK9c of {
                     __DEFAULT ->
-                      case ==# ww1_sJK0 y#1_sJYU of {
-                        __DEFAULT -> jump $j1_sITr;
+                      case ==# ww1_sJPq y#1_sK9c of {
+                        __DEFAULT -> jump $j1_sIPk;
                         1# ->
-                          case lazy w_sJJN of wild2_aIOB { V2 ipv_sITf ipv1_sITg ->
-                          case reallyUnsafePtrEquality# w_sJJN wild1_sJYM of {
-                            __DEFAULT -> Bin dt_aIOp wild2_aIOB l_aIOr r_aIOs;
-                            1# -> wild_aIOn
+                          case lazy w_sJPd of wild2_aIKI { V2 ipv_sIP8 ipv1_sIP9 ->
+                          case reallyUnsafePtrEquality# w_sJPd wild1_sK94 of {
+                            __DEFAULT -> Bin dt_aIKw wild2_aIKI l_aIKy r_aIKz;
+                            1# -> wild_aIKu
                           }
                           }
                       };
-                    1# -> jump $j_sITp
+                    1# -> jump $j_sIPi
                   }
               };
-            1# -> jump $j_sITp
+            1# -> jump $j_sIPi
           }
           }
           }
           };
         Tip ->
-          case lazy w_sJJN of dt_XIms { V2 ipv_sITD ipv1_sITE ->
-          Bin 1# dt_XIms Tip Tip
+          case lazy w_sJPd of dt_XIiH { V2 ipv_sIPw ipv1_sIPx ->
+          Bin 1# dt_XIiH Tip Tip
           }
       }
 end Rec }
 
 Rec {
 -- RHS size: {terms: 183, types: 328, coercions: 0, joins: 1/1}
-$wcreate_rK8G
-  = \ ww_sJK8 w_sJK5 ->
-      case w_sJK5 of wild6_aInb {
+$wcreate_rKm6
+  = \ ww_sJPy w_sJPv ->
+      case w_sJPv of wild6_aIjq {
         [] -> (# Tip, [], [] #);
-        : ipv8_aIne ipv9_aInf ->
-          case ww_sJK8 of wild_X21 {
+        : ipv8_aIjt ipv9_aIju ->
+          case ww_sJPy of wild_X22 {
             __DEFAULT ->
-              case $wcreate_rK8G (uncheckedIShiftRA# wild_X21 1#) wild6_aInb of
-              { (# ww2_sJKK, ww3_sJKL, ww4_sJKM #) ->
-              case ww3_sJKL of wild9_aIsB {
-                [] -> (# ww2_sJKK, [], ww4_sJKM #);
-                : y_aIsF ds11_aIsG ->
-                  case ds11_aIsG of wild10_aIsI {
-                    [] -> (# insertMax y_aIsF ww2_sJKK, [], ww4_sJKM #);
-                    : ipv10_aIsM ipv11_aIsN ->
-                      case y_aIsF of wild1_aIGl { V2 a1_aIGn a2_aIGo ->
-                      case a1_aIGn of { I# x#_sJZ3 ->
-                      case a2_aIGo of { I# x_sJZ9 ->
-                      case ipv10_aIsM of { V2 b1_aIGs b2_aIGt ->
-                      case b1_aIGs of { I# y#_sJZ6 ->
-                      case b2_aIGt of { I# y1_sJZc ->
+              case $wcreate_rKm6 (uncheckedIShiftRA# wild_X22 1#) wild6_aIjq of
+              { (# ww2_sJQa, ww3_sJQb, ww4_sJQc #) ->
+              case ww3_sJQb of wild9_aIoQ {
+                [] -> (# ww2_sJQa, [], ww4_sJQc #);
+                : y_aIoU ds11_aIoV ->
+                  case ds11_aIoV of wild10_aIoX {
+                    [] -> (# insertMax y_aIoU ww2_sJQa, [], ww4_sJQc #);
+                    : ipv10_aIp1 ipv11_aIp2 ->
+                      case y_aIoU of wild1_aICo { V2 a1_aICq a2_aICr ->
+                      case a1_aICq of { I# x#_sK9l ->
+                      case a2_aICr of { I# x_sK9r ->
+                      case ipv10_aIp1 of { V2 b1_aICv b2_aICw ->
+                      case b1_aICv of { I# y#_sK9o ->
+                      case b2_aICw of { I# y1_sK9u ->
                       join {
-                        $j_sISj
-                          = case $wcreate_rK8G (uncheckedIShiftRA# wild_X21 1#) wild10_aIsI
+                        $j_sIOc
+                          = case $wcreate_rKm6 (uncheckedIShiftRA# wild_X22 1#) wild10_aIoX
                             of
-                            { (# ww6_XJNn, ww7_XJNp, ww8_XJNr #) ->
-                            (# link wild1_aIGl ww2_sJKK ww6_XJNn, ww7_XJNp, ww8_XJNr #)
+                            { (# ww6_XJSU, ww7_XJSW, ww8_XJSY #) ->
+                            (# link wild1_aICo ww2_sJQa ww6_XJSU, ww7_XJSW, ww8_XJSY #)
                             } } in
-                      case <# x#_sJZ3 y#_sJZ6 of {
+                      case <# x#_sK9l y#_sK9o of {
                         __DEFAULT ->
-                          case ==# x#_sJZ3 y#_sJZ6 of {
-                            __DEFAULT -> (# ww2_sJKK, [], wild9_aIsB #);
+                          case ==# x#_sK9l y#_sK9o of {
+                            __DEFAULT -> (# ww2_sJQa, [], wild9_aIoQ #);
                             1# ->
-                              case <# x_sJZ9 y1_sJZc of {
-                                __DEFAULT -> (# ww2_sJKK, [], wild9_aIsB #);
-                                1# -> jump $j_sISj
+                              case <# x_sK9r y1_sK9u of {
+                                __DEFAULT -> (# ww2_sJQa, [], wild9_aIoQ #);
+                                1# -> jump $j_sIOc
                               }
                           };
-                        1# -> jump $j_sISj
+                        1# -> jump $j_sIOc
                       }
                       }
                       }
@@ -736,30 +849,30 @@ $wcreate_rK8G
               }
               };
             1# ->
-              case ipv9_aInf of wild8_aIt5 {
+              case ipv9_aIju of wild8_aIpk {
                 [] ->
-                  (# case ipv8_aIne of dt_XIms { V2 ipv_sISo ipv1_sISp ->
-                     Bin 1# dt_XIms Tip Tip
+                  (# case ipv8_aIjt of dt_XIiH { V2 ipv_sIOh ipv1_sIOi ->
+                     Bin 1# dt_XIiH Tip Tip
                      },
                      [], [] #);
-                : y_aIt9 ds8_aIta ->
-                  case ipv8_aIne of wild1_aIGl { V2 a1_aIGn a2_aIGo ->
-                  case a1_aIGn of { I# x#_sJZf ->
-                  case a2_aIGo of { I# x_sJZl ->
-                  case y_aIt9 of { V2 b1_aIGs b2_aIGt ->
-                  case b1_aIGs of { I# y#_sJZi ->
-                  case b2_aIGt of { I# y1_sJZo ->
-                  case <# x#_sJZf y#_sJZi of {
+                : y_aIpo ds8_aIpp ->
+                  case ipv8_aIjt of wild1_aICo { V2 a1_aICq a2_aICr ->
+                  case a1_aICq of { I# x#_sK9x ->
+                  case a2_aICr of { I# x_sK9D ->
+                  case y_aIpo of { V2 b1_aICv b2_aICw ->
+                  case b1_aICv of { I# y#_sK9A ->
+                  case b2_aICw of { I# y1_sK9G ->
+                  case <# x#_sK9x y#_sK9A of {
                     __DEFAULT ->
-                      case ==# x#_sJZf y#_sJZi of {
-                        __DEFAULT -> (# Bin 1# wild1_aIGl Tip Tip, [], wild8_aIt5 #);
+                      case ==# x#_sK9x y#_sK9A of {
+                        __DEFAULT -> (# Bin 1# wild1_aICo Tip Tip, [], wild8_aIpk #);
                         1# ->
-                          case <# x_sJZl y1_sJZo of {
-                            __DEFAULT -> (# Bin 1# wild1_aIGl Tip Tip, [], wild8_aIt5 #);
-                            1# -> (# Bin 1# wild1_aIGl Tip Tip, wild8_aIt5, [] #)
+                          case <# x_sK9D y1_sK9G of {
+                            __DEFAULT -> (# Bin 1# wild1_aICo Tip Tip, [], wild8_aIpk #);
+                            1# -> (# Bin 1# wild1_aICo Tip Tip, wild8_aIpk, [] #)
                           }
                       };
-                    1# -> (# Bin 1# wild1_aIGl Tip Tip, wild8_aIt5, [] #)
+                    1# -> (# Bin 1# wild1_aICo Tip Tip, wild8_aIpk, [] #)
                   }
                   }
                   }
@@ -774,15 +887,15 @@ end Rec }
 
 Rec {
 -- RHS size: {terms: 23, types: 22, coercions: 0, joins: 0/0}
-go_rK8H
-  = \ ds_a9mJ eta_B1 ->
-      case ds_a9mJ of {
+go_rKm7
+  = \ ds_a9mr eta_B1 ->
+      case ds_a9mr of {
         [] -> eta_B1;
-        : y_a9mO ys_a9mP ->
-          case y_a9mO of ww_sJJR { V2 ww1_sJJS ww2_sJJX ->
-          case ww1_sJJS of { I# ww4_sJZV ->
-          case ww2_sJJX of { I# ww6_sJZY ->
-          go_rK8H ys_a9mP ($w$sgo4 ww_sJJR ww4_sJZV ww6_sJZY eta_B1)
+        : y_a9mw ys_a9mx ->
+          case y_a9mw of ww_sJPh { V2 ww1_sJPi ww2_sJPn ->
+          case ww1_sJPi of { I# ww4_sKad ->
+          case ww2_sJPn of { I# ww6_sKag ->
+          go_rKm7 ys_a9mx ($w$sgo4 ww_sJPh ww4_sKad ww6_sKag eta_B1)
           }
           }
           }
@@ -791,15 +904,15 @@ end Rec }
 
 Rec {
 -- RHS size: {terms: 23, types: 22, coercions: 0, joins: 0/0}
-go1_rK8I
-  = \ ds_a9mJ eta_B1 ->
-      case ds_a9mJ of {
+go1_rKm8
+  = \ ds_a9mr eta_B1 ->
+      case ds_a9mr of {
         [] -> eta_B1;
-        : y_a9mO ys_a9mP ->
-          case y_a9mO of ww_sJJR { V2 ww1_sJJS ww2_sJJX ->
-          case ww1_sJJS of { I# ww4_sJZH ->
-          case ww2_sJJX of { I# ww6_sJZK ->
-          go1_rK8I ys_a9mP ($w$sgo4 ww_sJJR ww4_sJZH ww6_sJZK eta_B1)
+        : y_a9mw ys_a9mx ->
+          case y_a9mw of ww_sJPh { V2 ww1_sJPi ww2_sJPn ->
+          case ww1_sJPi of { I# ww4_sK9Z ->
+          case ww2_sJPn of { I# ww6_sKa2 ->
+          go1_rKm8 ys_a9mx ($w$sgo4 ww_sJPh ww4_sK9Z ww6_sKa2 eta_B1)
           }
           }
           }
@@ -808,15 +921,15 @@ end Rec }
 
 Rec {
 -- RHS size: {terms: 23, types: 22, coercions: 0, joins: 0/0}
-go2_rK8J
-  = \ ds_a9mJ eta_B1 ->
-      case ds_a9mJ of {
+go2_rKm9
+  = \ ds_a9mr eta_B1 ->
+      case ds_a9mr of {
         [] -> eta_B1;
-        : y_a9mO ys_a9mP ->
-          case y_a9mO of ww_sJJR { V2 ww1_sJJS ww2_sJJX ->
-          case ww1_sJJS of { I# ww4_sJZz ->
-          case ww2_sJJX of { I# ww6_sJZC ->
-          go2_rK8J ys_a9mP ($w$sgo4 ww_sJJR ww4_sJZz ww6_sJZC eta_B1)
+        : y_a9mw ys_a9mx ->
+          case y_a9mw of ww_sJPh { V2 ww1_sJPi ww2_sJPn ->
+          case ww1_sJPi of { I# ww4_sK9R ->
+          case ww2_sJPn of { I# ww6_sK9U ->
+          go2_rKm9 ys_a9mx ($w$sgo4 ww_sJPh ww4_sK9R ww6_sK9U eta_B1)
           }
           }
           }
@@ -826,44 +939,44 @@ end Rec }
 Rec {
 -- RHS size: {terms: 84, types: 81, coercions: 0, joins: 1/1}
 $wgo4
-  = \ ww_sJKp w_sJKl w1_sJKm ->
-      case w1_sJKm of wild3_aImM {
-        [] -> w_sJKl;
-        : ipv3_aImQ ipv4_aImR ->
-          case ipv4_aImR of wild4_aImT {
-            [] -> insertMax ipv3_aImQ w_sJKl;
-            : ipv5_aImY ipv6_aImZ ->
-              case ipv3_aImQ of wild_aIGl { V2 a1_aIGn a2_aIGo ->
-              case a1_aIGn of { I# x#_sJZr ->
-              case a2_aIGo of { I# x_sJZN ->
-              case ipv5_aImY of { V2 b1_aIGs b2_aIGt ->
-              case b1_aIGs of { I# y#_sJZu ->
-              case b2_aIGt of { I# y_sJZQ ->
+  = \ ww_sJPP w_sJPL w1_sJPM ->
+      case w1_sJPM of wild3_aIj1 {
+        [] -> w_sJPL;
+        : ipv3_aIj5 ipv4_aIj6 ->
+          case ipv4_aIj6 of wild4_aIj8 {
+            [] -> insertMax ipv3_aIj5 w_sJPL;
+            : ipv5_aIjd ipv6_aIje ->
+              case ipv3_aIj5 of wild_aICo { V2 a1_aICq a2_aICr ->
+              case a1_aICq of { I# x#_sK9J ->
+              case a2_aICr of { I# x_sKa5 ->
+              case ipv5_aIjd of { V2 b1_aICv b2_aICw ->
+              case b1_aICv of { I# y#_sK9M ->
+              case b2_aICw of { I# y_sKa8 ->
               join {
-                $j_sISJ
-                  = case $wcreate_rK8G ww_sJKp wild4_aImT of
-                    { (# ww2_sJKK, ww3_sJKL, ww4_sJKM #) ->
-                    case ww4_sJKM of wild8_aItn {
+                $j_sIOC
+                  = case $wcreate_rKm6 ww_sJPP wild4_aIj8 of
+                    { (# ww2_sJQa, ww3_sJQb, ww4_sJQc #) ->
+                    case ww4_sJQc of wild8_aIpC {
                       [] ->
                         $wgo4
-                          (uncheckedIShiftL# ww_sJKp 1#)
-                          (link wild_aIGl w_sJKl ww2_sJKK)
-                          ww3_sJKL;
-                      : ipv7_aItu ipv8_aItv ->
-                        go2_rK8J wild8_aItn (link wild_aIGl w_sJKl ww2_sJKK)
+                          (uncheckedIShiftL# ww_sJPP 1#)
+                          (link wild_aICo w_sJPL ww2_sJQa)
+                          ww3_sJQb;
+                      : ipv7_aIpJ ipv8_aIpK ->
+                        go2_rKm9 wild8_aIpC (link wild_aICo w_sJPL ww2_sJQa)
                     }
                     } } in
-              case <# x#_sJZr y#_sJZu of {
+              case <# x#_sK9J y#_sK9M of {
                 __DEFAULT ->
-                  case ==# x#_sJZr y#_sJZu of {
-                    __DEFAULT -> go1_rK8I wild3_aImM w_sJKl;
+                  case ==# x#_sK9J y#_sK9M of {
+                    __DEFAULT -> go1_rKm8 wild3_aIj1 w_sJPL;
                     1# ->
-                      case <# x_sJZN y_sJZQ of {
-                        __DEFAULT -> go_rK8H wild3_aImM w_sJKl;
-                        1# -> jump $j_sISJ
+                      case <# x_sKa5 y_sKa8 of {
+                        __DEFAULT -> go_rKm7 wild3_aIj1 w_sJPL;
+                        1# -> jump $j_sIOC
                       }
                   };
-                1# -> jump $j_sISJ
+                1# -> jump $j_sIOC
               }
               }
               }
@@ -878,14 +991,14 @@ end Rec }
 Rec {
 -- RHS size: {terms: 23, types: 22, coercions: 0, joins: 0/0}
 $sfromList_go
-  = \ ds_a9mJ eta_B1 ->
-      case ds_a9mJ of {
+  = \ ds_a9mr eta_B1 ->
+      case ds_a9mr of {
         [] -> eta_B1;
-        : y_a9mO ys_a9mP ->
-          case y_a9mO of ww_sJJR { V2 ww1_sJJS ww2_sJJX ->
-          case ww1_sJJS of { I# ww4_sK09 ->
-          case ww2_sJJX of { I# ww6_sK0c ->
-          $sfromList_go ys_a9mP ($w$sgo4 ww_sJJR ww4_sK09 ww6_sK0c eta_B1)
+        : y_a9mw ys_a9mx ->
+          case y_a9mw of ww_sJPh { V2 ww1_sJPi ww2_sJPn ->
+          case ww1_sJPi of { I# ww4_sKar ->
+          case ww2_sJPn of { I# ww6_sKau ->
+          $sfromList_go ys_a9mx ($w$sgo4 ww_sJPh ww4_sKar ww6_sKau eta_B1)
           }
           }
           }
@@ -894,33 +1007,33 @@ end Rec }
 
 -- RHS size: {terms: 84, types: 74, coercions: 0, joins: 0/0}
 $sfromList
-  = \ ds_aImf ->
-      case ds_aImf of {
+  = \ ds_aIiu ->
+      case ds_aIiu of {
         [] -> Tip;
-        : x_aImr ds1_aIms ->
-          case ds1_aIms of wild1_aImu {
+        : x_aIiG ds1_aIiH ->
+          case ds1_aIiH of wild1_aIiJ {
             [] ->
-              case x_aImr of dt_XIms { V2 ipv_sISQ ipv1_sISR ->
-              Bin 1# dt_XIms Tip Tip
+              case x_aIiG of dt_XIiH { V2 ipv_sIOJ ipv1_sIOK ->
+              Bin 1# dt_XIiH Tip Tip
               };
-            : ipv_aImy ipv1_aImz ->
-              case x_aImr of wild2_aIGl { V2 a1_aIGn a2_aIGo ->
-              case a1_aIGn of { I# x#_sK01 ->
-              case a2_aIGo of { I# x1_sK0f ->
-              case ipv_aImy of { V2 b1_aIGs b2_aIGt ->
-              case b1_aIGs of { I# y#_sK04 ->
-              case b2_aIGt of { I# y_sK0i ->
-              case <# x#_sK01 y#_sK04 of {
+            : ipv_aIiN ipv1_aIiO ->
+              case x_aIiG of wild2_aICo { V2 a1_aICq a2_aICr ->
+              case a1_aICq of { I# x#_sKaj ->
+              case a2_aICr of { I# x1_sKax ->
+              case ipv_aIiN of { V2 b1_aICv b2_aICw ->
+              case b1_aICv of { I# y#_sKam ->
+              case b2_aICw of { I# y_sKaA ->
+              case <# x#_sKaj y#_sKam of {
                 __DEFAULT ->
-                  case ==# x#_sK01 y#_sK04 of {
-                    __DEFAULT -> $sfromList_go wild1_aImu (Bin 1# wild2_aIGl Tip Tip);
+                  case ==# x#_sKaj y#_sKam of {
+                    __DEFAULT -> $sfromList_go wild1_aIiJ (Bin 1# wild2_aICo Tip Tip);
                     1# ->
-                      case <# x1_sK0f y_sK0i of {
-                        __DEFAULT -> $sfromList_go wild1_aImu (Bin 1# wild2_aIGl Tip Tip);
-                        1# -> $wgo4 1# (Bin 1# wild2_aIGl Tip Tip) wild1_aImu
+                      case <# x1_sKax y_sKaA of {
+                        __DEFAULT -> $sfromList_go wild1_aIiJ (Bin 1# wild2_aICo Tip Tip);
+                        1# -> $wgo4 1# (Bin 1# wild2_aICo Tip Tip) wild1_aIiJ
                       }
                   };
-                1# -> $wgo4 1# (Bin 1# wild2_aIGl Tip Tip) wild1_aImu
+                1# -> $wgo4 1# (Bin 1# wild2_aICo Tip Tip) wild1_aIiJ
               }
               }
               }
@@ -936,31 +1049,31 @@ visitedPositions1 = $sfromList []
 
 -- RHS size: {terms: 44, types: 44, coercions: 0, joins: 2/3}
 visitedPositions
-  = \ gs_aI5g steps_aI5h ->
-      let { rayVisitedIndexes_sIM3 = map snd steps_aI5h } in
+  = \ gs_aI1H steps_aI1I ->
+      let { rayVisitedIndexes_sII8 = map snd steps_aI1I } in
       join {
-        $j_sJEz y_atEF
-          = case <# 0# y_atEF of {
+        $j_sJHO y_atDN
+          = case <# 0# y_atDN of {
               __DEFAULT -> visitedPositions1;
-              1# -> $sfromList ($wunsafeTake y_atEF rayVisitedIndexes_sIM3)
+              1# -> $sfromList ($wunsafeTake y_atDN rayVisitedIndexes_sII8)
             } } in
       joinrec {
-        $wgo1_sJKE w_sJKy ww_sJKC
-          = case w_sJKy of {
-              [] -> jump $j_sJEz ww_sJKC;
-              : y_a9mO ys_a9mP ->
-                case y_a9mO of {
-                  __DEFAULT -> jump $wgo1_sJKE ys_a9mP (+# ww_sJKC 1#);
-                  FW -> jump $j_sJEz ww_sJKC
+        $wgo1_sJQ4 w_sJPY ww_sJQ2
+          = case w_sJPY of {
+              [] -> jump $j_sJHO ww_sJQ2;
+              : y_a9mw ys_a9mx ->
+                case y_a9mw of {
+                  __DEFAULT -> jump $wgo1_sJQ4 ys_a9mx (+# ww_sJQ2 1#);
+                  FW -> jump $j_sJHO ww_sJQ2
                 }
             }; } in
-      jump $wgo1_sJKE (wallSamples gs_aI5g rayVisitedIndexes_sIM3) 0#
+      jump $wgo1_sJQ4 (wallSamples gs_aI1H rayVisitedIndexes_sII8) 0#
 
 
 ------ Local rules for imported ids --------
 "SPEC cameraPlaneSweep @ CInt @ Float"
-    forall $dEnum_sIMw $dFractional_sIMv $dIntegral_sIMu.
-      cameraPlaneSweep $dIntegral_sIMu $dFractional_sIMv $dEnum_sIMw
+    forall $dEnum_sIID $dFractional_sIIC $dIntegral_sIIB.
+      cameraPlaneSweep $dIntegral_sIIB $dFractional_sIIC $dEnum_sIID
       = cameraPlaneSweep_$scameraPlaneSweep
 "SPEC/Obelisk.Engine.Ray fromList @ (V2 Int)"
-    forall $dOrd_sINz. fromList $dOrd_sINz = $sfromList
+    forall $dOrd_sIJG. fromList $dOrd_sIJG = $sfromList

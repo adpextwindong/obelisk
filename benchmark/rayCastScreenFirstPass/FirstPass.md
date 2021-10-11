@@ -8,6 +8,7 @@ Things to note:
 
 This was on an AMD Ryzen 7 3700x and rayCastScreen is single threaded. We still don't know if doing it in parallel for rays will be reasonable. Ideally we'll improve single threaded performance incase we ever target a lower spec machine.
 
+Some of these numbers are done on a Intel(R) Core(TM) i5-6600 CPU @ 3.30GHz.
 ```
 cabal build rayBench --enable-profiling
 
@@ -16,6 +17,8 @@ ghc-options:
     -fprof-auto
     -prof
     "-with-rtsopts=-N -p -s -h -i0.1"
+
+--RYZEN
 benchmarking rayCasting/rayCastScreen/r640 w64
 time                 7.502 ms   (7.467 ms .. 7.545 ms)
                      1.000 R²   (1.000 R² .. 1.000 R²)
@@ -80,6 +83,7 @@ Before:
 baseSteps = [0.0 ..]
 ```
 
+--INTEL
 ```
 time                 9.361 ms   (8.688 ms .. 10.08 ms)
                      0.978 R²   (0.971 R² .. 0.989 R²)
@@ -129,6 +133,7 @@ baseStepsBounded worldSize bss axisPosition axisRay = Sq.take upperBound bss
                      else floor axisPosition
 ```
 
+--INTEL
 ```
 benchmarking rayCasting/rayCastScreen/r640 w64
 time                 12.73 ms   (12.65 ms .. 12.81 ms)
@@ -177,6 +182,7 @@ baseStepsBounded :: Int -> Float -> Float -> [Float]
 baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axisPosition axisRay) baseSteps
 ```
 
+--INTEL
 ```
 time                 8.294 ms   (8.242 ms .. 8.341 ms)
                      1.000 R²   (1.000 R² .. 1.000 R²)
@@ -258,6 +264,7 @@ Diff
 ```
 
 After:
+--INTEL
 ```
 time                 7.760 ms   (7.715 ms .. 7.823 ms)
                      0.999 R²   (0.999 R² .. 1.000 R²)
@@ -302,6 +309,7 @@ mergeIntersections playerpos (x:xs) (y:ys) = if qd playerpos x < qd playerpos y
                                              else y : mergeIntersections playerpos (x:xs) ys
 ```
 
+--INTEL
 ```
 benchmarking rayCasting/rayCastScreen/r640 w64
 time                 4.132 ms   (4.092 ms .. 4.168 ms)
