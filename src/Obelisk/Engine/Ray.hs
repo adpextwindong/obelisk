@@ -69,10 +69,6 @@ shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections 
         vints = xRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._x) (direction ^._x))
         hints = yRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._y) (direction ^._y))
 
---NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Float value for distance handling.
---5.000000000000001
---28.999999999999996
-
 epsilon = 0.00001 --TODO maybe lift this to the math module
 
 epsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
@@ -107,23 +103,19 @@ rayCast' world p r = sampleWalkRayPaths world p r (mergeIntersections p vints hi
         vints = xRayGridIntersections p r (baseStepsBounded (fromIntegral $ worldSize world) (p ^._x) (r ^._x))
         hints = yRayGridIntersections p r (baseStepsBounded (fromIntegral $ worldSize world) (p ^._y) (r ^._y))
 
---Takes a list while its members are still in the world bounding box
--- clipWorld :: CInt -> [V2 Float] -> [V2 Float]
--- clipWorld ws = takeWhile (\v@(V2 x y) -> x <= fromIntegral ws && y <= fromIntegral ws
---                                             && x >= 0 && y >= 0)
-
 {-
 
 TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
-
--}
--- p = V2 0 0
-
 -- wholeFloatE v = (v - fromIntegral (floor v)) < epsilon
 -- v2OR :: V2 Bool -> Bool
 -- v2OR (V2 x y) = x || y
 -- path_test path = or $ fmap (v2OR . (fmap wholeFloatE) . fst) path --This should be true if all either member of the V2 Float of the path is on a gridline.
 
+--NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Float value for distance handling.
+--5.000000000000001
+--28.999999999999996
+
+-}
 --TODO determine set of visited voxels
 
 --Utilize the new Ray
@@ -140,7 +132,6 @@ rayHeads screenWidth player = [normalize (direction player + (camera_plane playe
 --Returns the final sample location of the rays
 rayCastScreen :: CInt -> PVars -> WorldTiles -> [Maybe (V2 Float, V2 Int)]
 rayCastScreen screenWidth player world = rayCast' world (position player) <$> rayHeads screenWidth player
-
 
 {-
 Note:
