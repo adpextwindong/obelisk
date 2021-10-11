@@ -42,18 +42,18 @@ upperBound worldSize axisPosition axisRay = if axisRay > 0
 baseStepsBounded :: Int -> Float -> Float -> [Float]
 baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axisPosition axisRay) baseSteps
 
+--NOTE: These rays should be normalized
+--TODO newtype for normalized ray invariant
 xRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
-xRayGridIntersections p r bss = (p +) . (*^ nr) <$> stepScales
+xRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
-        nr = normalize r
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
         stepScales = [(firstStep + x) / abs (nr ^._x) | x <- bss] --TODO unbound this once everything is kosher so it can scale to any worldsize
 
-
+--NOTE: These rays should be normalized
 yRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
-yRayGridIntersections p r bss = (p +) . (*^ nr) <$> stepScales
+yRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
-        nr = normalize r
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
         stepScales = [(firstStep + y) / abs (nr ^._y) | y <- bss] --TODO unbound this once everythign is kosher so it can scale to any worldsize
 
@@ -136,7 +136,7 @@ genRays screenWidth player worldSize = shootRay' worldSize (position player) <$>
 cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth - 1]]
 
 rayHeads :: CInt -> PVars -> [V2 Float]
-rayHeads screenWidth player = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
+rayHeads screenWidth player = [normalize (direction player + (camera_plane player ^* x)) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
 --Returns the final sample location of the rays
 rayCastScreen :: CInt -> PVars -> WorldTiles -> [Maybe (V2 Float, V2 Int)]
 rayCastScreen screenWidth player world = rayCast' world (position player) <$> rayHeads screenWidth player

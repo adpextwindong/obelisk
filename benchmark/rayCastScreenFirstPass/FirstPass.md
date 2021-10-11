@@ -229,4 +229,64 @@ yRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(56,1)-(60,65
 accessMapV            Obelisk.State      src\Obelisk\State.hs:28:1-39                 3.7    3.5
 ```
 
-Great now we can move out to removing normalize.
+Great now we can move onto lifting normalize.
+
+Diff
+```
+ xRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
+-xRayGridIntersections p r bss = (p +) . (*^ nr) <$> stepScales
++xRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
+     where
+-        nr = normalize r
+         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
+         stepScales = [(firstStep + x) / abs (nr ^._x) | x <- bss] --TODO unbound this once everything is kosher so it can scale to any worldsize
+ 
+-
++--NOTE: These rays should be normalized
+ yRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
+-yRayGridIntersections p r bss = (p +) . (*^ nr) <$> stepScales
++yRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
+     where
+-        nr = normalize r
+         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
+         stepScales = [(firstStep + y) / abs (nr ^._y) | y <- bss] --TODO unbound this once everythign is kosher so it can scale to any worldsize
+
+ rayHeads :: CInt -> PVars -> [V2 Float]
+-rayHeads screenWidth player = [direction player + (camera_plane player ^* x) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
++rayHeads screenWidth player = [normalize (direction player + (camera_plane player ^* x)) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
+```
+
+After:
+```
+time                 7.760 ms   (7.715 ms .. 7.823 ms)
+                     0.999 R²   (0.999 R² .. 1.000 R²)
+mean                 7.850 ms   (7.810 ms .. 7.931 ms)
+std dev              156.1 μs   (98.23 μs .. 266.1 μs)
+
+benchmarking rayCasting/rayCastScreen/r320 w64
+time                 3.913 ms   (3.884 ms .. 3.944 ms)
+                     1.000 R²   (0.999 R² .. 1.000 R²)
+mean                 3.926 ms   (3.905 ms .. 3.983 ms)
+std dev              102.8 μs   (43.45 μs .. 210.8 μs)
+variance introduced by outliers: 10% (moderately inflated)
+
+benchmarking rayCasting/rayCastScreen/r240 w64
+time                 2.936 ms   (2.924 ms .. 2.946 ms)
+                     1.000 R²   (1.000 R² .. 1.000 R²)
+mean                 2.940 ms   (2.932 ms .. 2.947 ms)
+std dev              26.10 μs   (21.21 μs .. 35.20 μs)
+```
+
+```
+COST CENTRE           MODULE             SRC                                        %time %alloc
+
+mergeIntersections    Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(86,1)-(90,31)    51.8   59.3
+xRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(48,1)-(51,65)    11.4   14.5
+epsilonBump           Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(79,1)-(83,64)     9.0    6.3
+sampleWalkRayPaths    Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(93,1)-(100,58)    8.6    3.7
+accessMap             Obelisk.State      src\Obelisk\State.hs:31:1-81                 4.6    0.0
+baseStepsBounded      Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:43:1-108           4.3    6.4
+yRayGridIntersections Obelisk.Engine.Ray src\Obelisk\Engine\Ray.hs:(55,1)-(58,65)     4.1    4.4
+accessMapV            Obelisk.State      src\Obelisk\State.hs:28:1-39                 3.4    3.6
+```
+
