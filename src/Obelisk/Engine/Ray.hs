@@ -3,7 +3,7 @@ module Obelisk.Engine.Ray where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
-import Linear.Metric ( qd, normalize )
+import Linear.Metric ( qd, normalize, norm )
 import Debug.Trace (trace)
 
 import Control.Lens ( (^.) )
@@ -44,18 +44,19 @@ baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axi
 
 --NOTE: These rays should be normalized
 --TODO newtype for normalized ray invariant
+--TODO tests that these are on gridlines
 xRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
 xRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
-        stepScales = [(firstStep + x) / abs (nr ^._x) | x <- bss] --TODO unbound this once everything is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + x) / abs (nr ^._x) | x <- bss]
 
 --NOTE: These rays should be normalized
 yRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
 yRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
-        stepScales = [(firstStep + y) / abs (nr ^._y) | y <- bss] --TODO unbound this once everythign is kosher so it can scale to any worldsize
+        stepScales = [(firstStep + y) / abs (nr ^._y) | y <- bss]
 
 {-# INLINE deltaFirst #-}
 deltaFirst :: Float -> Float -> Float
@@ -63,12 +64,7 @@ deltaFirst px vx = if vx < 0
                    then fromIntegral (floor px) - px
                    else fromIntegral (ceiling px) - px
 
---Lets test the ray regularly without concerning ourselves with the bumping into correct tile for wall positions. Maybe an epsilon aware rounder could work.
-shootRay' :: Int -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
-shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections playerpos vints hints
-    where
-        vints = xRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._x) (direction ^._x))
-        hints = yRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._y) (direction ^._y))
+
 
 epsilon = 0.00001 --TODO maybe lift this to the math module
 
@@ -92,7 +88,7 @@ mergeIntersections _ [] ys = ys
 mergeIntersections _ xs [] = xs
 
 sampleWalkRayPaths :: WorldTiles -> V2 Float -> V2 Float -> [V2 Float] -> Maybe (V2 Float, V2 Int)
-sampleWalkRayPaths _ _ _ [] = Nothing
+sampleWalkRayPaths _ _ _ [] = Nothing --TODO it might be easier to replace this with a default wall
 -- sampleWalkRayPaths world playerpos ray (step:path) | trace ("Ray " ++ show ray ++  " step " ++ show step ++ " epsilonBump " ++ show (epsilonBump ray step)) False = undefined --Trace trick
 sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkInds == FW
                                                      then Just cPair
@@ -109,36 +105,27 @@ rayCast' world p r = sampleWalkRayPaths world p r (mergeIntersections p vints hi
         vints = xRayGridIntersections p r (baseStepsBounded (fromIntegral $ worldSize world) (p ^._x) (r ^._x))
         hints = yRayGridIntersections p r (baseStepsBounded (fromIntegral $ worldSize world) (p ^._y) (r ^._y))
 
-{-
 
-TEST FIXTURES. `grender tgp` in GHCI to see the testing rig for this code
--- wholeFloatE v = (v - fromIntegral (floor v)) < epsilon
--- v2OR :: V2 Bool -> Bool
--- v2OR (V2 x y) = x || y
--- path_test path = or $ fmap (v2OR . (fmap wholeFloatE) . fst) path --This should be true if all either member of the V2 Float of the path is on a gridline.
-
---NOTE, watch out it nXForm currently spits out values like this. We'll need some rounding aware of this, wherever we also use the V2 Float value for distance handling.
---5.000000000000001
---28.999999999999996
-
--}
---TODO determine set of visited voxels
-
---Utilize the new Ray
---TODO make a version that takes in the world so we don't waste time allocing for fat ass lists
---TODO benchmark this
-genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
-genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rayHeads screenWidth player
 
 --TODO fix cameraPlaneSweep so it uniformly gives back n elements spaced across -1 to 1 inclusive
+cameraPlaneSweep :: Int -> [Float]
 cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth - 1]]
 
 rayHeads :: CInt -> PVars -> [V2 Float]
-rayHeads screenWidth player = [normalize (direction player + (camera_plane player ^* x)) | x <- cameraPlaneSweep screenWidth] :: [V2 Float]
+rayHeads screenWidth player = [normalize (direction player + (camera_plane player ^* x)) | x <- cameraPlaneSweep (fromIntegral screenWidth)] :: [V2 Float]
+
 --Returns the final sample location of the rays
 rayCastScreen :: CInt -> PVars -> WorldTiles -> [Maybe (V2 Float, V2 Int)]
 rayCastScreen screenWidth player world = rayCast' world (position player) <$> rayHeads screenWidth player
+    where
+        rays = rayHeads screenWidth player
 
+--Permadi Wall Height
+--Make sure this distance is properly projected to prevent fisheye
+--NOTE: The direction vector and the camera plane vector length ratios will determine FOV with this impl
+projectedSliceHeight :: Float -> PVars -> Float
+projectedSliceHeight distanceToSlice player = (sliceConstant / distanceToSlice) * (norm (direction player))
+    where sliceConstant = 60.0 :: Float --TODO figure this constant out
 {-
 Note:
 
@@ -163,3 +150,16 @@ wallSamples gs [] = []
 wallSamples gs (r:rs) = if inBounds gs r
                         then checkAt gs r : wallSamples gs rs
                         else []
+
+--TODO DEPRECATE THESE
+--Lets test the ray regularly without concerning ourselves with the bumping into correct tile for wall positions. Maybe an epsilon aware rounder could work.
+shootRay' :: Int -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
+shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections playerpos vints hints
+    where
+        vints = xRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._x) (direction ^._x))
+        hints = yRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._y) (direction ^._y))
+--Utilize the new Ray
+--TODO make a version that takes in the world so we don't waste time allocing for fat ass lists
+--TODO benchmark this
+genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
+genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rayHeads screenWidth player
