@@ -9,9 +9,12 @@ import Debug.Trace (trace)
 import Control.Lens ( (^.) )
 import qualified Data.Set as S
 import Foreign.C.Types ( CInt )
+import Data.IntMap.Strict (IntMap)
+import qualified Data.IntMap.Strict as IntMap
 
 import Obelisk.State
 import Obelisk.Types.Wall
+import Obelisk.Math.Vector (cosThetaBetween)
 -- import Obelisk.Graphics.DebugUI
 import Obelisk.State (emptyMap)
 import SDL.Primitive (horizontalLine)
@@ -111,14 +114,27 @@ rayCast' world p r = sampleWalkRayPaths world p r (mergeIntersections p vints hi
 cameraPlaneSweep :: Int -> [Float]
 cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth - 1]]
 
-rayHeads :: CInt -> PVars -> [V2 Float]
-rayHeads screenWidth player = [normalize (direction player + (camera_plane player ^* x)) | x <- cameraPlaneSweep (fromIntegral screenWidth)] :: [V2 Float]
+--The ray and its angle for fixing fish eye
+createRayHead :: V2 Float -> V2 Float -> Float -> (V2 Float, Float)
+createRayHead pdir cplane x = (ray, cosThetaBetween ray pdir)
+    where ray = normalize (pdir + cplane ^* x)
+
+rayHeads :: CInt -> PVars -> [(V2 Float, Float)]
+rayHeads screenWidth player = createRayHead (direction player) (camera_plane player) <$> cameraPlaneSweep (fromIntegral screenWidth)
 
 --Returns the final sample location of the rays
 rayCastScreen :: CInt -> PVars -> WorldTiles -> [Maybe (V2 Float, V2 Int)]
-rayCastScreen screenWidth player world = rayCast' world (position player) <$> rayHeads screenWidth player
+rayCastScreen screenWidth player world = rayCast' world (position player) <$> rays
+    where
+        rayAnglePairs = rayHeads screenWidth player
+        rays = fmap fst rayAnglePairs
+        angles = fmap snd rayAnglePairs
+
+rayCastScreenWithVision :: CInt -> PVars -> WorldTiles -> ([Maybe (V2 Float, V2 Int)], IntMap Bool)
+rayCastScreenWithVision screenWidth player world = undefined
     where
         rays = rayHeads screenWidth player
+
 
 --Permadi Wall Height
 --Make sure this distance is properly projected to prevent fisheye
@@ -162,4 +178,6 @@ shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections 
 --TODO make a version that takes in the world so we don't waste time allocing for fat ass lists
 --TODO benchmark this
 genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
-genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rayHeads screenWidth player
+genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rays
+    where rayAnglePairs = rayHeads screenWidth player
+          rays = fmap fst rayAnglePairs
