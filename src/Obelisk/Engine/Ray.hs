@@ -3,7 +3,7 @@ module Obelisk.Engine.Ray where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
-import Linear.Metric ( qd, normalize, norm )
+import Linear.Metric ( qd, normalize, norm, distance)
 import Debug.Trace (trace)
 
 import Control.Lens ( (^.) )
@@ -11,6 +11,7 @@ import qualified Data.Set as S
 import Foreign.C.Types ( CInt )
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
+import Data.Bifunctor
 
 import Obelisk.State
 import Obelisk.Types.Wall
@@ -123,18 +124,23 @@ rayHeads :: CInt -> PVars -> [(V2 Float, Float)]
 rayHeads screenWidth player = createRayHead (direction player) (camera_plane player) <$> cameraPlaneSweep (fromIntegral screenWidth)
 
 --Returns the final sample location of the rays
-rayCastScreen :: CInt -> PVars -> WorldTiles -> [Maybe (V2 Float, V2 Int)]
-rayCastScreen screenWidth player world = rayCast' world (position player) <$> rays
+rayCastScreen :: CInt -> PVars -> WorldTiles -> [Maybe (Float, V2 Int)]
+rayCastScreen screenWidth player world = rayCastResults
     where
         rayAnglePairs = rayHeads screenWidth player
         rays = fmap fst rayAnglePairs
+        rayCastSamples = rayCast' world (position player) <$> rays
         angles = fmap snd rayAnglePairs
+        rayCastResults = (\(res, angle) -> fmap (first (applyPermadi (position player) angle)) res) <$> zip rayCastSamples angles
 
 rayCastScreenWithVision :: CInt -> PVars -> WorldTiles -> ([Maybe (V2 Float, V2 Int)], IntMap Bool)
 rayCastScreenWithVision screenWidth player world = undefined
     where
         rays = rayHeads screenWidth player
 
+--Permadi Fisheye Fix
+applyPermadi :: V2 Float -> Float -> V2 Float -> Float
+applyPermadi ppos costheta sampledpos = costheta * distance ppos sampledpos
 
 --Permadi Wall Height
 --Make sure this distance is properly projected to prevent fisheye
