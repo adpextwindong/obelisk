@@ -24,4 +24,7 @@ For now lets just have constant animations and figure out how evaluating animati
 # Scenes
 We need some sort of zipper to navigate scenes.
 
+[ ] List Zipper Import and Usage for swtiching between scenes
+[ ] Some notion of scene so we can do in engine examples
+
 Input handling for navigating the Godbolt slide scenes.
