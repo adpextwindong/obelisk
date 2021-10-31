@@ -84,6 +84,7 @@ drawGraphicDebug' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic (
 drawGraphicDebug' g = do
     -- Grid To Player as center Local to Screen Affine Transformation
     let gtp = centerScreenOnWorldGrid 10 640 480
+--dprint $ evalGraphic $ AffineT gtp g
     drawGraphic $ evalGraphic $ AffineT gtp g
 
 drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m) => Vars -> m ()
@@ -147,18 +148,6 @@ drawMouseLoc t = do
     surfaceBlit textSurface Nothing targetSurface position
 
 --------------------------------------------------------------------------------
-
--- | Evaluates the Shape Graphic and applies all the transformations
--- | Defaults the affine transformation to the identity matrix if the Graphic root isn't an AffineT
-evalGraphic :: Graphic (Shape Float) -> Graphic (Shape CInt)
-evalGraphic (AffineT t s) = evalGraphic' t s
-evalGraphic s = evalGraphic' m22AffineIdD s
-
--- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
-evalGraphic' :: M22Affine Float -> Graphic (Shape Float) -> Graphic (Shape CInt)
-evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
-evalGraphic' t (GroupPrim label gs) = EvaldGP label $ fmap (evalGraphic' t) gs
-evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! t') s --TODO make sure this is the correct behavior when nesting transforms
 
 -- | Maps eval'd primitives to their SDLCanDraw draw calls
 drawGraphic :: SDLCanDraw m => Graphic (Shape CInt) -> m ()

@@ -15,6 +15,7 @@ import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
 import Obelisk.Graphics.Primitives
+import Obelisk.Graphics.UIScene
 
 import Control.Monad.Reader
 import Control.Monad.State
@@ -50,6 +51,52 @@ gameTick hs = do
 --TODO mouse zoom handling
 
 (initialScreenWidth, initialScreenHeight) = (640, 480) :: (CInt,CInt)
+
+testPresentation = [
+    UIScene {
+        scene_name = "Title Page",
+        graphic_elems = [Prim (FillCircle (V2 1 1) 30 (V4 255 191 0 255))]
+    },
+    UIScene {
+        scene_name = "Second Page",
+        graphic_elems = [Prim (FillCircle (V2 2 2) 45 (V4 242 210 189 255))]
+    }]
+
+zipperMain :: Presentation -> IO ()
+zipperMain presentation = do
+    --TODO scene zipper with test slides and some controls for moving between slides
+    SDL.initialize [SDL.InitVideo]
+    SDL.Font.initialize
+    let title = "Graphic Zipper Test"
+
+    font <- SDL.Font.load "resources/arial.ttf" 16
+    
+    window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
+    SDL.showWindow window
+    screenSurface <- SDL.getWindowSurface window
+    SDL.updateWindowSurface window
+
+    screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
+
+    let hs = (window, screenSurface, screenRenderer)
+
+    let cfg = Config {
+                cWindow = window,
+                cRenderer = screenRenderer,
+                cSurface = screenSurface,
+                cScreenWidth = initialScreenWidth,
+                cScreenHeight = initialScreenHeight,
+                cFont = font
+            }
+
+    runObelisk cfg initVars (presentationRenderLoop presentation)
+
+    SDL.Font.free font
+    SDL.freeSurface screenSurface
+    SDL.destroyWindow window
+    SDL.quit
+    return ()
+
 main :: IO ()
 main = do
     SDL.initialize [SDL.InitVideo]
@@ -92,6 +139,7 @@ grender g = do
     let title = "Graphic Renderer Test"
 
     font <- SDL.Font.load "resources/arial.ttf" 16
+
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
     SDL.showWindow window
     screenSurface <- SDL.getWindowSurface window

@@ -4,7 +4,7 @@ module Obelisk.Graphics.Primitives where
 
 import qualified SDL
 import qualified SDL.Primitive as SDL
-import Linear.V2 ( V2 )
+import Linear
 import Foreign.C.Types (CInt)
 
 import Obelisk.Math.Homogenous
@@ -54,6 +54,9 @@ data Graphic a where
     EvaldGP :: String -> [Graphic (Shape CInt)] -> Graphic (Shape CInt)
     --At evaluation we floor at the end
 
+--TODO CONSIDER A MORE TYPE SAFE AffineT WITH RESPECT TO COORDINATE SPACES
+--TODO CONSIDER HOW TEXT CAN BE ADDED
+
 anonGP = GroupPrim ""
 anonEGP = EvaldGP ""
 instance Show (Graphic (Shape Float)) where
@@ -76,3 +79,15 @@ type Duration = Float
 
 -- staticFrame :: Duration -> Graphic Shape -> Animation
 -- staticFrame d g = Animation d (const g)
+
+-- | Evaluates the Shape Graphic and applies all the transformations
+-- | Defaults the affine transformation to the identity matrix if the Graphic root isn't an AffineT
+evalGraphic :: Graphic (Shape Float) -> Graphic (Shape CInt)
+evalGraphic (AffineT t s) = evalGraphic' t s
+evalGraphic s = evalGraphic' m22AffineIdD s
+
+-- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
+evalGraphic' :: M22Affine Float -> Graphic (Shape Float) -> Graphic (Shape CInt)
+evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
+evalGraphic' t (GroupPrim label gs) = EvaldGP label $ fmap (evalGraphic' t) gs
+evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! t') s --TODO make sure this is the correct behavior when nesting transforms

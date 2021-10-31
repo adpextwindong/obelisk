@@ -7,6 +7,7 @@ import Control.Monad.State
 import Linear
 import Control.Lens
 import qualified SDL
+import Data.ListZipper
 
 import Obelisk.Config
 import Obelisk.State
@@ -17,6 +18,55 @@ import Obelisk.Engine.Input
 import Obelisk.Manager.Input
 import Obelisk.Math.Homogenous
 import Obelisk.Graphics.Primitives
+import Obelisk.Graphics.UIScene
+
+presentationRenderLoop :: ( MonadReader Config m
+            , MonadState Vars m
+            , SDLInput m
+            , HasInput m
+            , Debug m
+            , Renderer m ) => Presentation -> m ()
+presentationRenderLoop presentation = do
+    --Make a zipper and launch if the zipper isn't nothing
+        case zipper presentation of
+            Nothing -> return ()
+            Just z -> sceneRenderLoop' z
+
+sceneRenderLoop' :: ( MonadReader Config m
+            , MonadState Vars m
+            , SDLInput m
+            , HasInput m
+            , Debug m
+            , Renderer m ) => ListZipper UIScene -> m ()
+sceneRenderLoop' sceneZipper = do
+
+    updateInput
+    clearScreen
+    fillBackground
+
+    input <- getInput
+    let quitSignal = iQuit input
+    let sceneChangeSignal = presentationInput input
+
+    let sceneZipper' = case sceneChangeSignal of
+                        Nothing -> sceneZipper
+                        Just lzOp -> execListZipperOpOr lzOp sceneZipper
+
+    let currentScene = sceneZipper' ^. focus
+    -- dprint currentScene
+
+    sequence $ drawGraphicDebug <$> graphic_elems currentScene
+    drawScreen
+
+    --TODO modify sceneZipper based on input
+
+    unless quitSignal (sceneRenderLoop' sceneZipper')
+
+presentationInput :: Input -> Maybe (ListZipperOp' UIScene)
+presentationInput (Input True False _ _) = Just moveLeft
+presentationInput (Input False True _ _) = Just moveRight
+presentationInput _ = Nothing
+
 
 grenderLoop :: ( MonadReader Config m
             , MonadState Vars m
