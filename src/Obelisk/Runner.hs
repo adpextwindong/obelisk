@@ -55,13 +55,14 @@ sceneRenderLoop' sceneZipper = do
     let currentScene = sceneZipper' ^. focus
     -- dprint currentScene
 
-    sequence $ drawGraphicDebug <$> graphic_elems currentScene
+    sequence_ $ drawGraphicDebug <$> graphic_elems currentScene
     drawScreen
 
     --TODO modify sceneZipper based on input
 
     unless quitSignal (sceneRenderLoop' sceneZipper')
 
+--Handles switching the scene for our the presentation
 presentationInput :: Input -> Maybe (ListZipperOp' UIScene)
 presentationInput (Input True False _ _) = Just moveLeft
 presentationInput (Input False True _ _) = Just moveRight
