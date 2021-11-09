@@ -26,6 +26,7 @@ library
       Obelisk.Graphics.UIScene
       Obelisk.Manager.Input
       Obelisk.Types.Wall
+      Obelisk.Math.Hierarchy
       Obelisk.Math.Homogenous
       Obelisk.Math.Vector
       Obelisk.Wrapper.SDLInput
