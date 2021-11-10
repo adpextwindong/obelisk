@@ -1,5 +1,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Obelisk.Graphics.Primitives where
 
 import qualified SDL
@@ -7,6 +8,7 @@ import qualified SDL.Primitive as SDL
 import Linear
 import Foreign.C.Types (CInt)
 
+import Data.Coerce
 import Obelisk.Math.Homogenous
 
 --Consider how we should handle pixels
@@ -49,7 +51,8 @@ data Graphic a where
     Prim :: Shape Float -> Graphic (Shape Float)
     GroupPrim :: String -> [Graphic (Shape Float)] -> Graphic (Shape Float)
     -- ColorPrim :: ColorEffect -> Graphic Shape -> Graphic Shape
-    AffineT :: M22Affine Float -> Graphic a -> Graphic a
+    --Show t constraint could be removed, we're just using this coerce stuff for Data.Tagged phantom typing
+    AffineT :: (Coercible t (M22Affine Float), Show t) => t -> Graphic a -> Graphic a
     EvaldP :: Shape CInt -> Graphic (Shape CInt)
     EvaldGP :: String -> [Graphic (Shape CInt)] -> Graphic (Shape CInt)
     --At evaluation we floor at the end
@@ -84,11 +87,26 @@ type Duration = Float
 -- | Evaluates the Shape Graphic and applies all the transformations
 -- | Defaults the affine transformation to the identity matrix if the Graphic root isn't an AffineT
 evalGraphic :: Graphic (Shape Float) -> Graphic (Shape CInt)
-evalGraphic (AffineT t s) = evalGraphic' t s
+evalGraphic (AffineT t s) = evalGraphic' (coerce t) s
 evalGraphic s = evalGraphic' m22AffineIdD s
 
 -- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
 evalGraphic' :: M22Affine Float -> Graphic (Shape Float) -> Graphic (Shape CInt)
 evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
 evalGraphic' t (GroupPrim label gs) = EvaldGP label $ fmap (evalGraphic' t) gs
-evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! t') s --TODO make sure this is the correct behavior when nesting transforms
+evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! coerce t') s --TODO make sure this is the correct behavior when nesting transforms
+
+{-
+
+RE: Coerce usage here
+ Couldn't match expected type `M22Affine Float'
+                  with actual type `t'
+      `t' is a rigid type variable bound by
+        a pattern with constructor:
+          AffineT :: forall t a.
+                     (Coercible t (M22Affine Float), Show t) =>
+
+Because we coerce phantom typed coordinate space transformations, we have coerce here too
+
+This shit works because Data.Tagged is a newtype on M22Affine which is a type alias for V3 (V3 t)
+-}

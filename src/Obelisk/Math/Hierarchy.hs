@@ -3,7 +3,10 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE ConstraintKinds #-}
 module Obelisk.Math.Hierarchy where
-import Obelisk.Math.Homogenous
+
+import Data.Tagged
+
+import Obelisk.Math.Homogenous ( m22AffineIdD, M22Affine )
 
 -- | a and b represent the source coordinate system and target coordinate system the Affine transformation takes you through.
 data M22CoordAffine t a b where
@@ -21,6 +24,14 @@ type family KCoordinateSystem' a where
     KCoordinateSystem' PDC = 'CoordinateSystem
 
 type KCoordinateSystem t = (KCoordinateSystem' t ~ 'CoordinateSystem)
+
+--Data.Tagged version
+type M_World2PhysicalDevice t = Tagged (WorldC -> PDC) (M22Affine t)
+type M_PhysicalDevice2World t = Tagged (PDC -> WorldC) (M22Affine t)
+
+type WorldSpace t = Tagged WorldC t
+type PhysicalDeviceSpace t = Tagged PDC t
+type NormalizedDeviceSpace t = Tagged NDC t
 
 -- | t is the underlying type for the V2/V3's to accomodate converting from Float to CInt eventually
 -- | a is the coordinate system (enforced by Lift's ConstraintKind usage)
