@@ -67,6 +67,7 @@ instance Show (Graphic (Shape Float)) where
 instance Show (Graphic (Shape CInt)) where
     show (EvaldP s) = "Evaluated Prim" ++ show s
     show (EvaldGP label gs) = "Evaluated GroupPrim" ++ show label ++ show gs
+    show (AffineT _ _) = undefined --Evald specifically evaluates away AffineT's. TODO figure out a way to get this known
 
 --TODO COLOR, EFFECTS, ANIMATIONS, SCENES LATER
 

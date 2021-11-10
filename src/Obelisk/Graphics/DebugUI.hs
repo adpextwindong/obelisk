@@ -148,7 +148,7 @@ midlineRaycastIntersectionsGraphic player ws = do
 singleRaycastGraphic :: Graphic (Shape Float)
 singleRaycastGraphic =
     let p = V2 5.25 5.66
-        r = V2 (1.0) (1.0)
+        r = V2 1.0 1.0
         path = shootRay' 10 p r
         vints = xRayGridIntersections p r $ baseStepsBounded 10 (p ^._x) (r ^._x)
         hints = yRayGridIntersections p r $ baseStepsBounded 10 (p ^._y) (r ^._y)

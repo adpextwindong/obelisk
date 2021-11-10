@@ -72,7 +72,7 @@ clearScreen' = do
 
 drawScreen' :: SDLCanDraw m => m ()
 drawScreen' = do
-    window <- asks cWindow 
+    window <- asks cWindow
     updateWindowSurface window
 
 fillBackground' :: SDLCanDraw m => m ()
@@ -111,13 +111,13 @@ drawDebug' gs = do
     let new_gridTiles = DUI.worldGridTilesGraphic (world gs) visitedSet
     let new_player = DUI.playerGraphic (player gs)
     let new_midline_intersections = DUI.midlineRaycastIntersectionsGraphic (player gs) ws
-    
+
     let new_ui = AffineT gtp $ GroupPrim "Debug UI" [new_gridTiles, new_grid, new_player,
             new_midline_intersections]
 
     -- dprint $ vectorAngle $ direction (player gs)
     drawGraphic $ evalGraphic new_ui
-    
+
     -- old_drawRaycastIntersectionSimple (player gs) gtp
     -- old_drawRaycastIntersections (player gs) gtp
     -- _ <- drawMouseLoc gtp
@@ -134,17 +134,17 @@ drawMouseLoc t = do
     mloc <- getMouseAbsoluteLoc
     targetSurface <- asks cSurface
     font <- asks cFont
-    
+
     let textColor = V4 255 255 255 255
 
     let worldLoc = pdToWorldPos t (fmap fromIntegral mloc)
     let gridLoc = pdToGridPos t (fmap fromIntegral mloc)
-    let text = T.pack $ (show worldLoc ++ "  $$  " ++ show gridLoc)
+    let text = T.pack (show worldLoc ++ "  $$  " ++ show gridLoc)
 
     textSurface <- renderSolidText font textColor text
 
     let position = Just (SDL.P (V2 50 50))
-    
+
     surfaceBlit textSurface Nothing targetSurface position
 
 --------------------------------------------------------------------------------
@@ -156,6 +156,7 @@ drawGraphic (EvaldP (Line start end color))           = (\sr -> drawLine sr star
 drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center radius color) =<< asks cRenderer
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
+drawGraphic (AffineT _ _) = undefined --TODO figure out a way for this to be statically known that EvaldP contains no AffineT's
 --------------------------------------------------------------------------------
 
 --TODO FINISH PORTING THE REST TO THE NEW GRAPHIC API
@@ -189,15 +190,15 @@ pointToScreenSpace :: GridTransform -> V2 Float -> V2 CInt
 pointToScreenSpace t = dropHomoCoords . fmap floor . (t !*) . homoCoords
 
 pdToWorldT :: M22Affine Float -> M22Affine Float
-pdToWorldT gridTransform = inv33 gridTransform
+pdToWorldT = inv33
 
-pdToWorldPos t (SDL.P pos) = dropHomoCoords . ((pdToWorldT t) !*) . homoCoords $ pos
-pdToGridPos t (SDL.P pos) = dropHomoCoords . (fmap floor) . ((pdToWorldT t) !*) . homoCoords $ pos
+pdToWorldPos t (SDL.P pos) = dropHomoCoords . (pdToWorldT t !*) . homoCoords $ pos
+pdToGridPos t (SDL.P pos) = dropHomoCoords . fmap floor . (pdToWorldT t !*) . homoCoords $ pos
 
 -- Grid To Player as center Local to Screen Affine Transformation
 --The gtp
 centerScreenOnWorldGrid :: CInt -> CInt -> CInt -> GridTransform
-centerScreenOnWorldGrid ws screenWidth screenHeight = gridT ws zoomFactor rotationFactor focus tPDCenter 
+centerScreenOnWorldGrid ws screenWidth screenHeight = gridT ws zoomFactor rotationFactor focus tPDCenter
     where
     --TODO rotation focus mechanism
     -- let rotationFactor = bool 0.0 (vectorAngle. direction $ player gs) $ rotateToPView gs

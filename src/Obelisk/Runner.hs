@@ -8,6 +8,8 @@ import Linear
 import Control.Lens
 import qualified SDL
 import Data.ListZipper
+import Data.Foldable ( forM_ )
+import Control.Monad (when)
 
 import Obelisk.Config
 import Obelisk.State
@@ -28,9 +30,7 @@ presentationRenderLoop :: ( MonadReader Config m
             , Renderer m ) => Presentation -> m ()
 presentationRenderLoop presentation = do
     --Make a zipper and launch if the zipper isn't nothing
-        case zipper presentation of
-            Nothing -> return ()
-            Just z -> sceneRenderLoop' z
+        forM_ (zipper presentation) sceneRenderLoop'
 
 sceneRenderLoop' :: ( MonadReader Config m
             , MonadState Vars m
@@ -112,29 +112,27 @@ mainLoop = do
     let (rotated_dir, rotated_cplane) = if | iLeft input && not (iRight input) -> (dir *! rotation2 0.05, cplane *! rotation2 0.05)
                                            | iRight input && not (iLeft input) -> (dir *! rotation2 (-0.05), cplane *! rotation2 (-0.05))
                                            | otherwise -> (dir, cplane)
-    
+
 
     modify $ pVars %~ (\v -> v { direction = rotated_dir, camera_plane = rotated_cplane})
 
     time <- getTime
     let elapsed_seconds = fromIntegral (toInteger time) / 1000.0
     let rotationFactor = elapsed_seconds --0.0
-    
+
     --gameTick hs TODO updateStep
-    
+
 
     --TODO once we finish debug stuff and get drawing done
         --Implement press tab to show debug screen
 
     gs <- get
 
-    if iPrintState input
-    then printGS gs
-    else return ()
+    when (iPrintState input) $ printGS gs
 
     drawDebug gs
-    drawScreen 
-    
+    drawScreen
+
     fillBackground
-    
+
     unless quitSignal mainLoop
