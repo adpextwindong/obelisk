@@ -73,11 +73,13 @@ Figure out how JXV's library is really supposed to be used.
 
 ## Experimental Ideas
 
-- [ ] Test out annotating matrix/vector types with what space they are in
-  - [ ] Have the graphics dsl AffineT :: M22Affine a -> Graphic (a -> b), composition operator for (a -> b) -> (b -> c) -> (a -> c)
+- [x] Test out annotating matrix/vector types with what space they are in
+  - [x] Have the graphics dsl AffineT :: M22Affine a -> Graphic (a -> b), composition operator for (a -> b) -> (b -> c) -> (a -> c)
 
 It would be nice if anything touching the graphics dsl pipeline has a notion of which coordinate system its in. The vector math might become too unwieldy to do something like that. But anything ready to be composed for rendering should have that notion.
 
 ```
 Local -> Object -> World  -> Normalized Device Coordinates -> Physical Device Coordinates
 ```
+
+This idea might be more coerce's than I'd like.
