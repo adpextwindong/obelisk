@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE ConstraintKinds #-}
 module Obelisk.Math.Hierarchy where
 
