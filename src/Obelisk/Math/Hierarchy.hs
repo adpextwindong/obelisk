@@ -12,18 +12,19 @@ import Obelisk.Math.Homogenous ( m22AffineIdD, M22Affine )
 data M22CoordAffine t a b where
     M22CoordAffine :: M22Affine t -> M22CoordAffine t a b
 
+--Coordinate Spaces
 data WorldC
 data NDC
 data PDC
 
-data CoordinateSystem = 'CoordinateSystem
+data CoordinateSystem = 'CoordinateSystem                              --DataKinds is used here
 
-type family KCoordinateSystem' a where
+type family KCoordinateSystem' a where                                 --TypeFamilies
     KCoordinateSystem' WorldC = 'CoordinateSystem
     KCoordinateSystem' NDC = 'CoordinateSystem
     KCoordinateSystem' PDC = 'CoordinateSystem
 
-type KCoordinateSystem t = (KCoordinateSystem' t ~ 'CoordinateSystem)
+type KCoordinateSystem t = (KCoordinateSystem' t ~ 'CoordinateSystem)  --ConstraintKinds
 
 --Data.Tagged version
 type M_World2PhysicalDevice t = Tagged (WorldC -> PDC) (M22Affine t)
