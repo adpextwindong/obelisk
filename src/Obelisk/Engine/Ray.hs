@@ -1,4 +1,3 @@
-{-# LANGUAGE MagicHash #-}
 module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions, genRays) where
 
 import Linear.V2
@@ -11,13 +10,17 @@ import qualified Data.Set as S
 import Foreign.C.Types ( CInt )
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
-import Data.Bifunctor
+import Data.Bifunctor ( Bifunctor(first) )
 
 import Obelisk.State
-import Obelisk.Types.Wall
+    ( checkAt,
+      inBounds,
+      accessMapV,
+      Vars,
+      PVars(camera_plane, direction, position),
+      WorldTiles(worldSize) )
+import Obelisk.Types.Wall ( WallType(FW) )
 import Obelisk.Math.Vector (cosThetaBetween)
--- import Obelisk.Graphics.DebugUI
-import Obelisk.State (emptyMap)
 import SDL.Primitive (horizontalLine)
 
 --Positions in world space the raycaster will actually being checking
@@ -146,7 +149,7 @@ applyPermadi ppos costheta sampledpos = costheta * distance ppos sampledpos
 --Make sure this distance is properly projected to prevent fisheye
 --NOTE: The direction vector and the camera plane vector length ratios will determine FOV with this impl
 projectedSliceHeight :: Float -> PVars -> Float
-projectedSliceHeight distanceToSlice player = (sliceConstant / distanceToSlice) * (norm (direction player))
+projectedSliceHeight distanceToSlice player = (sliceConstant / distanceToSlice) * norm (direction player)
     where sliceConstant = 60.0 :: Float --TODO figure this constant out
 {-
 Note:

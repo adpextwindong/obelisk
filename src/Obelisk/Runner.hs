@@ -9,6 +9,8 @@ import Control.Lens
 import qualified SDL
 import Data.ListZipper
 import Data.Foldable ( forM_ )
+import Control.Monad (when)
+
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Renderer
@@ -110,6 +112,13 @@ gRenderMouseLookLoop g = do
     let gtp = centerScreenOnWorldGrid 10 screenWidth screenHeight --todo
     let worldLoc = pdToWorldPos gtp (fromIntegral <$> absMouseLoc)
 
+    -- dprint "---"
+    -- dprint absMouseLoc
+    -- dprint worldLoc
+    -- dprint "---"
+
+    --TODO dump state
+
     graphic <- g worldLoc
     drawGraphicDebug graphic
     
@@ -143,29 +152,27 @@ mainLoop = do
     let (rotated_dir, rotated_cplane) = if | iLeft input && not (iRight input) -> (dir *! rotation2 0.05, cplane *! rotation2 0.05)
                                            | iRight input && not (iLeft input) -> (dir *! rotation2 (-0.05), cplane *! rotation2 (-0.05))
                                            | otherwise -> (dir, cplane)
-    
+
 
     modify $ pVars %~ (\v -> v { direction = rotated_dir, camera_plane = rotated_cplane})
 
     time <- getTime
     let elapsed_seconds = fromIntegral (toInteger time) / 1000.0
     let rotationFactor = elapsed_seconds --0.0
-    
+
     --gameTick hs TODO updateStep
-    
+
 
     --TODO once we finish debug stuff and get drawing done
         --Implement press tab to show debug screen
 
     gs <- get
 
-    if iPrintState input
-    then printGS gs
-    else return ()
+    when (iPrintState input) $ printGS gs
 
     drawDebug gs
-    drawScreen 
-    
+    drawScreen
+
     fillBackground
-    
+
     unless quitSignal mainLoop

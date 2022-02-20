@@ -1,6 +1,8 @@
 {-# LANGUAGE FlexibleContexts #-}
 module Obelisk.Graphics.DebugUI where
 
+import Obelisk.Effect.Debug
+
 import Foreign.C.Types (CInt)
 import Linear
 import Control.Lens
@@ -18,6 +20,7 @@ import Obelisk.Math.Homogenous ( rotation, translate )
 import Obelisk.Graphics.Primitives
 import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded)
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
+import Linear (normalize)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -151,7 +154,7 @@ midlineRaycastIntersectionsGraphic player ws = do
 singleRaycastGraphic :: Graphic (Shape Float)
 singleRaycastGraphic =
     let p = V2 5.25 5.66
-        r = V2 (1.0) (1.0)
+        r = V2 1.0 1.0
         path = shootRay' 10 p r
         vints = xRayGridIntersections p r $ baseStepsBounded 10 (p ^._x) (r ^._x)
         hints = yRayGridIntersections p r $ baseStepsBounded 10 (p ^._y) (r ^._y)
@@ -164,19 +167,24 @@ singleRaycastGraphic =
             anonGP $ (\c -> Prim $ Circle c 1 blue) <$> vints,
             anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]
 
+--raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
 --TODO Look the raycast at the mouse
 --TODO flexibility to zoom/translate the screen around in the runner for this
-mouseLookRaycastGraphicM :: (MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
-mouseLookRaycastGraphicM  r = do
+mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
+mouseLookRaycastGraphicM  lookingAtWorldPos = do
     (Vars (PVars p _ _) _ _ _) <- get
-    
-    let path = shootRay' 10 p r
+    let r = normalize $ lookingAtWorldPos - p
+
+    dprint r
+    dprint (r ^._x == 0.0 || r ^._x == -0.0)
+    let 
+        path = shootRay' 10 p r
         circleAt color c = Prim $ Circle c 1 color
         boundedSteps = baseStepsBounded 10 (p ^._x) (p ^._y)
 
         vertical_intersections = xRayGridIntersections p r boundedSteps
         horizontal_intersections = yRayGridIntersections p r boundedSteps
-        visitedSet = S.fromList $ fmap snd path
+        visitedSet = S.fromList $ fmap snd path --TODO FIX Visited set will contain (0,0) visited if the ray.x is 0.0 for some reason.
         playerCircle = Prim $ Circle p 1 white
 
         in return $ GroupPrim "MouseLookSingleRayIntersections" [
