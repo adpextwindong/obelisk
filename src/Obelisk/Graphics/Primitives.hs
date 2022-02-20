@@ -50,6 +50,7 @@ data Graphic a where
     GroupPrim :: String -> [Graphic (Shape Float)] -> Graphic (Shape Float)
     -- ColorPrim :: ColorEffect -> Graphic Shape -> Graphic Shape
     AffineT :: M22Affine Float -> Graphic a -> Graphic a
+
     EvaldP :: Shape CInt -> Graphic (Shape CInt)
     EvaldGP :: String -> [Graphic (Shape CInt)] -> Graphic (Shape CInt)
     --At evaluation we floor at the end

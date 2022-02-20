@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 module Obelisk.Graphics.DebugUI where
 
 import Foreign.C.Types (CInt)
@@ -7,6 +8,7 @@ import qualified SDL
 import qualified SDL.Primitive as SDL
 import qualified Data.Set as S
 import Control.Monad.Reader 
+import Control.Monad.State
 
 import Obelisk.State
 import Obelisk.Types.Wall
@@ -15,6 +17,7 @@ import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate )
 import Obelisk.Graphics.Primitives
 import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded)
+import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -160,3 +163,26 @@ singleRaycastGraphic =
             Prim $ Circle p 1 white,
             anonGP $ (\c -> Prim $ Circle c 1 blue) <$> vints,
             anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]
+
+--TODO Look the raycast at the mouse
+--TODO flexibility to zoom/translate the screen around in the runner for this
+mouseLookRaycastGraphicM :: (MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
+mouseLookRaycastGraphicM  r = do
+    (Vars (PVars p _ _) _ _ _) <- get
+    
+    let path = shootRay' 10 p r
+        circleAt color c = Prim $ Circle c 1 color
+        boundedSteps = baseStepsBounded 10 (p ^._x) (p ^._y)
+
+        vertical_intersections = xRayGridIntersections p r boundedSteps
+        horizontal_intersections = yRayGridIntersections p r boundedSteps
+        visitedSet = S.fromList $ fmap snd path
+        playerCircle = Prim $ Circle p 1 white
+
+        in return $ GroupPrim "MouseLookSingleRayIntersections" [
+            worldGridTilesGraphic emptyMap visitedSet,
+            worldGridGraphic 10,
+            playerCircle,
+            GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vertical_intersections,
+            GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> horizontal_intersections
+            ]

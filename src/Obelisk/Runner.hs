@@ -8,7 +8,7 @@ import Linear
 import Control.Lens
 import qualified SDL
 import Data.ListZipper
-
+import Data.Foldable ( forM_ )
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Renderer
@@ -19,6 +19,7 @@ import Obelisk.Manager.Input
 import Obelisk.Math.Homogenous
 import Obelisk.Graphics.Primitives
 import Obelisk.Graphics.UIScene
+import Data.Text (center)
 
 presentationRenderLoop :: ( MonadReader Config m
             , MonadState Vars m
@@ -28,9 +29,7 @@ presentationRenderLoop :: ( MonadReader Config m
             , Renderer m ) => Presentation -> m ()
 presentationRenderLoop presentation = do
     --Make a zipper and launch if the zipper isn't nothing
-        case zipper presentation of
-            Nothing -> return ()
-            Just z -> sceneRenderLoop' z
+        forM_ (zipper presentation) sceneRenderLoop'
 
 sceneRenderLoop' :: ( MonadReader Config m
             , MonadState Vars m
@@ -88,6 +87,38 @@ grenderLoop g = do
     fillBackground
 
     unless quitSignal (grenderLoop g)
+
+gRenderMouseLookLoop :: ( MonadReader Config m
+            , MonadState Vars m
+            , SDLInput m
+            , HasInput m
+            , Debug m
+            , Renderer m ) => (V2 Float ->m (Graphic (Shape Float))) -> m ()
+gRenderMouseLookLoop g = do
+    updateInput
+    clearScreen
+    fillBackground
+
+    input <- getInput
+    let quitSignal = iQuit input
+
+    absMouseLoc <- getMouseAbsoluteLoc 
+    --Implicitly assumes world is size 10 for diagram.
+    --TODO fix this math
+    screenWidth <- asks cScreenWidth 
+    screenHeight <- asks cScreenHeight
+    let gtp = centerScreenOnWorldGrid 10 screenWidth screenHeight --todo
+    let worldLoc = pdToWorldPos gtp (fromIntegral <$> absMouseLoc)
+
+    graphic <- g worldLoc
+    drawGraphicDebug graphic
+    
+    drawScreen
+    fillBackground
+
+    unless quitSignal (gRenderMouseLookLoop g)
+
+
 
 mainLoop :: ( MonadReader Config m
             , MonadState Vars m

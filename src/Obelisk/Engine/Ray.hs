@@ -1,5 +1,5 @@
 {-# LANGUAGE MagicHash #-}
-module Obelisk.Engine.Ray where
+module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions, genRays) where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
@@ -187,3 +187,25 @@ genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
 genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rays
     where rayAnglePairs = rayHeads screenWidth player
           rays = fmap fst rayAnglePairs
+
+
+{-
+
+Lets try to do the rendering pipeline in one step and return all the stuff we'd need in a record
+
+Debug Views expects:
+
+RayPaths
+Visited Set
+
+Game Screen expects:
+
+Wall Heights and the respective color/texture sample of the wall
+Visited Set for sprite drawing
+-}
+
+data RaycastResults
+    = RaycastResults {
+        
+    }
+

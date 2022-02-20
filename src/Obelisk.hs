@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralisedNewtypeDeriving #-}
+{-# LANGUAGE GADTs #-}
 
 module Obelisk where
 
@@ -159,6 +160,39 @@ grender g = do
             }
 
     runObelisk cfg initVars (grenderLoop g)
+
+    SDL.Font.free font
+    SDL.freeSurface screenSurface
+    SDL.destroyWindow window
+    SDL.quit
+
+grenderMouseLook :: (m ~ Obelisk) => (V2 Float -> m (Graphic (Shape Float))) -> IO ()
+grenderMouseLook g = do
+    SDL.initialize [SDL.InitVideo]
+    SDL.Font.initialize
+    let title = "Graphic Renderer Test"
+
+    font <- SDL.Font.load "resources/arial.ttf" 16
+
+    window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
+    SDL.showWindow window
+    screenSurface <- SDL.getWindowSurface window
+    SDL.updateWindowSurface window
+
+    screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
+
+    let hs = (window, screenSurface, screenRenderer)
+
+    let cfg = Config {
+                cWindow = window,
+                cRenderer = screenRenderer,
+                cSurface = screenSurface,
+                cScreenWidth = initialScreenWidth,
+                cScreenHeight = initialScreenHeight,
+                cFont = font
+            }
+
+    runObelisk cfg initVars (gRenderMouseLookLoop g)
 
     SDL.Font.free font
     SDL.freeSurface screenSurface
