@@ -168,24 +168,33 @@ singleRaycastGraphic =
             anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]
 
 --raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
---TODO Look the raycast at the mouse
 --TODO flexibility to zoom/translate the screen around in the runner for this
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    (Vars (PVars p _ _) _ _ _) <- get
+    (Vars (PVars p _ _) (WorldTiles _ ws) _ _) <- get
+    let playerCircle = Prim $ Circle p 1 white
     let r = normalize $ lookingAtWorldPos - p
 
-    dprint r
-    dprint (r ^._x == 0.0 || r ^._x == -0.0)
-    let 
-        path = shootRay' 10 p r
-        circleAt color c = Prim $ Circle c 1 color
-        boundedSteps = baseStepsBounded 10 (p ^._x) (p ^._y)
+    let path = shootRay' 10 p r
+    let visitedSet = S.fromList $ fmap snd path
 
-        vertical_intersections = xRayGridIntersections p r boundedSteps
-        horizontal_intersections = yRayGridIntersections p r boundedSteps
-        visitedSet = S.fromList $ fmap snd path
-        playerCircle = Prim $ Circle p 1 white
+    dprint ""
+    dprint path --Where the mouse is looking
+    dprint ""
+
+    let
+        circleAt color c = Prim $ Circle c 1 color
+        --TODO place yellow circles at sample points
+        stepsX = baseStepsBounded (fromIntegral ws) (p ^._x) (r ^._x)
+        stepsY = baseStepsBounded (fromIntegral ws) (p ^._y) (r ^._y)
+
+        --Filter out of bound steps
+        boundHorizontal = takeWhile (\(V2 x y) -> y > 0 && y < fromIntegral ws)
+        boundVertical = takeWhile (\(V2 x y) -> x > 0 && x < fromIntegral ws)
+
+        vertical_intersections = boundHorizontal $ xRayGridIntersections p r stepsX
+        horizontal_intersections = boundVertical $ yRayGridIntersections p r stepsY
+
 
         in return $ GroupPrim "MouseLookSingleRayIntersections" [
             worldGridTilesGraphic emptyMap visitedSet,
