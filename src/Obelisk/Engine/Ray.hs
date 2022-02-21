@@ -1,4 +1,4 @@
-module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions, genRays) where
+module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions) where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
@@ -11,6 +11,8 @@ import Foreign.C.Types ( CInt )
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.Bifunctor ( Bifunctor(first) )
+
+import qualified Data.Vector.Unboxed.Mutable as UM
 
 import Obelisk.State
     ( checkAt,
@@ -167,6 +169,9 @@ visitedPositions gs steps = S.fromList $ take takeLength rayVisitedIndexes
         rayVisitedIndexes = fmap snd steps
         takeLength = lenPassthrough (wallSamples gs rayVisitedIndexes)
 
+stVisitedPositions :: Vars -> [[(V2 Float, V2 Int)]] -> UM.MVector () Bool
+stVisitedPositions = undefined --TODO ST visited positions for list of raypaths
+
 lenPassthrough :: [WallType] -> Int
 lenPassthrough = length . takeWhile (/= FW)
 
@@ -176,23 +181,33 @@ wallSamples gs (r:rs) = if inBounds gs r
                         then checkAt gs r : wallSamples gs rs
                         else []
 
---TODO DEPRECATE THESE
---Lets test the ray regularly without concerning ourselves with the bumping into correct tile for wall positions. Maybe an epsilon aware rounder could work.
-shootRay' :: Int -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
-shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections playerpos vints hints
+
+-- (Path, Vertical Intersections, Horizontal Intersections)
+shootRay' :: Int -> V2 Float -> V2 Float -> ([(V2 Float, V2 Int)], [V2 Float], [V2 Float])
+shootRay' ws playerpos direction = (epsilonBump direction <$> mergeIntersections playerpos vints hints, vints, hints)
     where
+        stepsX = baseStepsBounded ws (playerpos ^._x) (direction ^._x)
+        stepsY = baseStepsBounded ws (playerpos ^._y) (direction ^._y)
+
+        boundedHorizontal = takeWhile (\(V2 _ y) -> y > 0 && y < fromIntegral ws)
+        boundedVertical = takeWhile (\(V2 x _) -> x > 0 && x < fromIntegral ws)
+
         vints = if direction ^._x == 0.0
-                then []
-                else xRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._x) (direction ^._x))
-        hints = yRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._y) (direction ^._y))
+                then [] --No vertical intersection if literally looking along x axis
+                else boundedHorizontal $ xRayGridIntersections playerpos direction stepsX
+        hints = boundedVertical $ yRayGridIntersections playerpos direction stepsY
+
 --Utilize the new Ray
 --TODO make a version that takes in the world so we don't waste time allocing for fat ass lists
 --TODO benchmark this
+
+{-
+ - TODO UNDO
 genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
 genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rays
     where rayAnglePairs = rayHeads screenWidth player
           rays = fmap fst rayAnglePairs
-
+-}
 
 {-
 

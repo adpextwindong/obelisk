@@ -29,7 +29,7 @@ import Data.Coerce
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
-import Obelisk.Engine.Ray (visitedPositions, genRays)
+import Obelisk.Engine.Ray (visitedPositions)
 
 import Obelisk.Graphics.Primitives
 import qualified Obelisk.Graphics.DebugUI as DUI
@@ -95,12 +95,14 @@ drawGraphicDebug' g = do
     drawGraphic $ evalGraphic $ AffineT gtp g
 
 drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m) => Vars -> m ()
+drawDebug' = undefined
+{- TODO UNDO AFTER WE FINISH MOUSELOOKRAYCASTGRAPHIC
 drawDebug' gs = do
     let ws = worldSize . world $ gs
     screenWidth <- asks cScreenWidth
     screenHeight <- asks cScreenHeight
     --RAYCASTING CORE
-    let rays = genRays 320 (player gs) (fromIntegral ws)
+    --let rays = genRays 320 (player gs) (fromIntegral ws)
     let visitedSet = S.unions $ visitedPositions gs <$> rays
     --
 
@@ -124,7 +126,7 @@ drawDebug' gs = do
     -- _ <- drawMouseLoc gtp
     --TODO draw sideRaycastIntersections
     return ()
-
+-}
 ---------------------------------------------------------------
 -- rayCount = 320 --TODO FIXME REVERT
 

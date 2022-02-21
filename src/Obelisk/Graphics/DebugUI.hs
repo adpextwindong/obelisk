@@ -145,17 +145,22 @@ playerCircleGraphic p = do
     AffineT (translate px py) $ Prim (Circle (V2 0.0 0.0) circle_radius white)
 
 --Raycasting Diagnostics
+--
+{-
 midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic (Shape Float)
 midlineRaycastIntersectionsGraphic player ws = do
-    let intersections = fst <$> shootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Float]
+    let intersections = fst <$> fshootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Float]
     GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersections
 
+-}
+
+{-
 --Test with grender for Ray
 singleRaycastGraphic :: Graphic (Shape Float)
 singleRaycastGraphic =
     let p = V2 5.25 5.66
         r = V2 1.0 1.0
-        path = shootRay' 10 p r
+        path = fshootRay' 10 p r
         vints = xRayGridIntersections p r $ baseStepsBounded 10 (p ^._x) (r ^._x)
         hints = yRayGridIntersections p r $ baseStepsBounded 10 (p ^._y) (r ^._y)
 
@@ -166,40 +171,24 @@ singleRaycastGraphic =
             Prim $ Circle p 1 white,
             anonGP $ (\c -> Prim $ Circle c 1 blue) <$> vints,
             anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]
-
+-}
 --raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
 --TODO flexibility to zoom/translate the screen around in the runner for this
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
     (Vars (PVars p _ _) (WorldTiles _ ws) _ _) <- get
-    let playerCircle = Prim $ Circle p 1 white
-    let r = normalize $ lookingAtWorldPos - p
-
-    let path = shootRay' 10 p r
-    let visitedSet = S.fromList $ fmap snd path
-
-    dprint ""
-    dprint path --Where the mouse is looking
-    dprint ""
-
     let
+        playerCircle = Prim $ Circle p 1 white
+        r = normalize $ lookingAtWorldPos - p
+        (path, vints, hints) = shootRay' (fromIntegral ws) p r
+        visitedSet = S.fromList $ fmap snd path
+
         circleAt color c = Prim $ Circle c 1 color
         --TODO place yellow circles at sample points
-        stepsX = baseStepsBounded (fromIntegral ws) (p ^._x) (r ^._x)
-        stepsY = baseStepsBounded (fromIntegral ws) (p ^._y) (r ^._y)
-
-        --Filter out of bound steps
-        boundHorizontal = takeWhile (\(V2 x y) -> y > 0 && y < fromIntegral ws)
-        boundVertical = takeWhile (\(V2 x y) -> x > 0 && x < fromIntegral ws)
-
-        vertical_intersections = boundHorizontal $ xRayGridIntersections p r stepsX
-        horizontal_intersections = boundVertical $ yRayGridIntersections p r stepsY
-
-
         in return $ GroupPrim "MouseLookSingleRayIntersections" [
             worldGridTilesGraphic emptyMap visitedSet,
             worldGridGraphic 10,
             playerCircle,
-            GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vertical_intersections,
-            GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> horizontal_intersections
+            GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
+            GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
             ]
