@@ -181,7 +181,9 @@ wallSamples gs (r:rs) = if inBounds gs r
 shootRay' :: Int -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
 shootRay' ws playerpos direction = epsilonBump direction <$> mergeIntersections playerpos vints hints
     where
-        vints = xRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._x) (direction ^._x))
+        vints = if direction ^._x == 0.0
+                then []
+                else xRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._x) (direction ^._x))
         hints = yRayGridIntersections playerpos direction (baseStepsBounded ws (playerpos ^._y) (direction ^._y))
 --Utilize the new Ray
 --TODO make a version that takes in the world so we don't waste time allocing for fat ass lists

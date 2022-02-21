@@ -184,7 +184,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
         vertical_intersections = xRayGridIntersections p r boundedSteps
         horizontal_intersections = yRayGridIntersections p r boundedSteps
-        visitedSet = S.fromList $ fmap snd path --TODO FIX Visited set will contain (0,0) visited if the ray.x is 0.0 for some reason.
+        visitedSet = S.fromList $ fmap snd path
         playerCircle = Prim $ Circle p 1 white
 
         in return $ GroupPrim "MouseLookSingleRayIntersections" [
