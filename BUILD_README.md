@@ -1,4 +1,19 @@
-#SDL2_gfx
+# Build Notes
+
+For SDL2:
+which ghc
+/cygdrive/c/tools/ghc-8.8.4/bin
+
+Stick SDL2.dll in the same bin folder as your ghc.
+
+For SDL2_gfx, SDL2_ttf:
+
+Add the directories containing the .pc files to PKG_CONFIG_PATH
+```
+configure && make
+```
+
+## SDL2_gfx
 SDL2_gfx lib stuff license:
 (C) A. Schiffler, aschiffler [at] ferzkopp.net 2012-2018, licensed under the zlib license
 
