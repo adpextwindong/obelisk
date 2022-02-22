@@ -37,6 +37,7 @@ import Data.Word
 import Linear
 import Control.Lens
 import SDL.Primitive as SDL
+import Obelisk.Manager.Input (updateCamEvents')
 
 --ACCESSED godBoltMap !! y !! x style
 {-
@@ -226,6 +227,7 @@ instance HasInput Obelisk where
     updateInput = updateInput'
     getInput = getInput'
     setInput = setInput'
+    updateCamEvents = updateCamEvents'
 
 instance Renderer Obelisk where
     clearScreen = clearScreen'

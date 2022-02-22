@@ -84,7 +84,8 @@ data Vars = Vars {
                 --Debug vars TODO refactor
                 rotateToPView :: Bool,
                 vInput :: Input,
-                zoom :: Float
+                camZoom :: Float,
+                camPan :: V2 Float
             }
     deriving Show
 
@@ -107,9 +108,10 @@ initPVars = PVars (V2 2.5 6.5) dir cam
          cam = V2 0.9954279468472328 9.551545757406914e-2
 
 initVars :: Vars
-initVars = Vars initPVars boxMap False initInput baseZoom
+initVars = Vars initPVars boxMap False initInput baseZoom basePan
   where
     baseZoom = 1.0
+    basePan = V2 0.0 0.0
 
 makeClassy ''Vars
 makeClassy ''PVars

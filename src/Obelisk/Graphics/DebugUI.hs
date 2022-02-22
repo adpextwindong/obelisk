@@ -176,7 +176,7 @@ singleRaycastGraphic =
 --TODO flexibility to zoom/translate the screen around in the runner for this
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    (Vars (PVars p _ _) (WorldTiles _ ws) _ _ _) <- get
+    (Vars (PVars p _ _) (WorldTiles _ ws) _ _ _ _) <- get
     let
         playerCircle = Prim $ Circle p 1 white
         r = normalize $ lookingAtWorldPos - p

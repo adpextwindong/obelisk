@@ -112,13 +112,11 @@ gRenderMouseLookLoop g = do
 
     --TODO mousescroll zooming
     --TODO translate with mouse
-    let mouseTx = 200.0
-    let mouseTy = 100.0
-    let zoomAmmount = 1.0
+    (Vars _ _ _ _ zoomAmmount camPan) <- get
 
     --Transforms
     let screenOnWorldGrid = rawCenterScreenOnWorldGrid 10 screenWidth screenHeight --todo
-    let translateMouse = translate mouseTx mouseTy
+    let translateMouse = translate (camPan ^._x) (camPan ^._y)
     let zoomMouse = zoomT zoomAmmount 
     let gtp =  zoomMouse !*! translateMouse !*! screenOnWorldGrid 
 
