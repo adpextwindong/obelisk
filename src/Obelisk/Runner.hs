@@ -104,13 +104,25 @@ gRenderMouseLookLoop g = do
     input <- getInput
     let quitSignal = iQuit input
 
-    absMouseLoc <- getMouseAbsoluteLoc 
+    absMouseLoc <- getMouseAbsoluteLoc
     --Implicitly assumes world is size 10 for diagram.
     --TODO fix this math
-    screenWidth <- asks cScreenWidth 
+    screenWidth <- asks cScreenWidth
     screenHeight <- asks cScreenHeight
-    let gtp = centerScreenOnWorldGrid 10 screenWidth screenHeight --todo
-    let worldLoc = pdToWorldPos gtp (fromIntegral <$> absMouseLoc)
+
+    --TODO mousescroll zooming
+    --TODO translate with mouse
+    let mouseTx = 200.0
+    let mouseTy = 100.0
+    let zoomAmmount = 1.0
+
+    --Transforms
+    let screenOnWorldGrid = rawCenterScreenOnWorldGrid 10 screenWidth screenHeight --todo
+    let translateMouse = translate mouseTx mouseTy
+    let zoomMouse = zoomT zoomAmmount 
+    let gtp =  zoomMouse !*! translateMouse !*! screenOnWorldGrid 
+
+    let worldLoc = rawPDtoWorldPos gtp (fromIntegral <$> absMouseLoc)
 
     -- dprint "---"
     -- dprint absMouseLoc
@@ -120,8 +132,8 @@ gRenderMouseLookLoop g = do
     --TODO dump state
 
     graphic <- g worldLoc
-    drawGraphicDebug graphic
-    
+    drawGraphicDebugWithMatrix graphic gtp
+
     drawScreen
     fillBackground
 

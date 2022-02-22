@@ -68,6 +68,7 @@ class Monad m => Renderer m where
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
     drawGraphicDebug :: Graphic (Shape Float) -> m ()
+    drawGraphicDebugWithMatrix :: Graphic (Shape Float) -> M22Affine Float -> m ()
 
 --TODO consider SDLFont being in this
 type SDLCanDraw m = (SDLRenderer m, MonadReader Config m)
@@ -93,6 +94,11 @@ drawGraphicDebug' g = do
     let gtp = centerScreenOnWorldGrid 10 640 480
 --dprint $ evalGraphic $ AffineT gtp g
     drawGraphic $ evalGraphic $ AffineT gtp g
+
+drawGraphicDebugWithMatrix' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic (Shape Float) -> M22Affine Float -> m ()
+drawGraphicDebugWithMatrix' g gtp = do
+    drawGraphic $ evalGraphic $ AffineT gtp g
+
 
 drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m) => Vars -> m ()
 drawDebug' = undefined
@@ -158,6 +164,9 @@ pdToWorldT t = coerce @(M22Affine Float) (inv33 @_ (coerce t))
 
 pdToWorldPos :: M_World2PhysicalDevice Float -> SDL.Point V2 Float -> V2 Float
 pdToWorldPos t' (SDL.P pos) = dropHomoCoords . (unTagged (pdToWorldT t') !*) . homoCoords $ pos
+
+rawPDtoWorldPos :: M22Affine Float -> SDL.Point V2 Float -> V2 Float
+rawPDtoWorldPos t (SDL.P pos) = dropHomoCoords . (inv33 t !*) . homoCoords $ pos
 
 -- pdToGridPos :: M22Affine Float -> SDL.Point V2 Float -> V2 CInt
 -- pdToGridPos t (SDL.P pos) = dropHomoCoords . fmap floor . (pdToWorldT t !*) . homoCoords $ pos

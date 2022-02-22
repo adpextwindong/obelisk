@@ -83,7 +83,8 @@ data Vars = Vars {
                 world :: WorldTiles,
                 --Debug vars TODO refactor
                 rotateToPView :: Bool,
-                vInput :: Input
+                vInput :: Input,
+                zoom :: Float
             }
     deriving Show
 
@@ -106,7 +107,9 @@ initPVars = PVars (V2 2.5 6.5) dir cam
          cam = V2 0.9954279468472328 9.551545757406914e-2
 
 initVars :: Vars
-initVars = Vars initPVars boxMap False initInput
+initVars = Vars initPVars boxMap False initInput baseZoom
+  where
+    baseZoom = 1.0
 
 makeClassy ''Vars
 makeClassy ''PVars

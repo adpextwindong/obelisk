@@ -233,6 +233,7 @@ instance Renderer Obelisk where
     fillBackground = fillBackground'
     drawDebug = drawDebug'
     drawGraphicDebug = drawGraphicDebug'
+    drawGraphicDebugWithMatrix = drawGraphicDebugWithMatrix'
 
 instance Debug Obelisk where
     printGS = printGS'
