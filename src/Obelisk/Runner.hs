@@ -112,14 +112,9 @@ gRenderMouseLookLoop g = do
 
     --TODO mousescroll zooming
     --TODO translate with mouse
-    (Vars _ _ _ _ zoomAmmount camPan) <- get
+    gtp <- worldGTP <$> get
 
     --Transforms
-    let screenOnWorldGrid = rawCenterScreenOnWorldGrid 10 screenWidth screenHeight --todo
-    let translateMouse = translate (camPan ^._x) (camPan ^._y)
-    let zoomMouse = zoomT zoomAmmount 
-    let gtp =  zoomMouse !*! translateMouse !*! screenOnWorldGrid 
-
     let worldLoc = rawPDtoWorldPos gtp (fromIntegral <$> absMouseLoc)
 
     -- dprint "---"

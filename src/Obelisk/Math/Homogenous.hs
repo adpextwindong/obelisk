@@ -1,6 +1,7 @@
 module Obelisk.Math.Homogenous where
 
 import Linear
+import Control.Lens
 import Foreign.C.Types ( CInt )
 import Data.Bifunctor
 
@@ -12,6 +13,9 @@ zoomT :: (Num a) => a -> V3 (V3 a)
 zoomT scale = V3 (V3 scale 0     0)
                 (V3 0     scale 0)
                 (V3 0     0     1)
+
+zoomAround :: Float -> V2 Float -> V3 (V3 Float)
+zoomAround scale (V2 x y) = translate x y !*! zoomT scale !*! translate (-x) (-y)
 
 translate :: (Num a) => a -> a -> V3 (V3 a)
 translate x y = V3 (V3 1 0 x)
@@ -59,3 +63,37 @@ dropHomoCoords (V3 x y _) = V2 x y
 
 apDT :: (Integral a) => M22Affine Float ->  HV2 Float -> V2 a
 apDT t =  dropHomoCoords . fmap floor . (t !*)
+
+gridT :: CInt -> Float -> Float -> Maybe (V2 Float) -> M22Affine Float -> M22Affine Float
+gridT worldSize zoomFactor rotationFactor Nothing translateToPDCenter = translateToPDCenter !*! rotationT !*! zoomT zoomFactor !*! centerToLocalOrigin
+    where
+        delta = fromIntegral worldSize / 2
+        centerToLocalOrigin = translate (-delta) (-delta) :: M22Affine Float
+        rotationT = rotation rotationFactor
+
+--Focuses onto something else in the world.
+--TODO This should be taking in a viewport instead of all these params...
+gridT worldSize zoomFactor rotationFactor (Just focus) translateToPDCenter = translateToPDCenter !*! zt !*! rotationT !*! playerToLocalOrigin
+    where
+        zt = zoomT zoomFactor
+        wsMid = fromIntegral worldSize / 2.0
+        playerToLocalOrigin = translate (-focus ^._x) (-focus ^._y)  :: M22Affine Float
+        rotationT = rotation ((-pi/2.0) - rotationFactor)
+
+translateToPDCenter :: CInt -> CInt -> M22Affine Float
+translateToPDCenter screenWidth screenHeight = translate (fromIntegral screenWidth / 2.0) (fromIntegral screenHeight / 2.0)
+
+
+-- Grid To Player as center Local to Screen Affine Transformation
+--The gtp
+rawCenterScreenOnWorldGrid :: CInt -> CInt -> CInt -> M22Affine Float
+rawCenterScreenOnWorldGrid ws screenWidth screenHeight = gridT ws zoomFactor rotationFactor focus tPDCenter
+    where
+    --TODO rotation focus mechanism
+    -- let rotationFactor = bool 0.0 (vectorAngle. direction $ player gs) $ rotateToPView gs
+    -- let focus = bool Nothing (Just (position . player $ gs)) $ rotateToPView gs
+        zoomLimiter = 0.95
+        zoomFactor = fromIntegral screenHeight / fromIntegral ws * zoomLimiter
+        rotationFactor = 0.0
+        focus = Nothing
+        tPDCenter = translateToPDCenter screenWidth screenHeight

@@ -2,10 +2,15 @@
 module Obelisk.Manager.Input where
 
 import qualified SDL
+import qualified SDL.Raw.Types (Point)
 import Control.Monad.State
+import Linear
 
+import Obelisk.Math.Homogenous
 import Obelisk.Engine.Input
 import Obelisk.Wrapper.SDLInput
+import Obelisk.Effect.Renderer
+import Obelisk.Effect.Debug
 import Obelisk.State
 
 class Monad m => HasInput m where
@@ -27,25 +32,30 @@ getInput' = gets vInput
 setInput' :: MonadState Vars m => Input -> m ()
 setInput' input = modify (\v -> v { vInput = input })
 
---TODO re-express this as a fold
-updateCamEvents' :: MonadState Vars m => [SDL.EventPayload] -> m ()
-updateCamEvents' ((SDL.MouseMotionEvent (SDL.MouseMotionEventData _window _device buttons position relmotion)) : xs) = modify (\v ->
+updateCamEvent :: (Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
+updateCamEvent (SDL.MouseMotionEvent (SDL.MouseMotionEventData _window _device buttons position (V2 relmotionx relmotiony))) = modify (\v ->
     if SDL.ButtonLeft `elem` buttons
-    then v { camPan = camPan v + fmap fromIntegral relmotion }
-    else v) >> updateCamEvents' xs
+    then v { worldGTP = translate (fromIntegral relmotionx) (fromIntegral relmotiony) !*! worldGTP v }
+    else v)
 
---TODO should be centered on the mouse but this will require more plumbing
-updateCamEvents' ((SDL.MouseWheelEvent (SDL.MouseWheelEventData _window _device (SDL.V2 scrollx scrolly) direction)) : xs) = modify (\v ->
-    let mag = fromIntegral scrolly
-        pre = camZoom v
-        scaleSpeedConstant = 0.05 --TODO tune this
-        in
-    case direction of
-        SDL.ScrollNormal  -> v { camZoom = pre + (scaleSpeedConstant * mag)}
-        SDL.ScrollFlipped -> v { camZoom = pre - (scaleSpeedConstant * mag)}) >> updateCamEvents' xs
+updateCamEvent (SDL.MouseWheelEvent (SDL.MouseWheelEventData _window _device (SDL.V2 scrollx scrolly) direction)) = do
+    vars <- get
+    let gtp = worldGTP vars
 
-updateCamEvents' (x:xs) = updateCamEvents' xs
-updateCamEvents' [] = return ()
+    aLoc@(SDL.P absMouseLoc) <- fmap fromIntegral <$> getMouseAbsoluteLoc
+    let worldLoc = rawPDtoWorldPos gtp aLoc
+
+    modify (\v ->
+      let mag = fromIntegral scrolly
+          scaleSpeedConstant = 0.15 --TODO store tunable in config
+          in
+      case direction of
+          --TODO stash scaleConstant
+          SDL.ScrollNormal  -> v { worldGTP = zoomAround (1.0 + (scaleSpeedConstant * mag)) absMouseLoc !*! worldGTP v }
+          SDL.ScrollFlipped -> v { worldGTP = zoomAround (1.0 + (-(scaleSpeedConstant * mag))) absMouseLoc !*! worldGTP v} )
+
+updateCamEvent _ = return ()
+updateCamEvents' xs = mapM_ updateCamEvent xs
 
 stepControl :: [SDL.EventPayload] -> Input -> Input
 stepControl (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym = SDL.Keysym{SDL.keysymKeycode = SDL.KeycodeA }}:xs) (Input _ y z a) = stepControl xs (Input True y z a) --TODO REFACTOR

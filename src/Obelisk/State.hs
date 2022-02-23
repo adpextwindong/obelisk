@@ -84,8 +84,8 @@ data Vars = Vars {
                 --Debug vars TODO refactor
                 rotateToPView :: Bool,
                 vInput :: Input,
-                camZoom :: Float,
-                camPan :: V2 Float
+                worldGTP :: V3 (V3 Float),
+                camZoomScale :: Float --Used for scaling other things
             }
     deriving Show
 
@@ -108,10 +108,10 @@ initPVars = PVars (V2 2.5 6.5) dir cam
          cam = V2 0.9954279468472328 9.551545757406914e-2
 
 initVars :: Vars
-initVars = Vars initPVars boxMap False initInput baseZoom basePan
+initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale
   where
-    baseZoom = 1.0
-    basePan = V2 0.0 0.0
+    baseGTP = rawCenterScreenOnWorldGrid 10 640 480
+    baseZoomScale = 1.0
 
 makeClassy ''Vars
 makeClassy ''PVars

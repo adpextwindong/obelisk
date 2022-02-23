@@ -9,7 +9,7 @@ import Control.Lens
 import qualified SDL
 import qualified SDL.Primitive as SDL
 import qualified Data.Set as S
-import Control.Monad.Reader 
+import Control.Monad.Reader
 import Control.Monad.State
 
 import Obelisk.State
@@ -64,8 +64,8 @@ worldGridGraphic ws = GroupPrim "Grid Lines" gridLines
 
 worldGridTilesGraphic :: WorldTiles -> S.Set (V2 Int) -> Graphic (Shape Float)
 worldGridTilesGraphic world visitedSet = do
-    let ws = worldSize world 
-    
+    let ws = worldSize world
+
     let inds = [(x,y) | x <- [0..ws -1], y <- [0..ws - 1]]
     let quads = [(V2 x y, V2 (x+1) y, V2 x (y+1), V2 (x+1) (y+1)) | x <- [0.. fromIntegral ws - 1], y <- [0.. fromIntegral ws - 1]]
 
@@ -176,7 +176,7 @@ singleRaycastGraphic =
 --TODO flexibility to zoom/translate the screen around in the runner for this
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    (Vars (PVars p _ _) (WorldTiles _ ws) _ _ camZoom _) <- get
+    (Vars (PVars p _ _) (WorldTiles _ ws) _ _ _ camZoom) <- get
     let
         playerCircle = Prim $ Circle p (floor camZoom) white
         r = normalize $ lookingAtWorldPos - p
