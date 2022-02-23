@@ -176,14 +176,14 @@ singleRaycastGraphic =
 --TODO flexibility to zoom/translate the screen around in the runner for this
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    (Vars (PVars p _ _) (WorldTiles _ ws) _ _ _ _) <- get
+    (Vars (PVars p _ _) (WorldTiles _ ws) _ _ camZoom _) <- get
     let
-        playerCircle = Prim $ Circle p 1 white
+        playerCircle = Prim $ Circle p (floor camZoom) white
         r = normalize $ lookingAtWorldPos - p
         (path, vints, hints) = shootRay' (fromIntegral ws) p r
         visitedSet = S.fromList $ fmap snd path
 
-        circleAt color c = Prim $ Circle c 1 color
+        circleAt color c = Prim $ Circle c (floor camZoom) color
         --TODO place yellow circles at sample points
         in return $ GroupPrim "MouseLookSingleRayIntersections" [
             worldGridTilesGraphic emptyMap visitedSet,
