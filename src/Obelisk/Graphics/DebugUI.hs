@@ -192,3 +192,9 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
             ]
+    --TODO plot raycast wall intersection
+    --TODO draw ray until intersection
+    --TODO insert some walls
+    --TODO ST visibility set
+
+--TODO seperate wall paint graph
