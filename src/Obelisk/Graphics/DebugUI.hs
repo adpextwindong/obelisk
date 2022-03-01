@@ -11,6 +11,7 @@ import qualified SDL.Primitive as SDL
 import qualified Data.Set as S
 import Control.Monad.Reader
 import Control.Monad.State
+import Data.Maybe
 
 import Obelisk.State
 import Obelisk.Types.Wall
@@ -18,7 +19,7 @@ import Obelisk.Types.Wall
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate )
 import Obelisk.Graphics.Primitives
-import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded)
+import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths)
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 -- UI CONSTANTS
@@ -172,26 +173,44 @@ singleRaycastGraphic =
             anonGP $ (\c -> Prim $ Circle c 1 blue) <$> vints,
             anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]
 -}
+
+--
+-- DEMOS
+--
+
 --raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
---TODO flexibility to zoom/translate the screen around in the runner for this
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    (Vars (PVars p _ _) (WorldTiles _ ws) _ _ _ camZoom) <- get
+    p <- position . player <$> get
+    w <- world <$> get
+    let ws = worldSize w
+    camZoom <- camZoomScale <$> get
+
+    let ray = normalize $ lookingAtWorldPos - p
+    let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
+    let visitedSet = S.fromList $ fmap snd path
+
+    --TODO sampleWalkRayPath
+    let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
+    let wallSamplePoint = case sampleWalkRayPaths w p ray (fmap fst path) of
+                            Nothing -> []
+                            Just (rayIntersectionPosition,rayIntersectionTileIndex) ->
+                              [yellow `circleAt` rayIntersectionPosition]
+
+    --TODO vision triangle for ray slice of screen
+
     let
         playerCircle = Prim $ Circle p (floor camZoom) white
-        r = normalize $ lookingAtWorldPos - p
-        (path, vints, hints) = shootRay' (fromIntegral ws) p r
-        visitedSet = S.fromList $ fmap snd path
 
-        circleAt color c = Prim $ Circle c (floor camZoom) color
         --TODO place yellow circles at sample points
-        in return $ GroupPrim "MouseLookSingleRayIntersections" [
-            worldGridTilesGraphic emptyMap visitedSet,
+        in return $ GroupPrim "MouseLookSingleRayIntersections" $ [
+            worldGridTilesGraphic w visitedSet,
             worldGridGraphic 10,
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
-            ]
+            ] ++ wallSamplePoint
+
     --TODO plot raycast wall intersection
     --TODO draw ray until intersection
     --TODO insert some walls

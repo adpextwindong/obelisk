@@ -1,4 +1,5 @@
-module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions) where
+{-# LANGUAGE TupleSections #-}
+module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths) where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
@@ -12,7 +13,10 @@ import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.Bifunctor ( Bifunctor(first) )
 
+import qualified Data.Vector.Unboxed as U
 import qualified Data.Vector.Unboxed.Mutable as UM
+import Data.STRef
+import Control.Monad.ST
 
 import Obelisk.State
     ( checkAt,
@@ -96,6 +100,7 @@ mergeIntersections playerpos (x:xs) (y:ys) = if qd playerpos x < qd playerpos y
 mergeIntersections _ [] ys = ys
 mergeIntersections _ xs [] = xs
 
+--Samples the raypath for the first wall intersection and returns its position in world space and tile indexes
 sampleWalkRayPaths :: WorldTiles -> V2 Float -> V2 Float -> [V2 Float] -> Maybe (V2 Float, V2 Int)
 sampleWalkRayPaths _ _ _ [] = Nothing --TODO it might be easier to replace this with a default wall
 -- sampleWalkRayPaths world playerpos ray (step:path) | trace ("Ray " ++ show ray ++  " step " ++ show step ++ " epsilonBump " ++ show (epsilonBump ray step)) False = undefined --Trace trick
@@ -105,6 +110,14 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
     where
         --TODO we should distinguish ray with a newtype
         cPair@(checkSpot,checkInds) = epsilonBump ray step
+
+--TODO port sampleWalkRayPaths to a version that uses a mutable vector for visited tiles
+stWalkRayPathForWall :: WorldTiles -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
+  -> (Maybe (V2 Float, V2 Int), U.Vector Bool)
+stWalkRayPathForWall w p r path = runST( do
+  v <- newSTRef $ U.replicate 100 False
+  let wallHit = Nothing
+  fmap (wallHit,) $ readSTRef v)
 
 --Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
 --Building the vision set might be a waste of time. Considering we could 
@@ -175,13 +188,16 @@ stVisitedPositions = undefined --TODO ST visited positions for list of raypaths
 lenPassthrough :: [WallType] -> Int
 lenPassthrough = length . takeWhile (/= FW)
 
+--TODO tests
+--Samples walls for their contents while within the bounds of the world
 wallSamples :: Vars -> [V2 Int] -> [WallType]
 wallSamples gs [] = []
 wallSamples gs (r:rs) = if inBounds gs r
                         then checkAt gs r : wallSamples gs rs
                         else []
 
-
+-- HASDEMO: mouseLookRayCastGraphicM
+-- Generates a bounded ray path, its vertical intersections with the grid, and horizontal intersections
 -- (Path, Vertical Intersections, Horizontal Intersections)
 shootRay' :: Int -> V2 Float -> V2 Float -> ([(V2 Float, V2 Int)], [V2 Float], [V2 Float])
 shootRay' ws playerpos direction = (epsilonBump direction <$> mergeIntersections playerpos vints hints, vints, hints)
@@ -207,9 +223,6 @@ genRays :: CInt -> PVars -> Int -> [[(V2 Float, V2 Int)]]
 genRays screenWidth player worldSize = shootRay' worldSize (position player) <$> rays
     where rayAnglePairs = rayHeads screenWidth player
           rays = fmap fst rayAnglePairs
--}
-
-{-
 
 Lets try to do the rendering pipeline in one step and return all the stuff we'd need in a record
 

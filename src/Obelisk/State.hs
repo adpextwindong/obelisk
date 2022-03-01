@@ -24,6 +24,18 @@ data WorldTiles = WorldTiles {
                   }
     deriving Show
 
+data Vars = Vars {
+                player :: PVars,
+                world :: WorldTiles,
+                --Debug vars TODO refactor
+                rotateToPView :: Bool,
+                vInput :: Input,
+                worldGTP :: V3 (V3 Float),
+                camZoomScale :: Float --Used for scaling other things
+            }
+    deriving Show
+
+
 {-# INLINE accessMapV #-}
 accessMapV :: WorldTiles -> V2 Int -> WallType
 accessMapV w (V2 x y) = accessMap w x y
@@ -77,17 +89,6 @@ boxMap64 = WorldTiles map 64
     where map = listArray (0, 4095) $ take 64 rFW ++ concat (replicate 62 (FW : take 62 rEW ++ [FW])) ++ take 64 rFW
 
 emptyMap = WorldTiles (listArray (0, 99) rEW) 10
-
-data Vars = Vars {
-                player :: PVars,
-                world :: WorldTiles,
-                --Debug vars TODO refactor
-                rotateToPView :: Bool,
-                vInput :: Input,
-                worldGTP :: V3 (V3 Float),
-                camZoomScale :: Float --Used for scaling other things
-            }
-    deriving Show
 
 initPVars :: PVars
 initPVars = PVars (V2 2.5 6.5) dir cam
