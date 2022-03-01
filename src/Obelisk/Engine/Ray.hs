@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections #-}
-module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths) where
+{-# LANGUAGE FlexibleContexts #-}
+module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths, stWalkRayPathForWall) where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
@@ -13,10 +14,12 @@ import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
 import Data.Bifunctor ( Bifunctor(first) )
 
-import qualified Data.Vector.Unboxed as U
-import qualified Data.Vector.Unboxed.Mutable as UM
 import Data.STRef
 import Control.Monad.ST
+import qualified Data.Array.Unboxed as U
+import qualified Data.Array.MArray as UM
+import qualified Data.Array.ST as US
+import qualified Data.Array.IArray as UI
 
 import Obelisk.State
     ( checkAt,
@@ -112,15 +115,33 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
         cPair@(checkSpot,checkInds) = epsilonBump ray step
 
 --TODO port sampleWalkRayPaths to a version that uses a mutable vector for visited tiles
-stWalkRayPathForWall :: WorldTiles -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
-  -> (Maybe (V2 Float, V2 Int), U.Vector Bool)
-stWalkRayPathForWall w p r path = runST( do
-  v <- newSTRef $ U.replicate 100 False
-  let wallHit = Nothing
-  fmap (wallHit,) $ readSTRef v)
+--stWalkRayPathForWall :: WorldTiles -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
+-- -> (Maybe (V2 Float, V2 Int), UI.Array Int Bool)
+
+stWalkRayPathForWall w p r path = runST (do
+  let tileCount = fromIntegral $ worldSize w * worldSize w
+  visited <- newSTRef $ UM.newArray (0, tileCount) False
+  wallHit <- newSTRef Nothing
+
+
+  let govisit (V2 x y) set = undefined --TODO
+
+  let go (sPair@(step_position, step_inds) : path) = (do
+       modifySTRef' visited (govisit step_inds)
+       if accessMapV w step_inds == FW
+       then do
+        writeSTRef wallHit (Just sPair)
+        return ()
+       else go path)
+
+  go path
+
+  rw <- readSTRef wallHit
+  rv <- readSTRef visited
+  return (rw, rv))
 
 --Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
---Building the vision set might be a waste of time. Considering we could 
+--Building the vision set might be a waste of time. Considering we could
 rayCast' :: WorldTiles -> V2 Float -> V2 Float -> Maybe (V2 Float, V2 Int)
 rayCast' world p r = sampleWalkRayPaths world p r (mergeIntersections p vints hints)
     where
@@ -182,9 +203,6 @@ visitedPositions gs steps = S.fromList $ take takeLength rayVisitedIndexes
         rayVisitedIndexes = fmap snd steps
         takeLength = lenPassthrough (wallSamples gs rayVisitedIndexes)
 
-stVisitedPositions :: Vars -> [[(V2 Float, V2 Int)]] -> UM.MVector () Bool
-stVisitedPositions = undefined --TODO ST visited positions for list of raypaths
-
 lenPassthrough :: [WallType] -> Int
 lenPassthrough = length . takeWhile (/= FW)
 
@@ -239,6 +257,5 @@ Visited Set for sprite drawing
 
 data RaycastResults
     = RaycastResults {
-        
-    }
 
+    }
