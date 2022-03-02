@@ -1,5 +1,4 @@
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE FlexibleContexts #-}
 module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths, stWalkRayPathForWall) where
 
 import Linear.V2
@@ -15,11 +14,10 @@ import qualified Data.IntMap.Strict as IntMap
 import Data.Bifunctor ( Bifunctor(first) )
 
 import Data.STRef
+import Data.Array.ST
+import Data.Array.MArray
+import Data.Array.Unboxed
 import Control.Monad.ST
-import qualified Data.Array.Unboxed as U
-import qualified Data.Array.MArray as UM
-import qualified Data.Array.ST as US
-import qualified Data.Array.IArray as UI
 
 import Obelisk.State
     ( checkAt,
@@ -114,31 +112,32 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
         --TODO we should distinguish ray with a newtype
         cPair@(checkSpot,checkInds) = epsilonBump ray step
 
---TODO port sampleWalkRayPaths to a version that uses a mutable vector for visited tiles
---stWalkRayPathForWall :: WorldTiles -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
--- -> (Maybe (V2 Float, V2 Int), UI.Array Int Bool)
+--TODO test
+stWalkRayPathForWall :: WorldTiles -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
+  -> (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
 
-stWalkRayPathForWall w p r path = runST (do
-  let tileCount = fromIntegral $ worldSize w * worldSize w
-  visited <- newSTRef $ UM.newArray (0, tileCount) False
-  wallHit <- newSTRef Nothing
+stWalkRayPathForWall w p r path = runST aux
+  where
+    aux :: ST s (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
+    aux = do
+      let tileCount = fromIntegral $ worldSize w * worldSize w
 
+      visited <- newArray (0, tileCount) False :: ST s (STUArray s (V2 Int) Bool)
+      wallHit <- newSTRef Nothing
 
-  let govisit (V2 x y) set = undefined --TODO
+      let go (sPair@(step_position, step_inds) : path) = do
+           writeArray visited step_inds True
+           if accessMapV w step_inds == FW
+           then do
+            writeSTRef wallHit (Just sPair)
+           else go path
 
-  let go (sPair@(step_position, step_inds) : path) = (do
-       modifySTRef' visited (govisit step_inds)
-       if accessMapV w step_inds == FW
-       then do
-        writeSTRef wallHit (Just sPair)
-        return ()
-       else go path)
+      go path
 
-  go path
+      rw <- readSTRef wallHit
+      rv <- freeze visited
+      return (rw,rv)
 
-  rw <- readSTRef wallHit
-  rv <- readSTRef visited
-  return (rw, rv))
 
 --Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
 --Building the vision set might be a waste of time. Considering we could
