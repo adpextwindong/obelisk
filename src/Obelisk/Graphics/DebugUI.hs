@@ -188,6 +188,11 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     camZoom <- camZoomScale <$> get
 
     let ray = normalize $ lookingAtWorldPos - p
+    --TODO raycast a whole screen worth of rays
+    --TODO stScreenWalkForWalls version that uses the same STUArray for all wall walks
+    --TODO worldGridTilesGraphic Screen version
+    --TODO wall painting mode switch (this will become the regular player view)
+    --
     let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
 
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
@@ -211,8 +216,6 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
             ] ++ stWallSamplePoint
 
-    --TODO plot raycast wall intersection
-    --TODO draw ray until intersection
-    --TODO insert some walls
+    --TODO add mouse interactivity to insert some walls on the fly
 
 --TODO seperate wall paint graph
