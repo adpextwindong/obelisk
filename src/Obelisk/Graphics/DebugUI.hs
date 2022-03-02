@@ -12,6 +12,7 @@ import qualified Data.Set as S
 import Control.Monad.Reader
 import Control.Monad.State
 import Data.Maybe
+import Data.Array.Unboxed
 
 import Obelisk.State
 import Obelisk.Types.Wall
@@ -19,7 +20,7 @@ import Obelisk.Types.Wall
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate )
 import Obelisk.Graphics.Primitives
-import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths)
+import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths, stWalkRayPathForWall)
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 -- UI CONSTANTS
@@ -63,7 +64,7 @@ worldGridGraphic ws = GroupPrim "Grid Lines" gridLines
         horizontalLines ws = [Prim (Line (V2 0 y) (V2 ws y) gridColor) | y <- [0..ws]]
         gridLines = verticalLines worldSize ++ horizontalLines worldSize
 
-worldGridTilesGraphic :: WorldTiles -> S.Set (V2 Int) -> Graphic (Shape Float)
+worldGridTilesGraphic :: WorldTiles -> UArray (V2 Int) Bool -> Graphic (Shape Float)
 worldGridTilesGraphic world visitedSet = do
     let ws = worldSize world
 
@@ -72,7 +73,7 @@ worldGridTilesGraphic world visitedSet = do
 
     let prims = zip inds quads <&> (\((x,y), (vA,vB,vC,vD)) -> do
             let sampleColor = wallTypeToColor $ accessMap world (fromIntegral x) (fromIntegral y)
-            let tileColor = if S.member (V2 (fromIntegral x) (fromIntegral y)) visitedSet
+            let tileColor = if visitedSet ! (V2 (fromIntegral x) (fromIntegral y))
                 --Lighten the tiles that get rayCasted
                 --TODO this should be a graphic highlight
                 then sampleColor + V4 20 20 20 0
@@ -188,32 +189,30 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     let ray = normalize $ lookingAtWorldPos - p
     let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
-    let visitedSet = S.fromList $ fmap snd path
 
-    --TODO sampleWalkRayPath
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
-    let wallSamplePoint = case sampleWalkRayPaths w p ray (fmap fst path) of
-                            Nothing -> []
-                            Just (rayIntersectionPosition,rayIntersectionTileIndex) ->
-                              [yellow `circleAt` rayIntersectionPosition]
+
+    let (stWallSample, stVisitedVector) = stWalkRayPathForWall w p ray path :: (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
 
     --TODO vision triangle for ray slice of screen
+    let stWallSamplePoint = case stWallSample of
+                              Nothing -> []
+                              Just (stIntersectionPos, _) -> [yellow `circleAt` stIntersectionPos]
 
     let
         playerCircle = Prim $ Circle p (floor camZoom) white
 
         --TODO place yellow circles at sample points
         in return $ GroupPrim "MouseLookSingleRayIntersections" $ [
-            worldGridTilesGraphic w visitedSet,
+            worldGridTilesGraphic w stVisitedVector,
             worldGridGraphic 10,
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
-            ] ++ wallSamplePoint
+            ] ++ stWallSamplePoint
 
     --TODO plot raycast wall intersection
     --TODO draw ray until intersection
     --TODO insert some walls
-    --TODO ST visibility set
 
 --TODO seperate wall paint graph
