@@ -5,6 +5,7 @@ import qualified SDL
 import qualified SDL.Raw.Types (Point)
 import Control.Monad.State
 import Linear
+import Data.Array ((//))
 
 import Obelisk.Math.Homogenous
 import Obelisk.Engine.Input
@@ -12,6 +13,7 @@ import Obelisk.Wrapper.SDLInput
 import Obelisk.Effect.Renderer
 import Obelisk.Effect.Debug
 import Obelisk.State
+import Obelisk.Types.Wall
 
 class Monad m => HasInput m where
     updateInput :: m ()
@@ -33,6 +35,18 @@ setInput' :: MonadState Vars m => Input -> m ()
 setInput' input = modify (\v -> v { vInput = input })
 
 updateCamEvent :: (Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
+updateCamEvent (SDL.MouseButtonEvent (SDL.MouseButtonEventData _window _motion _which button clicks aLoc)) = modify (\v ->
+    if SDL.ButtonLeft == button
+    then
+      let gtp = worldGTP v
+          worldLoc = floor <$> rawPDtoWorldPos gtp (fmap fromIntegral aLoc) in
+
+          --TODO make sure this doesn't fire on mouseUnclick
+          v {
+            world = toggleWall worldLoc (world v)
+          }
+    else v)
+
 updateCamEvent (SDL.MouseMotionEvent (SDL.MouseMotionEventData _window _device buttons position (V2 relmotionx relmotiony))) = modify (\v ->
     if SDL.ButtonLeft `elem` buttons
     then v { worldGTP = translate (fromIntegral relmotionx) (fromIntegral relmotiony) !*! worldGTP v }
@@ -63,3 +77,9 @@ stepControl (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym =
 stepControl (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym = SDL.Keysym{SDL.keysymKeycode = SDL.KeycodeEscape }}:xs) (Input x y _ a) = stepControl xs (Input x y True a)
 stepControl (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym = SDL.Keysym{SDL.keysymKeycode = SDL.KeycodeP }}:xs) (Input x y a _) = stepControl xs (Input x y a True)
 stepControl _ x = x
+
+toggleWall :: (V2 Int) -> WorldTiles -> WorldTiles
+toggleWall inds@(V2 x y) w@(WorldTiles tiles ws) =
+  case accessMapV w inds of
+    FW -> w { mapTiles = tiles // [(accessIndex w x y, EW)] }
+    EW -> w { mapTiles = tiles // [(accessIndex w x y, FW)] }

@@ -11,6 +11,7 @@ import Foreign.C.Types
 import Data.Array.Unboxed
 
 --In the style of https://github.com/jxv/diner/library/DinoRo-rush/blob/mastush/State.hs
+--TODO make gamevars strict
 data PVars = PVars {
                 position :: V2 Float,
                 direction :: V2 Float,
@@ -43,6 +44,8 @@ accessMapV w (V2 x y) = accessMap w x y
 {-# INLINE accessMap #-}
 accessMap :: WorldTiles -> Int -> Int -> WallType
 accessMap world x y = mapTiles world ! ((x * fromIntegral (worldSize world)) + y)
+
+accessIndex world x y = ((x * fromIntegral (worldSize world)) + y)
 
 checkAt :: Vars -> V2 Int -> WallType
 checkAt gs (V2 x y) = accessMap (world gs) x y
