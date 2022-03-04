@@ -216,6 +216,4 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
             ] ++ stWallSamplePoint
 
-    --TODO add mouse interactivity to insert some walls on the fly
-
 --TODO seperate wall paint graph

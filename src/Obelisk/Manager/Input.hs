@@ -35,13 +35,12 @@ setInput' :: MonadState Vars m => Input -> m ()
 setInput' input = modify (\v -> v { vInput = input })
 
 updateCamEvent :: (Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
-updateCamEvent (SDL.MouseButtonEvent (SDL.MouseButtonEventData _window _motion _which button clicks aLoc)) = modify (\v ->
-    if SDL.ButtonLeft == button
+updateCamEvent (SDL.MouseButtonEvent e@(SDL.MouseButtonEventData _window _motion _which button clicks aLoc)) = modify (\v ->
+    if SDL.ButtonRight == button  && SDL.mouseButtonEventMotion e == SDL.Released
     then
       let gtp = worldGTP v
           worldLoc = floor <$> rawPDtoWorldPos gtp (fmap fromIntegral aLoc) in
 
-          --TODO make sure this doesn't fire on mouseUnclick
           v {
             world = toggleWall worldLoc (world v)
           }
