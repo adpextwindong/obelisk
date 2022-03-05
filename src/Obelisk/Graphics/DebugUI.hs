@@ -204,6 +204,12 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
                               Nothing -> []
                               Just (stIntersectionPos, _) -> [yellow `circleAt` stIntersectionPos]
 
+    --TODO Field of View
+    -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
+    let triangleAt a b c = Prim $ FillTriangle a b c yellow
+    let rayIntersections = [(V2 0 y) | y <- [0.0,1.0..9.0]] --TODO replace
+    let fieldOfViewTestTris = uncurry (triangleAt p) <$> zip rayIntersections (tail rayIntersections)
+
     let
         playerCircle = Prim $ Circle p (floor camZoom) white
 
@@ -215,7 +221,5 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
             ] ++ stWallSamplePoint
-
-    --TODO add mouse interactivity to insert some walls on the fly
 
 --TODO seperate wall paint graph

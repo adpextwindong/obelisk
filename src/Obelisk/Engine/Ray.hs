@@ -131,6 +131,7 @@ stWalkRayPathForWall w p r path = runST aux
            then do
             writeSTRef wallHit (Just sPair)
            else go path
+          go [] = return ()
 
       go path
 
