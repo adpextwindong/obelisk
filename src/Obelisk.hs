@@ -17,6 +17,7 @@ import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
 import Obelisk.Graphics.Primitives
 import Obelisk.Graphics.UIScene
+import Obelisk.Graphics.DebugUI
 
 import Control.Monad.Reader
 import Control.Monad.State
@@ -53,6 +54,8 @@ gameTick hs = do
 --TODO mouse zoom handling
 
 (initialScreenWidth, initialScreenHeight) = (640, 480) :: (CInt,CInt)
+
+mouseTestMain = grenderMouseLook mouseLookRaycastGraphicM
 
 testPresentation = [
     UIScene {

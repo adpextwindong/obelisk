@@ -205,8 +205,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     let rayCastPoints = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayAnglePairs <&> (\(ray, angle) ->
           let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
-              (wallPointm, visitedV) = stWalkRayPathForWall w p path ray
-              point = (V2 3 4) in
+              (wallPointm, visitedV) = stWalkRayPathForWall w p path ray in
               fmap (circleAt yellow . fst) wallPointm)
 
     --TODO make a specialized version for the whole screen
