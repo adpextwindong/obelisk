@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections #-}
-module Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths, stWalkRayPathForWall) where
+module Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths, stWalkRayPathForWall) where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
@@ -113,10 +113,10 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
         cPair@(checkSpot,checkInds) = epsilonBump ray step
 
 --TODO test
-stWalkRayPathForWall :: WorldTiles -> V2 Float -> V2 Float -> [(V2 Float, V2 Int)]
+stWalkRayPathForWall :: WorldTiles -> V2 Float -> [(V2 Float, V2 Int)] -> V2 Float
   -> (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
 
-stWalkRayPathForWall w p r path = runST aux
+stWalkRayPathForWall w p path r = runST aux
   where
     aux :: ST s (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
     aux = do

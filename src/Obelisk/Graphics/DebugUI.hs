@@ -18,9 +18,9 @@ import Obelisk.State
 import Obelisk.Types.Wall
 
 import Obelisk.Math.Vector
-import Obelisk.Math.Homogenous ( rotation, translate )
+import Obelisk.Math.Homogenous ( rotation, translate, rotation2 )
 import Obelisk.Graphics.Primitives
-import Obelisk.Engine.Ray (shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths, stWalkRayPathForWall)
+import Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths, stWalkRayPathForWall)
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 -- UI CONSTANTS
@@ -188,6 +188,32 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     camZoom <- camZoomScale <$> get
 
     let ray = normalize $ lookingAtWorldPos - p
+
+    --TODO make the screen of rays
+    pp <- player <$> get
+    let mousePlayer = pp {
+      direction = ray,
+      camera_plane = normalize $ ray *! rotation2 (pi / 2.0)
+    }
+
+    let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
+
+
+    let tempScreenWidth = 16
+    let rayAnglePairs = rayHeads tempScreenWidth mousePlayer :: [(V2 Float, Float)]
+    --TODO field of view for this
+
+    let rayCastPoints = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayAnglePairs <&> (\(ray, angle) ->
+          let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
+              (wallPointm, visitedV) = stWalkRayPathForWall w p path ray
+              point = (V2 3 4) in
+              fmap (circleAt yellow . fst) wallPointm)
+
+    --TODO make a specialized version for the whole screen
+
+    --let screenCastSamples = GroupPrim "16 Raycast Samples" (circleAt yellow . fromMaybe (V2 -10 -10) . fst . fst <$> rayCastSamples)
+
+
     --TODO raycast a whole screen worth of rays
     --TODO stScreenWalkForWalls version that uses the same STUArray for all wall walks
     --TODO worldGridTilesGraphic Screen version
@@ -195,9 +221,8 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     --
     let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
 
-    let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
 
-    let (stWallSample, stVisitedVector) = stWalkRayPathForWall w p ray path :: (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
+    let (stWallSample, stVisitedVector) = stWalkRayPathForWall w p path ray :: (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
 
     --TODO vision triangle for ray slice of screen
     let stWallSamplePoint = case stWallSample of
@@ -219,7 +244,10 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
             worldGridGraphic 10,
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
-            GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints
-            ] ++ stWallSamplePoint
+            GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
+
+            rayCastPoints
+
+            ] -- ++ stWallSamplePoint
 
 --TODO seperate wall paint graph
