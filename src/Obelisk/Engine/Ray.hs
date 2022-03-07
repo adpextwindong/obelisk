@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths, stWalkRayPathForWall) where
 
 import Linear.V2
@@ -113,10 +114,10 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
         cPair@(checkSpot,checkInds) = epsilonBump ray step
 
 --TODO test
-stWalkRayPathForWall :: WorldTiles -> V2 Float -> [(V2 Float, V2 Int)] -> V2 Float
+stWalkRayPathForWall :: WorldTiles -> V2 Float -> [(V2 Float, V2 Int)]
   -> (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
 
-stWalkRayPathForWall w p path r = runST aux
+stWalkRayPathForWall w p path = runST aux
   where
     aux :: ST s (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
     aux = do
@@ -139,6 +140,28 @@ stWalkRayPathForWall w p path r = runST aux
       rv <- freeze visited
       return (rw,rv)
 
+stScreenWalkRaysForWall :: WorldTiles -> V2 Float -> [[(V2 Float, V2 Int)]] -> ([Maybe (V2 Float, V2 Int)], UArray (V2 Int) Bool)
+stScreenWalkRaysForWall w p paths = runST aux
+  where
+    aux :: ST s ([Maybe (V2 Float, V2 Int)], UArray (V2 Int) Bool)
+    aux = do
+      let tileCount = fromIntegral $ worldSize w * worldSize w
+
+      visited <- newArray (0, tileCount) False :: ST s (STUArray s (V2 Int) Bool)
+
+      let go (sPair@(step_position, step_inds) : path) = do
+           writeArray visited step_inds True
+           if accessMapV w step_inds == FW
+           then do
+            return $ Just sPair
+           else go path
+          go [] = return Nothing
+
+      results <- mapM go paths
+      rv <- freeze visited
+
+      return (results, rv)
+      --TODO test
 
 --Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
 --Building the vision set might be a waste of time. Considering we could

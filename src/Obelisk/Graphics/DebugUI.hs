@@ -205,7 +205,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     let rayCastPoints = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayAnglePairs <&> (\(ray, angle) ->
           let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
-              (wallPointm, visitedV) = stWalkRayPathForWall w p path ray in
+              (wallPointm, visitedV) = stWalkRayPathForWall w p path in
               fmap (circleAt yellow . fst) wallPointm)
 
     --TODO make a specialized version for the whole screen
@@ -221,7 +221,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
 
 
-    let (stWallSample, stVisitedVector) = stWalkRayPathForWall w p path ray :: (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
+    let (stWallSample, stVisitedVector) = stWalkRayPathForWall w p path :: (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
 
     --TODO vision triangle for ray slice of screen
     let stWallSamplePoint = case stWallSample of
