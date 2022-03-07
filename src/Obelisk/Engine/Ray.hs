@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths, stWalkRayPathForWall) where
+module Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, visitedPositions,sampleWalkRayPaths, stWalkRayPathForWall, stScreenWalkRaysForWall) where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
@@ -161,7 +161,6 @@ stScreenWalkRaysForWall w p paths = runST aux
       rv <- freeze visited
 
       return (results, rv)
-      --TODO test
 
 --Raycasts and returns the final location of the world. Samples the world as it walks to prevent building a huge list
 --Building the vision set might be a waste of time. Considering we could

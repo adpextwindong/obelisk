@@ -20,7 +20,7 @@ import Obelisk.Types.Wall
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate, rotation2 )
 import Obelisk.Graphics.Primitives
-import Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths, stWalkRayPathForWall)
+import Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths, stWalkRayPathForWall, stScreenWalkRaysForWall)
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 -- UI CONSTANTS
@@ -199,22 +199,21 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
 
 
+    --TODO scale this to 64x64 and benchmark
     let tempScreenWidth = 16
     let rayAnglePairs = rayHeads tempScreenWidth mousePlayer :: [(V2 Float, Float)]
     --TODO field of view for this
 
-    let rayCastPoints = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayAnglePairs <&> (\(ray, angle) ->
-          let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
-              (wallPointm, visitedV) = stWalkRayPathForWall w p path in
-              fmap (circleAt yellow . fst) wallPointm)
+    let fst3 (a,b,c) = a
+    let paths = fst3 . shootRay' (fromIntegral ws) p <$> fmap fst rayAnglePairs :: [[(V2 Float, V2 Int)]]
+    let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
+    let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
 
+    let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
     --TODO make a specialized version for the whole screen
 
     --let screenCastSamples = GroupPrim "16 Raycast Samples" (circleAt yellow . fromMaybe (V2 -10 -10) . fst . fst <$> rayCastSamples)
 
-
-    --TODO raycast a whole screen worth of rays
-    --TODO stScreenWalkForWalls version that uses the same STUArray for all wall walks
     --TODO worldGridTilesGraphic Screen version
     --TODO wall painting mode switch (this will become the regular player view)
     --
@@ -239,13 +238,13 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
         --TODO place yellow circles at sample points
         in return $ GroupPrim "MouseLookSingleRayIntersections" $ [
-            worldGridTilesGraphic w stVisitedVector,
+            worldGridTilesGraphic w visitedV,
             worldGridGraphic 10,
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
 
-            rayCastPoints
+            rayCastPointsG
 
             ] -- ++ stWallSamplePoint
 
