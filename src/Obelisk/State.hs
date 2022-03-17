@@ -32,10 +32,13 @@ data Vars = Vars {
                 rotateToPView :: Bool,
                 vInput :: Input,
                 worldGTP :: V3 (V3 Float),
-                camZoomScale :: Float --Used for scaling other things
+                camZoomScale :: Float, --Used for scaling other things
+                viewMode :: ViewMode
             }
     deriving Show
 
+data ViewMode = PlayerPOV | OverheadDebug
+  deriving Show
 
 {-# INLINE accessMapV #-}
 accessMapV :: WorldTiles -> V2 Int -> WallType
@@ -112,7 +115,7 @@ initPVars = PVars (V2 2.5 6.5) dir cam
          cam = V2 0.9954279468472328 9.551545757406914e-2
 
 initVars :: Vars
-initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale
+initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale OverheadDebug
   where
     baseGTP = rawCenterScreenOnWorldGrid 10 640 480
     baseZoomScale = 1.0

@@ -125,7 +125,11 @@ gRenderMouseLookLoop g = do
     --TODO dump state
 
     graphic <- g worldLoc
-    drawGraphicDebugWithMatrix graphic gtp
+    vmode <- viewMode <$> get
+    case vmode of
+      OverheadDebug -> drawGraphicDebugWithMatrix graphic gtp
+      PlayerPOV -> drawGraphicDebugWithMatrix graphic m22AffineIdD --Expects screen space graphic
+      --TODO we need keystate to make these buttons easier to use, right now this pops up on f1
 
     drawScreen
     fillBackground

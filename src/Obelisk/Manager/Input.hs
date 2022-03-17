@@ -27,12 +27,23 @@ updateInput' = do
     events <- pollEventPayloads
     setInput (stepControl events initInput) --TODO probably should be init vars so we dont spin endlessly
     updateCamEvents events
+    checkCamSwap events
 
 getInput' :: MonadState Vars m => m Input
 getInput' = gets vInput
 
 setInput' :: MonadState Vars m => Input -> m ()
 setInput' input = modify (\v -> v { vInput = input })
+
+checkCamSwap :: (MonadState Vars m, HasInput m) => [SDL.EventPayload] -> m ()
+checkCamSwap (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym = SDL.Keysym{SDL.keysymKeycode = SDL.KeycodeF1 }}:xs) = do
+  modify (\s -> s { viewMode = case viewMode s of
+                                  OverheadDebug -> PlayerPOV
+                                  PlayerPOV -> OverheadDebug
+  })
+checkCamSwap (_:xs) = checkCamSwap xs
+checkCamSwap [] = return ()
+
 
 updateCamEvent :: (Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
 updateCamEvent (SDL.MouseButtonEvent e@(SDL.MouseButtonEventData _window _motion _which button clicks aLoc)) = modify (\v ->
