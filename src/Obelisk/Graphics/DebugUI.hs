@@ -220,7 +220,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
 
     screenMode <- viewMode <$> get
-    screen <- screenGraphic wallPoints 320 tempRayCount
+    screen <- screenGraphic wallPoints 640 tempRayCount
     return $ case screenMode of
       --WorldSpace
       OverheadDebug -> GroupPrim "MouseLookSingleRayIntersections" $ [
@@ -239,10 +239,14 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> Integer -> CInt -> m [Graphic (Shape Float)]
 screenGraphic wallPoints screenWidth rayCount = do
   w <- world <$> get
-
+  let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
   let wallFromMaybe (mInt,index) = case mInt of
                                     Nothing -> Nothing
-                                    Just (intpos, intindex) -> Just $ Prim $ FillRectangle (V2 0 0) (V2 320 480) filledTileColor
+                                    Just (intpos, intindex) -> let wallTop = 480
+                                                                   wallBottom = 0
+                                                                   wallLeft = index * wallWidth
+                                                                   wallRight = (index + 1) * wallWidth in
+                                                               Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
                                     --TODO permadi wall height and placement of walls
 
   let walls = catMaybes $ wallFromMaybe <$> zip wallPoints [0..]
