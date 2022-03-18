@@ -75,7 +75,7 @@ grenderLoop :: ( MonadReader Config m
             , SDLInput m
             , HasInput m
             , Debug m
-            , Renderer m ) => Graphic (Shape Float) -> m ()
+            , Renderer m ) => Graphic Float -> m ()
 grenderLoop g = do
     updateInput
     clearScreen
@@ -95,7 +95,7 @@ gRenderMouseLookLoop :: ( MonadReader Config m
             , SDLInput m
             , HasInput m
             , Debug m
-            , Renderer m ) => (V2 Float ->m (Graphic (Shape Float))) -> m ()
+            , Renderer m ) => (V2 Float ->m (Graphic Float)) -> m ()
 gRenderMouseLookLoop g = do
     updateInput
     clearScreen

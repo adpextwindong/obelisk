@@ -56,7 +56,7 @@ wallTypeToColor DW = doorTileColor
 -- One thing to note about this is that all of this should be done in world coordinates
 -- The Grid to player as center local -> screen AFT will be applied as an AffineT in the renderer
 
-worldGridGraphic :: CInt -> Graphic (Shape Float)
+worldGridGraphic :: CInt -> Graphic Float
 worldGridGraphic ws = GroupPrim "Grid Lines" gridLines
     where
         worldSize = fromIntegral ws
@@ -64,7 +64,7 @@ worldGridGraphic ws = GroupPrim "Grid Lines" gridLines
         horizontalLines ws = [Prim (Line (V2 0 y) (V2 ws y) gridColor) | y <- [0..ws]]
         gridLines = verticalLines worldSize ++ horizontalLines worldSize
 
-worldGridTilesGraphic :: WorldTiles -> UArray (V2 Int) Bool -> Graphic (Shape Float)
+worldGridTilesGraphic :: WorldTiles -> UArray (V2 Int) Bool -> Graphic Float
 worldGridTilesGraphic world visitedSet = do
     let ws = worldSize world
 
@@ -83,14 +83,14 @@ worldGridTilesGraphic world visitedSet = do
              Prim $ FillTriangle vB vC vD tileColor])
     GroupPrim "World Grid Tiles" $ concat prims
 
-playerGraphic :: PVars -> Graphic (Shape Float)
+playerGraphic :: PVars -> Graphic Float
 playerGraphic p = GroupPrim "Player Graphic" [
                     playerCircleGraphic p,
                     cameraPlaneGraphic p,
                     playerArrowGraphic p
                 ]
 
-playerArrowGraphic :: PVars -> Graphic (Shape Float)
+playerArrowGraphic :: PVars -> Graphic Float
 playerArrowGraphic player = do
     let playerT = translate (position player^._x) (position player^._y)
     let arrowT = playerT !*! rotation (vectorAngle . direction $ player)
@@ -119,7 +119,7 @@ playerArrowGraphic player = do
 
     arrow
 
-cameraPlaneGraphic :: PVars -> Graphic (Shape Float)
+cameraPlaneGraphic :: PVars -> Graphic Float
 cameraPlaneGraphic p = do
     let ppos = position p
     let camTail = ppos + direction p - camera_plane p
@@ -139,7 +139,7 @@ cameraPlaneGraphic p = do
         Prim leftCamEdgeLine,
         Prim rightCamEdgeLine]
 
-playerCircleGraphic :: PVars -> Graphic (Shape Float)
+playerCircleGraphic :: PVars -> Graphic Float
 playerCircleGraphic p = do
     let px = position p ^._x
     let py = position p ^._y
@@ -149,7 +149,7 @@ playerCircleGraphic p = do
 --Raycasting Diagnostics
 --
 {-
-midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic (Shape Float)
+midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic Float
 midlineRaycastIntersectionsGraphic player ws = do
     let intersections = fst <$> fshootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Float]
     GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersections
@@ -158,7 +158,7 @@ midlineRaycastIntersectionsGraphic player ws = do
 
 {-
 --Test with grender for Ray
-singleRaycastGraphic :: Graphic (Shape Float)
+singleRaycastGraphic :: Graphic Float
 singleRaycastGraphic =
     let p = V2 5.25 5.66
         r = V2 1.0 1.0
@@ -180,7 +180,7 @@ singleRaycastGraphic =
 --
 
 --raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
-mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic (Shape Float))
+mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic Float)
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
     p <- position . player <$> get
     w <- world <$> get
@@ -236,7 +236,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     --[(screenSizeY / tempRayCount) * w |w <- [0..tempRayCount]]
 
-screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> Integer -> CInt -> m [Graphic (Shape Float)]
+screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> Integer -> CInt -> m [Graphic Float]
 screenGraphic wallPoints screenWidth rayCount = do
   w <- world <$> get
   let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount

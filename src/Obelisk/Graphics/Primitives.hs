@@ -50,13 +50,13 @@ mapAft t = dropHomoCoords . transformFloor t . homoCoords
 --     deriving Show
 
 data Graphic a where
-    Prim :: Shape Float -> Graphic (Shape Float)
-    GroupPrim :: String -> [Graphic (Shape Float)] -> Graphic (Shape Float)
+    Prim :: Shape Float -> Graphic Float
+    GroupPrim :: String -> [Graphic Float] -> Graphic Float
     -- ColorPrim :: ColorEffect -> Graphic Shape -> Graphic Shape
     --Show t constraint could be removed, we're just using this coerce stuff for Data.Tagged phantom typing
     AffineT :: (Coercible t (M22Affine Float), Show t) => t -> Graphic a -> Graphic a
-    EvaldP :: Shape CInt -> Graphic (Shape CInt)
-    EvaldGP :: String -> [Graphic (Shape CInt)] -> Graphic (Shape CInt)
+    EvaldP :: Shape CInt -> Graphic CInt
+    EvaldGP :: String -> [Graphic CInt] -> Graphic CInt
     --At evaluation we floor at the end
 
 --TODO CONSIDER A MORE TYPE SAFE AffineT WITH RESPECT TO COORDINATE SPACES
@@ -64,12 +64,12 @@ data Graphic a where
 
 anonGP = GroupPrim ""
 anonEGP = EvaldGP ""
-instance Show (Graphic (Shape Float)) where
+instance Show (Graphic Float) where
     show (Prim s) = "Prim " ++ show s
     show (GroupPrim label xs) = "GroupPrim "++ show label ++ show xs
     show (AffineT t s) = "AffineT " ++ show t ++ show s
 
-instance Show (Graphic (Shape CInt)) where
+instance Show (Graphic CInt) where
     show (EvaldP s) = "Evaluated Prim" ++ show s
     show (EvaldGP label gs) = "Evaluated GroupPrim" ++ show label ++ show gs
     show (AffineT _ _) = undefined --Evald specifically evaluates away AffineT's. TODO figure out a way to get this known
@@ -88,12 +88,12 @@ type Duration = Float
 
 -- | Evaluates the Shape Graphic and applies all the transformations
 -- | Defaults the affine transformation to the identity matrix if the Graphic root isn't an AffineT
-evalGraphic :: Graphic (Shape Float) -> Graphic (Shape CInt)
+evalGraphic :: Graphic Float -> Graphic CInt
 evalGraphic (AffineT t s) = evalGraphic' (coerce t) s
 evalGraphic s = evalGraphic' m22AffineIdD s
 
 -- | Aux that builds up the affine transformation as it recurses and applies once it hits the primitive
-evalGraphic' :: M22Affine Float -> Graphic (Shape Float) -> Graphic (Shape CInt)
+evalGraphic' :: M22Affine Float -> Graphic Float -> Graphic CInt
 evalGraphic' t (Prim l) =  EvaldP $ applyAffineTransformFloor t l
 evalGraphic' t (GroupPrim label gs) = EvaldGP label $ fmap (evalGraphic' t) gs
 evalGraphic' t (AffineT t' s) = evalGraphic' (t !*! coerce t') s --TODO make sure this is the correct behavior when nesting transforms

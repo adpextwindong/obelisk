@@ -67,8 +67,8 @@ class Monad m => Renderer m where
     drawScreen :: m ()
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
-    drawGraphicDebug :: Graphic (Shape Float) -> m ()
-    drawGraphicDebugWithMatrix :: Graphic (Shape Float) -> M22Affine Float -> m ()
+    drawGraphicDebug :: Graphic Float -> m ()
+    drawGraphicDebugWithMatrix :: Graphic Float -> M22Affine Float -> m ()
 
 --TODO consider SDLFont being in this
 type SDLCanDraw m = (SDLRenderer m, MonadReader Config m)
@@ -88,16 +88,16 @@ fillBackground' = do
     surface <- asks cSurface
     surfaceFillScreenRect surface backgroundColor
 
-drawGraphicDebug' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic (Shape Float) -> m ()
+drawGraphicDebug' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic Float -> m ()
 drawGraphicDebug' g = do
     -- Grid To Player as center Local to Screen Affine Transformation
     let gtp = centerScreenOnWorldGrid 10 640 480
 --dprint $ evalGraphic $ AffineT gtp g
-    drawGraphic $ evalGraphic $ AffineT gtp g
+    drawGraphic . evalGraphic $ AffineT gtp g
 
-drawGraphicDebugWithMatrix' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic (Shape Float) -> M22Affine Float -> m ()
+drawGraphicDebugWithMatrix' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic Float -> M22Affine Float -> m ()
 drawGraphicDebugWithMatrix' g gtp = do
-    drawGraphic $ evalGraphic $ AffineT gtp g
+    drawGraphic . evalGraphic $ AffineT gtp g
 
 
 drawDebug' :: (Debug m , SDLCanDraw m, SDLFont m, SDLInput m) => Vars -> m ()
@@ -175,7 +175,7 @@ rawPDtoWorldPos t (SDL.P pos) = dropHomoCoords . (inv33 t !*) . homoCoords $ pos
 --------------------------------------------------------------------------------
 
 -- | Maps eval'd primitives to their SDLCanDraw draw calls
-drawGraphic :: SDLCanDraw m => Graphic (Shape CInt) -> m ()
+drawGraphic :: SDLCanDraw m => Graphic CInt -> m ()
 drawGraphic (EvaldGP _ evald_xs) = mapM_ drawGraphic evald_xs
 drawGraphic (EvaldP (Line start end color))           = (\sr -> drawLine sr start end color) =<< asks cRenderer
 drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center radius color) =<< asks cRenderer

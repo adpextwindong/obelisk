@@ -137,7 +137,7 @@ main = do
     SDL.destroyWindow window
     SDL.quit
 
-grender :: Graphic (Shape Float) -> IO ()
+grender :: Graphic Float -> IO ()
 grender g = do
     SDL.initialize [SDL.InitVideo]
     SDL.Font.initialize
@@ -170,7 +170,7 @@ grender g = do
     SDL.destroyWindow window
     SDL.quit
 
-grenderMouseLook :: (m ~ Obelisk) => (V2 Float -> m (Graphic (Shape Float))) -> IO ()
+grenderMouseLook :: (m ~ Obelisk) => (V2 Float -> m (Graphic Float)) -> IO ()
 grenderMouseLook g = do
     SDL.initialize [SDL.InitVideo]
     SDL.Font.initialize

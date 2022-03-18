@@ -6,6 +6,6 @@ type Presentation = [UIScene]
 
 data UIScene = UIScene {
                 scene_name :: String
-                ,graphic_elems :: [Graphic (Shape Float)]
+                ,graphic_elems :: [Graphic Float]
                 --,text_elems :: [Graphic Text] --TODO text graphics
             } deriving Show
