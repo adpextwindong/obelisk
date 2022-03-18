@@ -189,7 +189,6 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     let ray = normalize $ lookingAtWorldPos - p
 
-    --TODO make the screen of rays
     pp <- player <$> get
     let mousePlayer = pp {
       direction = ray,
@@ -198,11 +197,9 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
 
-
     --TODO scale this to 64x64 and benchmark
     let tempScreenWidth = 16
     let rayAnglePairs = rayHeads tempScreenWidth mousePlayer :: [(V2 Float, Float)]
-    --TODO field of view for this
 
     let fst3 (a,b,c) = a
     let paths = fst3 . shootRay' (fromIntegral ws) p <$> fmap fst rayAnglePairs :: [[(V2 Float, V2 Int)]]
@@ -210,42 +207,29 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
 
     let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
-    --TODO make a specialized version for the whole screen
 
-    --let screenCastSamples = GroupPrim "16 Raycast Samples" (circleAt yellow . fromMaybe (V2 -10 -10) . fst . fst <$> rayCastSamples)
-
-    --TODO worldGridTilesGraphic Screen version
-    --TODO wall painting mode switch (this will become the regular player view)
-    --
+    --Single ray path and intersections
     let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
 
-
-    let (stWallSample, stVisitedVector) = stWalkRayPathForWall w p path :: (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
-
-    --TODO vision triangle for ray slice of screen
-    let stWallSamplePoint = case stWallSample of
-                              Nothing -> []
-                              Just (stIntersectionPos, _) -> [yellow `circleAt` stIntersectionPos]
-
-    --TODO Field of View
     -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
     let triangleAt a b c = Prim $ FillTriangle a b c yellow
-    let rayIntersections = [(V2 0 y) | y <- [0.0,1.0..9.0]] --TODO replace
+    let rayIntersections = fmap fst . catMaybes $ wallPoints --TODO replace
     let fieldOfViewTestTris = uncurry (triangleAt p) <$> zip rayIntersections (tail rayIntersections)
 
-    let
-        playerCircle = Prim $ Circle p (floor camZoom) white
+    let playerCircle = Prim $ Circle p (floor camZoom) white
 
-        --TODO place yellow circles at sample points
-        in return $ GroupPrim "MouseLookSingleRayIntersections" $ [
+    screenMode <- viewMode <$> get
+    return $ case screenMode of
+      --WorldSpace
+      OverheadDebug -> GroupPrim "MouseLookSingleRayIntersections" $ [
             worldGridTilesGraphic w visitedV,
             worldGridGraphic 10,
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
-
-            rayCastPointsG
-
-            ] -- ++ stWallSamplePoint
+            rayCastPointsG] ++ fieldOfViewTestTris
+      --ScreenSpace
+      --TODO drawWalls for screen
+      PlayerPOV -> undefined
 
 --TODO seperate wall paint graph
