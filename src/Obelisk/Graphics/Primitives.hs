@@ -16,17 +16,19 @@ data Shape a = Line (V2 a) (V2 a) SDL.Color
              | Circle (V2 a) SDL.Radius SDL.Color
              | FillTriangle (V2 a) (V2 a) (V2 a) SDL.Color
              | FillCircle (V2 a) SDL.Radius SDL.Color
+             | FillRectangle (V2 a) (V2 a) SDL.Color
             deriving Show
 
 applyAffineTransformFloor :: M22Affine Float -> Shape Float -> Shape CInt
 applyAffineTransformFloor t (Line start end color)           = Line (mapAft t start) (mapAft t end) color
 applyAffineTransformFloor t (Circle center radius color)     = Circle (mapAft t center) radius color
 applyAffineTransformFloor t (FillTriangle v0 v1 v2 color)    = FillTriangle (mapAft t v0) (mapAft t v1) (mapAft t v2) color
+applyAffineTransformFloor t (FillRectangle v0 v1 color)      = FillRectangle (mapAft t v0) (mapAft t v1) color
 applyAffineTransformFloor t (FillCircle center radius color) = FillCircle (mapAft t center) radius color
 
 -- Takes a regular vector, wraps into a homogeonous coordinate system for applying an affine transformation, floors it to an integer to be used in a draw call render
 mapAft :: M22Affine Float -> V2 Float -> V2 CInt
-mapAft t = dropHomoCoords . transformFloor t . homoCoords 
+mapAft t = dropHomoCoords . transformFloor t . homoCoords
 
 --             | Triangle
 --             | Rectangle
@@ -46,7 +48,7 @@ mapAft t = dropHomoCoords . transformFloor t . homoCoords
 -- Phasing it this way can help us look at the scene's graphics before and after transformations are applied I guess
 -- data Evaluated a b = Evaluated a b
 --     deriving Show
-    
+
 data Graphic a where
     Prim :: Shape Float -> Graphic (Shape Float)
     GroupPrim :: String -> [Graphic (Shape Float)] -> Graphic (Shape Float)

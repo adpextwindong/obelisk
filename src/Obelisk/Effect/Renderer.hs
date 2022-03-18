@@ -180,6 +180,7 @@ drawGraphic (EvaldGP _ evald_xs) = mapM_ drawGraphic evald_xs
 drawGraphic (EvaldP (Line start end color))           = (\sr -> drawLine sr start end color) =<< asks cRenderer
 drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center radius color) =<< asks cRenderer
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
+drawGraphic (EvaldP (FillRectangle v0 v1 color))      = (\sr -> fillRectangle sr v0 v1 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
 drawGraphic (AffineT _ _) = undefined --TODO figure out a way for this to be statically known that EvaldP contains no AffineT's
 --------------------------------------------------------------------------------

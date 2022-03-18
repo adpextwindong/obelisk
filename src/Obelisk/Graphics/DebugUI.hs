@@ -198,8 +198,8 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
 
     --TODO scale this to 64x64 and benchmark
-    let tempScreenWidth = 16
-    let rayAnglePairs = rayHeads tempScreenWidth mousePlayer :: [(V2 Float, Float)]
+    let tempRayCount = 16
+    let rayAnglePairs = rayHeads tempRayCount mousePlayer :: [(V2 Float, Float)]
 
     let fst3 (a,b,c) = a
     let paths = fst3 . shootRay' (fromIntegral ws) p <$> fmap fst rayAnglePairs :: [[(V2 Float, V2 Int)]]
@@ -218,7 +218,9 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     let playerCircle = Prim $ Circle p (floor camZoom) white
 
+
     screenMode <- viewMode <$> get
+    screen <- screenGraphic wallPoints 320 tempRayCount
     return $ case screenMode of
       --WorldSpace
       OverheadDebug -> GroupPrim "MouseLookSingleRayIntersections" $ [
@@ -230,6 +232,20 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
             rayCastPointsG] ++ fieldOfViewTestTris
       --ScreenSpace
       --TODO drawWalls for screen
-      PlayerPOV -> undefined
+      PlayerPOV -> GroupPrim "Player Point of View" screen
+
+    --[(screenSizeY / tempRayCount) * w |w <- [0..tempRayCount]]
+
+screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> Integer -> CInt -> m [Graphic (Shape Float)]
+screenGraphic wallPoints screenWidth rayCount = do
+  w <- world <$> get
+
+  let wallFromMaybe (mInt,index) = case mInt of
+                                    Nothing -> Nothing
+                                    Just (intpos, intindex) -> Just $ Prim $ FillRectangle (V2 0 0) (V2 320 480) filledTileColor
+                                    --TODO permadi wall height and placement of walls
+
+  let walls = catMaybes $ wallFromMaybe <$> zip wallPoints [0..]
+  return walls
 
 --TODO seperate wall paint graph

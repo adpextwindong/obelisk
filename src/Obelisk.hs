@@ -75,7 +75,7 @@ zipperMain presentation = do
     let title = "Graphic Zipper Test"
 
     font <- SDL.Font.load "resources/arial.ttf" 16
-    
+
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
     SDL.showWindow window
     screenSurface <- SDL.getWindowSurface window
@@ -218,6 +218,7 @@ instance SDLRenderer Obelisk where
     fillTriangle = fillTriangle'
     circle = circle'
     fillCircle = fillCircle'
+    fillRectangle = fillRectangle'
     surfaceBlit = surfaceBlit'
 
 instance SDLInput Obelisk where
