@@ -8,7 +8,11 @@ This project is meant to serve as a reference engine for teaching with as much o
 
 ### Raycasting
 
-- [x] Get wall renderering working. [(mouseTestMain press f1 to see playerPOV)](res/wallcasting.mp4)
+- [x] Get wall renderering working. 
+
+https://user-images.githubusercontent.com/3671250/159282321-90deea10-184a-4069-aa3b-75f15e3d83db.mp4
+
+
 - [ ] Fix eye fix
 
 ### DEV BUILD
