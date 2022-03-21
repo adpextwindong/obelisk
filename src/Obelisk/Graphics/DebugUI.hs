@@ -198,7 +198,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
 
     --TODO scale this to 64x64 and benchmark
-    let tempRayCount = 16
+    let tempRayCount = 320
     let rayAnglePairs = rayHeads tempRayCount mousePlayer :: [(V2 Float, Float)]
 
     let fst3 (a,b,c) = a
@@ -220,7 +220,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
 
     screenMode <- viewMode <$> get
-    screen <- screenGraphic wallPoints 640 tempRayCount
+    screen <- screenGraphic wallPoints 640 480 tempRayCount
     return $ case screenMode of
       --WorldSpace
       OverheadDebug -> GroupPrim "MouseLookSingleRayIntersections" $ [
@@ -236,14 +236,20 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     --[(screenSizeY / tempRayCount) * w |w <- [0..tempRayCount]]
 
-screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> Integer -> CInt -> m [Graphic Float]
-screenGraphic wallPoints screenWidth rayCount = do
+--TODO pipe in Ray angle for permadi
+screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> Integer -> CInt -> CInt -> m [Graphic Float]
+screenGraphic wallPoints screenWidth screenHeight rayCount = do
   w <- world <$> get
+  p <- player <$> get
   let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
+  let wallHeight = 64 --Wall Height 64, Player Height 32?
+  let screenMiddle = fromIntegral screenHeight / 2
   let wallFromMaybe (mInt,index) = case mInt of
                                     Nothing -> Nothing
-                                    Just (intpos, intindex) -> let wallTop = 480
-                                                                   wallBottom = 0
+                                    Just (intpos, intindex) -> let distanceToSlice = norm $ intpos - (position p)
+                                                                   projectedWallHeight = wallHeight / distanceToSlice
+                                                                   wallTop = screenMiddle - projectedWallHeight
+                                                                   wallBottom = screenMiddle + projectedWallHeight
                                                                    wallLeft = index * wallWidth
                                                                    wallRight = (index + 1) * wallWidth in
                                                                Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
