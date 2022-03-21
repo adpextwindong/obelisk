@@ -4,22 +4,15 @@ Wolf3D style rayCasting engine in progress. Architecture modeled after [DinoRush
 
 This project is meant to serve as a reference engine for teaching with as much of the core raycasting code as pure as possible. This way you can play with the code in GHCI to use as a reference for your own raycasting engine in another language.
 
-## TODOS
+## TODOS and Progress
 
 ### Raycasting
 
-Get wall renderering working
-
-### Debug Tooling
-
-REPL interface between GHCI and mainthread to add/remove/clear primitives in the world.
-This probably needs looking into IOREF/STRef/MVar.
-
-I'd like to simply mutate a stack of things I'm playing with so I can see if I'm creating correct drawPrimitive expressions correctly.
+- [x] Get wall renderering working. [(mouseTestMain press f1 to see playerPOV)](res/wallcasting.mp4)
+- [ ] Fix eye fix
 
 ### DEV BUILD
 Nix and Nix-shell setup to make things more consistent
-
 
 ### CODE PAGE
 
