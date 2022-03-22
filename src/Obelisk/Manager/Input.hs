@@ -50,6 +50,7 @@ updateCamEvent (SDL.MouseButtonEvent e@(SDL.MouseButtonEventData _window _motion
     if SDL.ButtonRight == button  && SDL.mouseButtonEventMotion e == SDL.Released
     then
       let gtp = worldGTP v
+          --TODO bounds check this
           worldLoc = floor <$> rawPDtoWorldPos gtp (fmap fromIntegral aLoc) in
 
           v {

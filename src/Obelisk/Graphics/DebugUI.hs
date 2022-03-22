@@ -253,6 +253,9 @@ screenGraphic wallPoints angles screenWidth screenHeight rayCount = do
                                     Just (intpos, intindex) -> let distanceToSlice = case projType of
                                                                     FishEye -> norm $ intpos - (position p)
                                                                     Permadi -> rayAngle * distance (position p) intpos
+
+                                                                   --TODO distance to the projection plane?
+                                                                   --TODO check if the screen is inverted
                                                                    projectedWallHeight = wallHeight / distanceToSlice
                                                                    wallTop = screenMiddle - projectedWallHeight
                                                                    wallBottom = screenMiddle + projectedWallHeight
