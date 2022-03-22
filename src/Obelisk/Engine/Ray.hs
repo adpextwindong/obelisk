@@ -179,7 +179,7 @@ cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <
 --The ray and its angle for fixing fish eye
 createRayHead :: V2 Float -> V2 Float -> Float -> (V2 Float, Float)
 createRayHead pdir cplane x = (ray, cosThetaBetween ray pdir)
-    where ray = normalize (pdir + cplane ^* x)
+    where ray = normalize (pdir - cplane ^* x)
 
 rayHeads :: CInt -> PVars -> [(V2 Float, Float)]
 rayHeads screenWidth player = createRayHead (direction player) (camera_plane player) <$> cameraPlaneSweep (fromIntegral screenWidth)
