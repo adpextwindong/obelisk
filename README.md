@@ -9,11 +9,12 @@ This project is meant to serve as a reference engine for teaching with as much o
 ### Raycasting
 
 - [x] Get wall renderering working.
-
 https://user-images.githubusercontent.com/3671250/159282321-90deea10-184a-4069-aa3b-75f15e3d83db.mp4
 
-
 - [x] Fix eye fix
+https://user-images.githubusercontent.com/3671250/159427381-1f67245f-5bc1-4968-93ba-6950d17864f6.mp4
+
+- [ ] Wall Texturing
 
 ### DEV BUILD
 Nix and Nix-shell setup to make things more consistent
