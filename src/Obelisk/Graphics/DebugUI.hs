@@ -200,6 +200,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     --TODO scale this to 64x64 and benchmark
     let tempRayCount = 320
     let rayAnglePairs = rayHeads tempRayCount mousePlayer :: [(V2 Float, Float)]
+    let rayAngles = fmap snd rayAnglePairs
 
     let fst3 (a,b,c) = a
     let paths = fst3 . shootRay' (fromIntegral ws) p <$> fmap fst rayAnglePairs :: [[(V2 Float, V2 Int)]]
@@ -220,7 +221,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
 
     screenMode <- viewMode <$> get
-    screen <- screenGraphic wallPoints 640 480 tempRayCount
+    screen <- screenGraphic wallPoints rayAngles 640 480 tempRayCount
     return $ case screenMode of
       --WorldSpace
       OverheadDebug -> GroupPrim "MouseLookSingleRayIntersections" $ [
@@ -237,25 +238,29 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     --[(screenSizeY / tempRayCount) * w |w <- [0..tempRayCount]]
 
 --TODO pipe in Ray angle for permadi
-screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> Integer -> CInt -> CInt -> m [Graphic Float]
-screenGraphic wallPoints screenWidth screenHeight rayCount = do
+screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> CInt -> m [Graphic Float]
+screenGraphic wallPoints angles screenWidth screenHeight rayCount = do
   w <- world <$> get
   p <- player <$> get
+
+  projType <- projectionType . config <$> get
+
   let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
   let wallHeight = 64 --Wall Height 64, Player Height 32?
   let screenMiddle = fromIntegral screenHeight / 2
-  let wallFromMaybe (mInt,index) = case mInt of
+  let wallFromMaybe (mInt,index, rayAngle) = case mInt of
                                     Nothing -> Nothing
-                                    Just (intpos, intindex) -> let distanceToSlice = norm $ intpos - (position p)
+                                    Just (intpos, intindex) -> let distanceToSlice = case projType of
+                                                                    FishEye -> norm $ intpos - (position p)
+                                                                    Permadi -> rayAngle * distance (position p) intpos
                                                                    projectedWallHeight = wallHeight / distanceToSlice
                                                                    wallTop = screenMiddle - projectedWallHeight
                                                                    wallBottom = screenMiddle + projectedWallHeight
                                                                    wallLeft = index * wallWidth
                                                                    wallRight = (index + 1) * wallWidth in
                                                                Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
-                                    --TODO permadi wall height and placement of walls
 
-  let walls = catMaybes $ wallFromMaybe <$> zip wallPoints [0..]
+  let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
   return walls
 
 --TODO seperate wall paint graph

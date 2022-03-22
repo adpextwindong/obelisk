@@ -33,9 +33,18 @@ data Vars = Vars {
                 vInput :: Input,
                 worldGTP :: V3 (V3 Float),
                 camZoomScale :: Float, --Used for scaling other things
-                viewMode :: ViewMode
+                viewMode :: ViewMode,
+                config :: GConfig
             }
     deriving Show
+
+data GConfig = GConfig {
+  projectionType :: ProjectionType
+}
+  deriving Show
+
+data ProjectionType = Permadi | FishEye
+  deriving Show
 
 data ViewMode = PlayerPOV | OverheadDebug
   deriving Show
@@ -115,10 +124,13 @@ initPVars = PVars (V2 2.5 6.5) dir cam
          cam = V2 0.9954279468472328 9.551545757406914e-2
 
 initVars :: Vars
-initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale OverheadDebug
+initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale OverheadDebug defaultConfig
   where
     baseGTP = rawCenterScreenOnWorldGrid 10 640 480
     baseZoomScale = 1.0
+
+--TODO add input config toggle for projection type
+defaultConfig = GConfig Permadi
 
 makeClassy ''Vars
 makeClassy ''PVars
