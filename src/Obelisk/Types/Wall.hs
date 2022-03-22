@@ -10,6 +10,7 @@ import Data.Vector.Unboxed.Deriving
 import Data.Word
 
 --TODO rename
+--TODO add mechanism for SDL.Video.Renderer.copy use in memory textures
 data WallType = EW | FW | DW --Empty Wall, Full Wall, Door Wall
     deriving (Show, Eq)
 
