@@ -20,9 +20,10 @@ import Obelisk.Types.Wall
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate, rotation2 )
 import Obelisk.Graphics.Primitives
-import Obelisk.Engine.Ray (rayHeads, shootRay', xRayGridIntersections, yRayGridIntersections, baseStepsBounded, sampleWalkRayPaths, stWalkRayPathForWall, stScreenWalkRaysForWall)
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
+
+import Obelisk.Engine.Ray (rayHeads, shootRay', stScreenWalkRaysForWall)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
