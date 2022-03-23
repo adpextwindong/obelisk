@@ -23,7 +23,7 @@ import Obelisk.Graphics.Primitives
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 
-import Obelisk.Engine.Ray (rayHeads, shootRay', stScreenWalkRaysForWall)
+import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -170,19 +170,19 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
 
     --TODO scale this to 64x64 and benchmark
-    let tempRayCount = 320
+    let tempRayCount = 320 :: Int
     let rayAnglePairs = rayHeads tempRayCount mousePlayer :: [(V2 Float, Float)]
     let rayAngles = fmap snd rayAnglePairs
 
     let fst3 (a,b,c) = a
-    let paths = fst3 . shootRay' (fromIntegral ws) p <$> fmap fst rayAnglePairs :: [[(V2 Float, V2 Int)]]
+    let paths = fst3 . shootRay (fromIntegral ws) p <$> fmap fst rayAnglePairs :: [[(V2 Float, V2 Int)]]
     let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
     let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
 
     let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
 
     --Single ray path and intersections
-    let (_, vints, hints) = shootRay' (fromIntegral ws) p ray
+    let (_, vints, hints) = shootRay (fromIntegral ws) p ray
 
     -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
     let triangleAt a b c = Prim $ FillTriangle a b c yellow
@@ -208,7 +208,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
       --ScreenSpace
       PlayerPOV -> GroupPrim "Player Point of View" screen
 
-screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> CInt -> m [Graphic Float]
+screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> Int -> m [Graphic Float]
 screenGraphic wallPoints angles screenWidth screenHeight rayCount = do
   w <- world <$> get
   p <- player <$> get

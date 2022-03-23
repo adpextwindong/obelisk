@@ -29,7 +29,6 @@ import Data.Coerce
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
-import Obelisk.Engine.Ray (visitedPositions)
 
 import Obelisk.Graphics.Primitives
 import qualified Obelisk.Graphics.DebugUI as DUI
