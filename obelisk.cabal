@@ -70,18 +70,3 @@ executable obelisk-exe
     , obelisk
 
   default-language: Haskell2010
-
-executable rayBench
-    main-is: rayBench.hs
-    hs-source-dirs:
-        benchmark
-    build-depends:
-        base >= 4.7 && <5
-        , obelisk
-        , criterion
-        , linear >= 1.21.6
-    ghc-options:
-        -O2
-        -fprof-auto
-        -prof
-        "-with-rtsopts=-p -s -h -i0.1"
