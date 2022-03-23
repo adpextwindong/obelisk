@@ -232,12 +232,8 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
             rayCastPointsG] ++ fieldOfViewTestTris
       --ScreenSpace
-      --TODO drawWalls for screen
       PlayerPOV -> GroupPrim "Player Point of View" screen
 
-    --[(screenSizeY / tempRayCount) * w |w <- [0..tempRayCount]]
-
---TODO pipe in Ray angle for permadi
 screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> CInt -> m [Graphic Float]
 screenGraphic wallPoints angles screenWidth screenHeight rayCount = do
   w <- world <$> get
@@ -265,5 +261,3 @@ screenGraphic wallPoints angles screenWidth screenHeight rayCount = do
 
   let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
   return walls
-
---TODO seperate wall paint graph

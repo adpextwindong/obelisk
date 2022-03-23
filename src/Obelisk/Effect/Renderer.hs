@@ -69,6 +69,7 @@ class Monad m => Renderer m where
     drawDebug :: Vars -> m ()
     drawGraphicDebug :: Graphic Float -> m ()
     drawGraphicDebugWithMatrix :: Graphic Float -> M22Affine Float -> m ()
+    blitSurfaceToWindowSurface :: SDL.Surface -> m ()
 
 --TODO consider SDLFont being in this
 type SDLCanDraw m = (SDLRenderer m, MonadReader Config m)
@@ -77,6 +78,13 @@ clearScreen' :: SDLCanDraw m => m ()
 clearScreen' = do
     renderer <- asks cRenderer
     clearRenderer renderer
+
+blitSurfaceToWindowSurface' :: (SDLRenderer m, MonadReader Config m, MonadIO m) => SDL.Surface -> m ()
+blitSurfaceToWindowSurface' s = do
+  windowSurface <- SDL.getWindowSurface =<< asks cWindow
+  surfaceBlit s Nothing windowSurface Nothing
+  return ()
+
 
 drawScreen' :: SDLCanDraw m => m ()
 drawScreen' = do

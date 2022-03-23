@@ -10,18 +10,20 @@ import qualified SDL
 import Data.ListZipper
 import Data.Foldable ( forM_ )
 import Control.Monad (when)
+import Data.Time.Clock
 
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Effect.Renderer
 import Obelisk.Effect.Debug
 import Obelisk.Wrapper.SDLInput
+import Obelisk.Wrapper.SDLFont
 import Obelisk.Engine.Input
 import Obelisk.Manager.Input
 import Obelisk.Math.Homogenous
 import Obelisk.Graphics.Primitives
 import Obelisk.Graphics.UIScene
-import Data.Text (center)
+import Data.Text (center, pack)
 
 presentationRenderLoop :: ( MonadReader Config m
             , MonadState Vars m
@@ -93,6 +95,7 @@ grenderLoop g = do
 gRenderMouseLookLoop :: ( MonadReader Config m
             , MonadState Vars m
             , SDLInput m
+            , SDLFont m
             , HasInput m
             , Debug m
             , Renderer m ) => (V2 Float ->m (Graphic Float)) -> m ()
@@ -124,12 +127,23 @@ gRenderMouseLookLoop g = do
 
     --TODO dump state
 
+    startTime <- getUTCTime
     graphic <- g worldLoc
     vmode <- viewMode <$> get
     case vmode of
       OverheadDebug -> drawGraphicDebugWithMatrix graphic gtp
       PlayerPOV -> drawGraphicDebugWithMatrix graphic m22AffineIdD --Expects screen space graphic
       --TODO we need keystate to make these buttons easier to use, right now this pops up on f1
+
+    --FPS Counter
+    endTime <- getUTCTime
+    let elapsed = 1000.0 * diffUTCTime endTime startTime
+    let fps = 1000.0 / elapsed
+    let elapsedMS = pack . reverse . ((++) "sm"). (drop 1) . reverse . show $ elapsed
+    let fpsT = pack . init . show $ fps
+    font <- asks cFont
+    elapsedSurface <- renderSolidText font yellow fpsT
+    blitSurfaceToWindowSurface elapsedSurface
 
     drawScreen
     fillBackground

@@ -240,10 +240,12 @@ instance Renderer Obelisk where
     drawDebug = drawDebug'
     drawGraphicDebug = drawGraphicDebug'
     drawGraphicDebugWithMatrix = drawGraphicDebugWithMatrix'
+    blitSurfaceToWindowSurface = blitSurfaceToWindowSurface'
 
 instance Debug Obelisk where
     printGS = printGS'
     dprint = print'
+    getUTCTime = getUTCTime'
 
 instance SDLFont Obelisk where
     renderSolidText = renderSolidText'
