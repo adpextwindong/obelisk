@@ -146,35 +146,6 @@ playerCircleGraphic p = do
     let circle_radius = 3
     AffineT (translate px py) $ Prim (Circle (V2 0.0 0.0) circle_radius white)
 
---Raycasting Diagnostics
---
-{-
-midlineRaycastIntersectionsGraphic :: PVars -> CInt -> Graphic Float
-midlineRaycastIntersectionsGraphic player ws = do
-    let intersections = fst <$> fshootRay' (fromIntegral ws) (position player) (direction player) :: [V2 Float]
-    GroupPrim "Midline Intersections Graphic" $ (\pos -> Prim $ Circle pos 3 yellow) <$> intersections
-
--}
-
-{-
---Test with grender for Ray
-singleRaycastGraphic :: Graphic Float
-singleRaycastGraphic =
-    let p = V2 5.25 5.66
-        r = V2 1.0 1.0
-        path = fshootRay' 10 p r
-        vints = xRayGridIntersections p r $ baseStepsBounded 10 (p ^._x) (r ^._x)
-        hints = yRayGridIntersections p r $ baseStepsBounded 10 (p ^._y) (r ^._y)
-
-        visitedSet = S.fromList $ fmap snd path
-        in anonGP [
-            worldGridTilesGraphic emptyMap visitedSet,
-            worldGridGraphic 10, --TODO unbound
-            Prim $ Circle p 1 white,
-            anonGP $ (\c -> Prim $ Circle c 1 blue) <$> vints,
-            anonGP $ (\c -> Prim $ Circle c 1 red) <$> hints]
--}
-
 --
 -- DEMOS
 --
@@ -210,11 +181,13 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
 
     --Single ray path and intersections
-    let (path, vints, hints) = shootRay' (fromIntegral ws) p ray
+    let (_, vints, hints) = shootRay' (fromIntegral ws) p ray
 
     -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
     let triangleAt a b c = Prim $ FillTriangle a b c yellow
-    let rayIntersections = fmap fst . catMaybes $ wallPoints --TODO replace
+    let rayIntersections = fmap fst . catMaybes $ wallPoints
+
+    --Field of View
     let fieldOfViewTestTris = uncurry (triangleAt p) <$> zip rayIntersections (tail rayIntersections)
 
     let playerCircle = Prim $ Circle p (floor camZoom) white
@@ -226,7 +199,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
       --WorldSpace
       OverheadDebug -> GroupPrim "MouseLookSingleRayIntersections" $ [
             worldGridTilesGraphic w visitedV,
-            worldGridGraphic 10,
+            worldGridGraphic 10,--TODO ask GVAR for worldsize
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
