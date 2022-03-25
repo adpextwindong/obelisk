@@ -34,3 +34,7 @@ Profiteur raybench.prof
 ```
 
 TODO fprof-auto costcenters for Ray.hs
+
+## Credits
+
+Thank you to [Andrew Durdin (adurdin)](https://moddingwiki.shikadi.net/wiki/GameMaps_Format) for file format information.
