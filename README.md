@@ -38,3 +38,5 @@ TODO fprof-auto costcenters for Ray.hs
 ## Credits
 
 Thank you to [Andrew Durdin (adurdin)](https://moddingwiki.shikadi.net/wiki/GameMaps_Format) for file format information.
+
+[The Wolf3D Shareware](http://www.areyep.com/RIPandMCS-OriginalWolf.html)
