@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall) where
+module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall) where
 
 import Linear.V2
 import Linear.Vector ( (*^), (^*) )
@@ -12,7 +12,7 @@ import qualified Data.Set as S
 import Foreign.C.Types ( CInt )
 import Data.IntMap.Strict (IntMap)
 import qualified Data.IntMap.Strict as IntMap
-import Data.Bifunctor ( Bifunctor(first) )
+import Data.Bifunctor
 
 import Data.STRef
 import Data.Array.ST
@@ -54,17 +54,19 @@ upperBound worldSize axisPosition axisRay = if axisRay > 0
 baseStepsBounded :: Int -> Float -> Float -> [Float]
 baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axisPosition axisRay) baseSteps
 
+--Epsilon is added to prevent stepscales that should be 29 ending up at values like 28.999999999999996
+--This prevents the truncated value ending up in the wrong tile index
 xRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
 xRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
-        stepScales = [(firstStep + x) / abs (nr ^._x) | x <- bss]
+        stepScales = [(firstStep + x + epsilon) / abs (nr ^._x) | x <- bss]
 
 yRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
 yRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
         firstStep = abs $ deltaFirst (p^._y) (nr ^._y)
-        stepScales = [(firstStep + y) / abs (nr ^._y) | y <- bss]
+        stepScales = [(firstStep + y + epsilon) / abs (nr ^._y) | y <- bss]
 
 {-# INLINE deltaFirst #-}
 deltaFirst :: Float -> Float -> Float
@@ -72,20 +74,7 @@ deltaFirst px vx = if vx < 0
                    then fromIntegral (floor px) - px
                    else fromIntegral (ceiling px) - px
 
-
-
-epsilon = 0.00001 --TODO maybe lift this to the math module
-
---This function is for bumping the grid index into the right spot. I have to read physically based rendering some more.
---Some of the math in computing the stepscales leads to values like 28.999999999999996 (when it should be 29 in terms of integers).
---To make sure it checks index 29 which it is close enough to with an epsilon test we add epsilon in the direction of the ray so it truncates properly.
-{-# INLINE epsilonBump #-}
-epsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
-epsilonBump ray result = (result,bumped)
-    where
-        bumped = V2 x y
-        x = truncate $ result ^._x + (epsilon * signum ray ^._x)
-        y = truncate $ result ^._y + (epsilon * signum ray ^._y)
+epsilon = 0.00001
 
 mergeIntersections :: V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
 mergeIntersections playerpos (x:xs) (y:ys) = if qd playerpos x < qd playerpos y
@@ -101,7 +90,12 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
                                                      then Just cPair
                                                      else sampleWalkRayPaths world playerpos ray path
     where
-        cPair@(_,checkInds) = epsilonBump ray step
+        cPair@(_,checkInds) = noEpsilonBump ray step
+
+noEpsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
+noEpsilonBump _ result = (result, floored)
+  where
+    floored = fmap truncate result
 
 --Walks a single ray path until it hits a wall
 stWalkRayPathForWall :: WorldTiles -> V2 Float -> [(V2 Float, V2 Int)]
@@ -166,7 +160,7 @@ createRayHead pdir cplane x = (ray, cosThetaBetween ray pdir)
 -- Generates a bounded ray path, its vertical intersections with the grid, and horizontal intersections
 -- (Path, Vertical Intersections, Horizontal Intersections)
 shootRay :: Int -> V2 Float -> V2 Float -> ([(V2 Float, V2 Int)], [V2 Float], [V2 Float])
-shootRay ws playerpos direction = (epsilonBump direction <$> mergeIntersections playerpos vints hints, vints, hints)
+shootRay ws playerpos direction = (noEpsilonBump direction <$> mergeIntersections playerpos vints hints, vints, hints)
     where
         stepsX = baseStepsBounded ws (playerpos ^._x) (direction ^._x)
         stepsY = baseStepsBounded ws (playerpos ^._y) (direction ^._y)
