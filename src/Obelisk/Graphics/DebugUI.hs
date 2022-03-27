@@ -23,7 +23,7 @@ import Obelisk.Graphics.Primitives
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 
-import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall)
+import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, parallelRaycast)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -154,6 +154,12 @@ playerCircleGraphic p = do
 --raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic Float)
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
+    screen <- parallelRaycast lookingAtWorldPos
+    return screen
+
+    {-
+
+
     p <- position . player <$> get
     w <- world <$> get
     let ws = worldSize w
@@ -168,15 +174,16 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     }
 
     let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
-
+    let fst3 (a,b,c) = a
     --TODO scale this to 64x64 and benchmark
     let tempRayCount = 320 :: Int
     let rayAnglePairs = rayHeads tempRayCount mousePlayer :: [(V2 Float, Float)]
+    let rays = fmap fst rayAnglePairs
     let rayAngles = fmap snd rayAnglePairs
 
-    let fst3 (a,b,c) = a
-    let paths = fst3 . shootRay (fromIntegral ws) p <$> fmap fst rayAnglePairs :: [[(V2 Float, V2 Int)]]
+    let paths = fst3 . shootRay (fromIntegral ws) p <$> rays :: [[(V2 Float, V2 Int)]]
     let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
+
     let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
 
     let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
@@ -196,7 +203,9 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
 
     screenMode <- viewMode <$> get
-    screen <- screenGraphic wallPoints rayAngles 640 480 tempRayCount
+    -- screen <- oldScreenGraphic wallPoints rayAngles 640 480 tempRayCount
+
+
     return $ case screenMode of
       --WorldSpace
       OverheadDebug -> GroupPrim "MouseLookScreenRayIntersections" $ [
@@ -210,8 +219,10 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
       --ScreenSpace
       PlayerPOV -> GroupPrim "Player Point of View" screen
 
-screenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> Int -> m [Graphic Float]
-screenGraphic wallPoints angles screenWidth screenHeight rayCount = do
+-}
+
+oldScreenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> Int -> m [Graphic Float]
+oldScreenGraphic wallPoints angles screenWidth screenHeight rayCount = do
   w <- world <$> get
   p <- player <$> get
 

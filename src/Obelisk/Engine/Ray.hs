@@ -1,11 +1,9 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall) where
+module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, parallelRaycast) where
 
-import Linear.V2
-import Linear.Vector ( (*^), (^*) )
-import Linear.Metric ( qd, normalize, norm, distance)
-import Debug.Trace (trace)
+import Linear
+import Debug.Trace
 
 import Control.Lens ( (^.) )
 import qualified Data.Set as S
@@ -19,17 +17,19 @@ import Data.Array.ST
 import Data.Array.MArray
 import Data.Array.Unboxed
 import Control.Monad.ST
+import Control.Monad.State
+
+import Control.Parallel
+import Control.Parallel.Strategies (parMap, rpar)
 
 import Obelisk.State
-    ( checkAt,
-      inBounds,
-      accessMapV,
-      Vars,
-      PVars(camera_plane, direction, position),
-      WorldTiles(worldSize) )
-import Obelisk.Types.Wall ( WallType(FW) )
-import Obelisk.Math.Vector (cosThetaBetween)
-import SDL.Primitive (horizontalLine)
+import Obelisk.Types.Wall
+import Obelisk.Math.Vector
+import Obelisk.Math.Homogenous
+import Obelisk.Graphics.Primitives
+
+import qualified SDL
+import Data.Maybe
 
 {-
 
@@ -43,25 +43,30 @@ StepScales are t values where there is a grid intersection.
 This code assumes walls are space 1.0f apart. Abs for firstStep ensures negative direction intersections are found correctly.
 
 -}
+{-# INLINE baseSteps #-}
 baseSteps :: [Float]
 baseSteps = [0.0 ..]
 
+{-# INLINE upperBound #-}
 upperBound :: Int -> Float -> Float -> Int
 upperBound worldSize axisPosition axisRay = if axisRay > 0
                                             then floor $ fromIntegral worldSize - axisPosition
                                             else floor axisPosition
 
+{-# INLINE baseStepsBounded #-}
 baseStepsBounded :: Int -> Float -> Float -> [Float]
 baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axisPosition axisRay) baseSteps
 
 --Epsilon is added to prevent stepscales that should be 29 ending up at values like 28.999999999999996
 --This prevents the truncated value ending up in the wrong tile index
+{-# INLINE xRayGridIntersections #-}
 xRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
 xRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
         firstStep = abs $ deltaFirst (p^._x) (nr ^._x)
         stepScales = [(firstStep + x + epsilon) / abs (nr ^._x) | x <- bss]
 
+{-# INLINE yRayGridIntersections #-}
 yRayGridIntersections :: V2 Float -> V2 Float -> [Float] -> [V2 Float]
 yRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
     where
@@ -76,6 +81,7 @@ deltaFirst px vx = if vx < 0
 
 epsilon = 0.00001
 
+{-# INLINE mergeIntersections #-}
 mergeIntersections :: V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
 mergeIntersections playerpos (x:xs) (y:ys) = if qd playerpos x < qd playerpos y
                                              then x : mergeIntersections playerpos xs (y:ys)
@@ -92,6 +98,7 @@ sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkIn
     where
         cPair@(_,checkInds) = noEpsilonBump ray step
 
+{-# INLINE noEpsilonBump #-}
 noEpsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
 noEpsilonBump _ result = (result, floored)
   where
@@ -147,6 +154,8 @@ stScreenWalkRaysForWall w p paths = runST aux
 
       return (results, rv)
 
+
+{-# INLINE cameraPlaneSweep #-}
 --TODO fix cameraPlaneSweep so it uniformly gives back n elements spaced across -1 to 1 inclusive
 cameraPlaneSweep :: Int -> [Float]
 cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth - 1]]
@@ -162,6 +171,7 @@ createRayHead pdir cplane x = (ray, cosThetaBetween ray pdir)
 shootRay :: Int -> V2 Float -> V2 Float -> ([(V2 Float, V2 Int)], [V2 Float], [V2 Float])
 shootRay ws playerpos direction = (noEpsilonBump direction <$> mergeIntersections playerpos vints hints, vints, hints)
     where
+        --TODO bound this correctly
         stepsX = baseStepsBounded ws (playerpos ^._x) (direction ^._x)
         stepsY = baseStepsBounded ws (playerpos ^._y) (direction ^._y)
 
@@ -174,5 +184,61 @@ shootRay ws playerpos direction = (noEpsilonBump direction <$> mergeIntersection
                 else boundedHorizontal $ xRayGridIntersections playerpos direction stepsX
         hints = boundedVertical $ yRayGridIntersections playerpos direction stepsY
 
+--Returns the rays and its angles for the whole screen
 rayHeads :: Int -> PVars -> [(V2 Float, Float)]
 rayHeads screenWidth player = createRayHead (direction player) (camera_plane player) <$> cameraPlaneSweep screenWidth
+
+parallelRaycast :: (MonadState Vars m) => V2 Float -> m (Graphic Float)
+parallelRaycast lookingAtWorldPos = do
+  let rayCount = 320 -- TODO float out
+  let screenWidth = 640
+  let screenHeight = 480
+
+  pp <- player <$> get
+  p <- position . player <$> get
+  w <- world <$> get
+
+  let ws = worldSize w
+
+  let ray = normalize $ lookingAtWorldPos - p
+  let mousePlayer = pp {
+    direction = ray,
+    camera_plane = normalize $ ray *! rotation2 (pi / 2.0)
+  }
+
+  let fst3 (a,b,c) = a
+
+  let rayAnglePairs = rayHeads rayCount mousePlayer
+  let rays = fmap fst rayAnglePairs
+  let angles = fmap snd rayAnglePairs
+
+  --TODO parallize shootRay and screenWalk together
+  let paths = parMap rpar (fst3 . shootRay (fromIntegral ws) p) rays
+  let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
+
+  -- Screen Graphic
+  projType <- projectionType . config <$> get
+
+  let filledTileColor = SDL.V4 51 51 102 maxBound -- TODO tile color/texture lookup
+
+  let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
+  let wallHeight = 64 --Wall Height 64, Player Height 32?
+  let screenMiddle = fromIntegral screenHeight / 2
+  let wallFromMaybe (mInt,index, rayAngle) = case mInt of
+                                    Nothing -> Nothing
+                                    Just (intpos, intindex) -> let distanceToSlice = case projType of
+                                                                    FishEye -> norm $ intpos - p
+                                                                    Permadi -> rayAngle * distance p intpos
+
+                                                                   --TODO distance to the projection plane?
+                                                                   --TODO check if the screen is inverted
+                                                                   projectedWallHeight = wallHeight / distanceToSlice
+                                                                   wallTop = screenMiddle - projectedWallHeight
+                                                                   wallBottom = screenMiddle + projectedWallHeight
+                                                                   wallLeft = index * wallWidth
+                                                                   wallRight = (index + 1) * wallWidth in
+                                                               Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
+
+  let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
+
+  return $ GroupPrim "PlayerPOV" walls

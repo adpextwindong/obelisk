@@ -10,7 +10,7 @@ import qualified SDL
 import Data.ListZipper
 import Data.Foldable ( forM_ )
 import Control.Monad (when)
-import Data.Time.Clock
+import Data.Time.Clock (diffUTCTime)
 
 import Obelisk.Config
 import Obelisk.State
