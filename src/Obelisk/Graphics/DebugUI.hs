@@ -23,7 +23,7 @@ import Obelisk.Graphics.Primitives
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 
-import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, parallelRaycast)
+import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, raycast)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -154,10 +154,7 @@ playerCircleGraphic p = do
 --raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
 mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic Float)
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    screen <- parallelRaycast lookingAtWorldPos
-    return screen
-
-    {-
+    screen <- raycast lookingAtWorldPos
 
 
     p <- position . player <$> get
@@ -211,15 +208,13 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
       OverheadDebug -> GroupPrim "MouseLookScreenRayIntersections" $ [
             worldGridTilesGraphic w visitedV,
             --worldGridTilesGraphic w _visitedSingle, --SingleRayIntersection
-            worldGridGraphic 10,--TODO ask GVAR for worldsize
+            worldGridGraphic ws,--TODO ask GVAR for worldsize
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
             rayCastPointsG] -- ++ fieldOfViewTestTris
       --ScreenSpace
-      PlayerPOV -> GroupPrim "Player Point of View" screen
-
--}
+      PlayerPOV -> screen
 
 oldScreenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> Int -> m [Graphic Float]
 oldScreenGraphic wallPoints angles screenWidth screenHeight rayCount = do

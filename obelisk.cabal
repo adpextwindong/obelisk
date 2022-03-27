@@ -54,7 +54,6 @@ library
       , list-zipper >= 0.0.11
       , tagged >= 0.8.6.1
       , time
-      , parallel
   ghc-options:
     -- -ddump-simpl
     -- -fforce-recomp

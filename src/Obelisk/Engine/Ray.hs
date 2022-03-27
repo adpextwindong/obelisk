@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, parallelRaycast) where
+module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, raycast) where
 
 import Linear
 import Debug.Trace
@@ -18,9 +18,6 @@ import Data.Array.MArray
 import Data.Array.Unboxed
 import Control.Monad.ST
 import Control.Monad.State
-
-import Control.Parallel
-import Control.Parallel.Strategies (parMap, rpar)
 
 import Obelisk.State
 import Obelisk.Types.Wall
@@ -188,8 +185,8 @@ shootRay ws playerpos direction = (noEpsilonBump direction <$> mergeIntersection
 rayHeads :: Int -> PVars -> [(V2 Float, Float)]
 rayHeads screenWidth player = createRayHead (direction player) (camera_plane player) <$> cameraPlaneSweep screenWidth
 
-parallelRaycast :: (MonadState Vars m) => V2 Float -> m (Graphic Float)
-parallelRaycast lookingAtWorldPos = do
+raycast :: (MonadState Vars m) => V2 Float -> m (Graphic Float)
+raycast lookingAtWorldPos = do
   let rayCount = 320 -- TODO float out
   let screenWidth = 640
   let screenHeight = 480
@@ -212,8 +209,7 @@ parallelRaycast lookingAtWorldPos = do
   let rays = fmap fst rayAnglePairs
   let angles = fmap snd rayAnglePairs
 
-  --TODO parallize shootRay and screenWalk together
-  let paths = parMap rpar (fst3 . shootRay (fromIntegral ws) p) rays
+  let paths = fst3 . shootRay (fromIntegral ws) p <$> rays
   let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
 
   -- Screen Graphic
