@@ -23,7 +23,7 @@ import Obelisk.Graphics.Primitives
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
 import Linear (normalize)
 
-import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, raycast)
+import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, raycast)
 -- UI CONSTANTS
 gridColor :: SDL.Color
 gridColor = SDL.V4 63 63 63 maxBound
@@ -187,7 +187,6 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     --Single ray path and intersections
     let (_singlePath, vints, hints) = shootRay (fromIntegral ws) p ray
-    let _visitedSingle = snd $ stWalkRayPathForWall w p _singlePath
 
     -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
     let triangleAt a b c = Prim $ FillTriangle a b c yellow
@@ -207,8 +206,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
       --WorldSpace
       OverheadDebug -> GroupPrim "MouseLookScreenRayIntersections" $ [
             worldGridTilesGraphic w visitedV,
-            --worldGridTilesGraphic w _visitedSingle, --SingleRayIntersection
-            worldGridGraphic ws,--TODO ask GVAR for worldsize
+            worldGridGraphic ws,
             playerCircle,
             GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
             GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,

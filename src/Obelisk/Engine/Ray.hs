@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, stWalkRayPathForWall, raycast) where
+module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, raycast) where
 
 import Linear
 import Debug.Trace
@@ -100,33 +100,6 @@ noEpsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
 noEpsilonBump _ result = (result, floored)
   where
     floored = fmap truncate result
-
---Walks a single ray path until it hits a wall
-stWalkRayPathForWall :: WorldTiles -> V2 Float -> [(V2 Float, V2 Int)]
-  -> (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
-
-stWalkRayPathForWall w p path = runST aux
-  where
-    aux :: ST s (Maybe (V2 Float, V2 Int), UArray (V2 Int) Bool)
-    aux = do
-      let tileCount = fromIntegral $ worldSize w * worldSize w
-
-      visited <- newArray (0, tileCount) False :: ST s (STUArray s (V2 Int) Bool)
-      wallHit <- newSTRef Nothing
-
-      let go (sPair@(step_position, step_inds) : path) = do
-           writeArray visited step_inds True
-           if accessMapV w step_inds == FW
-           then do
-            writeSTRef wallHit (Just sPair)
-           else go path
-          go [] = return ()
-
-      go path
-
-      rw <- readSTRef wallHit
-      rv <- freeze visited
-      return (rw,rv)
 
 --Walks a lists of ray paths and collect their wall hits into a single array
 stScreenWalkRaysForWall :: WorldTiles -> V2 Float -> [[(V2 Float, V2 Int)]] -> ([Maybe (V2 Float, V2 Int)], UArray (V2 Int) Bool)
