@@ -233,6 +233,9 @@ raycast lookingAtWorldPos = do
                                                                    wallBottom = screenMiddle + projectedWallHeight
                                                                    wallLeft = index * wallWidth
                                                                    wallRight = (index + 1) * wallWidth in
+
+                                                               --TODO tweak CopyRect to contains SDL.Rectangles instead
+                                                               --Just $ Prim $ CopyRect (fromJust textures) (V2 0 0) (V2 64 64) (V2 wallLeft wallTop)
                                                                Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
 
   let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
