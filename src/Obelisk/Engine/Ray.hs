@@ -50,9 +50,6 @@ upperBound worldSize axisPosition axisRay = if axisRay > 0
                                             then floor $ fromIntegral worldSize - axisPosition
                                             else floor axisPosition
 
-{-# INLINE baseStepsBounded #-}
-baseStepsBounded :: Int -> Float -> Float -> [Float]
-baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axisPosition axisRay) baseSteps
 
 --Epsilon is added to prevent stepscales that should be 29 ending up at values like 28.999999999999996
 --This prevents the truncated value ending up in the wrong tile index
@@ -87,21 +84,21 @@ mergeIntersections _ [] ys = ys
 mergeIntersections _ xs [] = xs
 
 --Samples the raypath for the first wall intersection and returns its position in world space and tile indexes
+{-# INLINE sampleWalkRayPaths #-}
 sampleWalkRayPaths :: WorldTiles -> V2 Float -> V2 Float -> [V2 Float] -> Maybe (V2 Float, V2 Int)
 sampleWalkRayPaths _ _ _ [] = Nothing
 sampleWalkRayPaths world playerpos ray (step:path) = if accessMapV world checkInds == FW
                                                      then Just cPair
                                                      else sampleWalkRayPaths world playerpos ray path
     where
-        cPair@(_,checkInds) = noEpsilonBump ray step
+        cPair@(_,checkInds) = posAndInd step
 
-{-# INLINE noEpsilonBump #-}
-noEpsilonBump :: V2 Float -> V2 Float -> (V2 Float, V2 Int)
-noEpsilonBump _ result = (result, floored)
-  where
-    floored = fmap truncate result
+{-# INLINE posAndInd #-}
+posAndInd :: V2 Float -> (V2 Float, V2 Int)
+posAndInd result = (result, fmap truncate result)
 
 --Walks a lists of ray paths and collect their wall hits into a single array
+{-# INLINE stScreenWalkRaysForWall #-}
 stScreenWalkRaysForWall :: WorldTiles -> V2 Float -> [[(V2 Float, V2 Int)]] -> ([Maybe (V2 Float, V2 Int)], UArray (V2 Int) Bool)
 stScreenWalkRaysForWall w p paths = runST aux
   where
@@ -131,33 +128,40 @@ cameraPlaneSweep :: Int -> [Float]
 cameraPlaneSweep screenWidth = [2.0 * (x / fromIntegral screenWidth) - 1.0 | x <- [0 .. fromIntegral screenWidth - 1]]
 
 --The ray and its angle for fixing fish eye
+{-# INLINE createRayHead #-}
 createRayHead :: V2 Float -> V2 Float -> Float -> (V2 Float, Float)
 createRayHead pdir cplane x = (ray, cosThetaBetween ray pdir)
     where ray = normalize (pdir - cplane ^* x)
+
+{-# INLINE baseStepsBounded #-}
+baseStepsBounded :: Int -> Float -> Float -> [Float]
+baseStepsBounded worldSize axisPosition axisRay = take (upperBound worldSize axisPosition axisRay) baseSteps
+
+{-# INLINE boundedHorizontal #-}
+boundedHorizontal ws = takeWhile (\(V2 _ y) -> y > 0 && y < fromIntegral ws)
+{-# INLINE boundedVertical #-}
+boundedVertical ws = takeWhile (\(V2 x _) -> x > 0 && x < fromIntegral ws)
 
 -- HASDEMO: mouseLookRayCastGraphicM
 -- Generates a bounded ray path, its vertical intersections with the grid, and horizontal intersections
 -- (Path, Vertical Intersections, Horizontal Intersections)
 shootRay :: Int -> V2 Float -> V2 Float -> ([(V2 Float, V2 Int)], [V2 Float], [V2 Float])
-shootRay ws playerpos direction = (noEpsilonBump direction <$> mergeIntersections playerpos vints hints, vints, hints)
+shootRay ws playerpos direction = (posAndInd <$> mergeIntersections playerpos vints hints, vints, hints)
     where
-        --TODO bound this correctly
         stepsX = baseStepsBounded ws (playerpos ^._x) (direction ^._x)
         stepsY = baseStepsBounded ws (playerpos ^._y) (direction ^._y)
 
-        --TODO refactor these takeWhile's out
-        boundedHorizontal = takeWhile (\(V2 _ y) -> y > 0 && y < fromIntegral ws)
-        boundedVertical = takeWhile (\(V2 x _) -> x > 0 && x < fromIntegral ws)
-
         vints = if direction ^._x == 0.0
                 then [] --No vertical intersection if literally looking along x axis
-                else boundedHorizontal $ xRayGridIntersections playerpos direction stepsX
-        hints = boundedVertical $ yRayGridIntersections playerpos direction stepsY
+                else boundedHorizontal ws $ xRayGridIntersections playerpos direction stepsX
+
+        hints = boundedVertical ws $ yRayGridIntersections playerpos direction stepsY
 
 --Returns the rays and its angles for the whole screen
 rayHeads :: Int -> PVars -> [(V2 Float, Float)]
 rayHeads screenWidth player = createRayHead (direction player) (camera_plane player) <$> cameraPlaneSweep screenWidth
 
+--TODO expose visibility set
 raycast :: (MonadState Vars m) => V2 Float -> m (Graphic Float)
 raycast lookingAtWorldPos = do
   let rayCount = 320 -- TODO float out
