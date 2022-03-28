@@ -24,6 +24,7 @@ library
       Obelisk.Graphics.Primitives
       Obelisk.Graphics.DebugUI
       Obelisk.Graphics.UIScene
+      Obelisk.Graphics.ColorConstants
       Obelisk.Manager.Input
       Obelisk.Types.Wall
       Obelisk.Math.Hierarchy

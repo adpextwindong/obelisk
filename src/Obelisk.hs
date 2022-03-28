@@ -91,7 +91,8 @@ zipperMain presentation = do
                 cSurface = screenSurface,
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
-                cFont = font
+                cFont = font,
+                cTextures = Nothing
             }
 
     runObelisk cfg initVars (presentationRenderLoop presentation)
@@ -127,7 +128,8 @@ main = do
                 cSurface = screenSurface,
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
-                cFont = font
+                cFont = font,
+                cTextures = Nothing
             }
 
     runObelisk cfg initVars mainLoop
@@ -160,7 +162,8 @@ grender g = do
                 cSurface = screenSurface,
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
-                cFont = font
+                cFont = font,
+                cTextures = Nothing
             }
 
     runObelisk cfg initVars (grenderLoop g)
@@ -178,12 +181,17 @@ grenderMouseLook g = do
 
     font <- SDL.Font.load "resources/arial.ttf" 16
 
+
     window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
     SDL.showWindow window
     screenSurface <- SDL.getWindowSurface window
     SDL.updateWindowSurface window
 
     screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
+
+    -- Load Textures
+    textureSurface <- SDL.loadBMP "resources/wolftextures.bmp"
+    textures <- SDL.createTexture screenRenderer SDL.RGB888 SDL.TextureAccessStatic (V2 512 64)
 
     let hs = (window, screenSurface, screenRenderer)
 
@@ -193,7 +201,8 @@ grenderMouseLook g = do
                 cSurface = screenSurface,
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
-                cFont = font
+                cFont = font,
+                cTextures = Just textures
             }
 
     runObelisk cfg initVars (gRenderMouseLookLoop g)

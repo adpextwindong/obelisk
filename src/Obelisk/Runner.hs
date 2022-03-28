@@ -23,6 +23,7 @@ import Obelisk.Manager.Input
 import Obelisk.Math.Homogenous
 import Obelisk.Graphics.Primitives
 import Obelisk.Graphics.UIScene
+import Obelisk.Graphics.ColorConstants
 import Data.Text (center, pack)
 
 presentationRenderLoop :: ( MonadReader Config m

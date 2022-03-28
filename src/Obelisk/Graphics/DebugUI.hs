@@ -16,44 +16,14 @@ import Data.Array.Unboxed
 
 import Obelisk.State
 import Obelisk.Types.Wall
-
 import Obelisk.Math.Vector
 import Obelisk.Math.Homogenous ( rotation, translate, rotation2 )
 import Obelisk.Graphics.Primitives
 import Obelisk.Wrapper.SDLRenderer (SDLRenderer(circle))
+import Obelisk.Graphics.ColorConstants
 import Linear (normalize)
 
-import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, raycast)
--- UI CONSTANTS
-gridColor :: SDL.Color
-gridColor = SDL.V4 63 63 63 maxBound
-white :: SDL.Color
-white = SDL.V4 maxBound maxBound maxBound maxBound
-red :: SDL.Color
-red = SDL.V4 maxBound 0 0 maxBound
-arrowColor :: SDL.Color
-arrowColor = SDL.V4 255 51 51 maxBound
-
-blue :: SDL.Color
-blue = SDL.V4 0 0 maxBound maxBound
-black :: SDL.Color
-black = SDL.V4 0 0 0 0
-yellow :: SDL.Color
-yellow = SDL.V4 255 255 0 maxBound
-
---GodBolt Colors
-backgroundColor :: SDL.Color
-backgroundColor = SDL.V4 34 34 34 maxBound
-filledTileColor :: SDL.Color
-filledTileColor = SDL.V4 51 51 102 maxBound
-doorTileColor :: SDL.Color
-doorTileColor = SDL.V4 102 51 102 maxBound
-
-wallTypeToColor :: WallType -> SDL.Color
-wallTypeToColor FW = filledTileColor
-wallTypeToColor EW = backgroundColor
-wallTypeToColor DW = doorTileColor
-
+import Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall)
 -- One thing to note about this is that all of this should be done in world coordinates
 -- The Grid to player as center local -> screen AFT will be applied as an AffineT in the renderer
 
@@ -146,98 +116,3 @@ playerCircleGraphic p = do
     let py = position p ^._y
     let circle_radius = 3
     AffineT (translate px py) $ Prim (Circle (V2 0.0 0.0) circle_radius white)
-
---
--- DEMOS
---
-
---raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
-mouseLookRaycastGraphicM :: (Debug m, MonadState Vars m) => V2 Float -> m (Graphic Float)
-mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    screen <- raycast lookingAtWorldPos
-
-
-    p <- position . player <$> get
-    w <- world <$> get
-    let ws = worldSize w
-    camZoom <- camZoomScale <$> get
-
-    let ray = normalize $ lookingAtWorldPos - p
-
-    pp <- player <$> get
-    let mousePlayer = pp {
-      direction = ray,
-      camera_plane = normalize $ ray *! rotation2 (pi / 2.0)
-    }
-
-    let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
-    let fst3 (a,b,c) = a
-    --TODO scale this to 64x64 and benchmark
-    let tempRayCount = 320 :: Int
-    let rayAnglePairs = rayHeads tempRayCount mousePlayer :: [(V2 Float, Float)]
-    let rays = fmap fst rayAnglePairs
-    let rayAngles = fmap snd rayAnglePairs
-
-    let paths = fst3 . shootRay (fromIntegral ws) p <$> rays :: [[(V2 Float, V2 Int)]]
-    let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
-
-    let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
-
-    let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
-
-    --Single ray path and intersections
-    let (_singlePath, vints, hints) = shootRay (fromIntegral ws) p ray
-
-    -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
-    let triangleAt a b c = Prim $ FillTriangle a b c yellow
-    let rayIntersections = fmap fst . catMaybes $ wallPoints
-
-    --Field of View
-    let fieldOfViewTestTris = uncurry (triangleAt p) <$> zip rayIntersections (tail rayIntersections)
-
-    let playerCircle = Prim $ Circle p (floor camZoom) white
-
-
-    screenMode <- viewMode <$> get
-    -- screen <- oldScreenGraphic wallPoints rayAngles 640 480 tempRayCount
-
-
-    return $ case screenMode of
-      --WorldSpace
-      OverheadDebug -> GroupPrim "MouseLookScreenRayIntersections" $ [
-            worldGridTilesGraphic w visitedV,
-            worldGridGraphic ws,
-            playerCircle,
-            GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
-            GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
-            rayCastPointsG] -- ++ fieldOfViewTestTris
-      --ScreenSpace
-      PlayerPOV -> screen
-
-oldScreenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> Int -> m [Graphic Float]
-oldScreenGraphic wallPoints angles screenWidth screenHeight rayCount = do
-  w <- world <$> get
-  p <- player <$> get
-
-  projType <- projectionType . config <$> get
-
-  let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
-  let wallHeight = 64 --Wall Height 64, Player Height 32?
-  let screenMiddle = fromIntegral screenHeight / 2
-  let wallFromMaybe (mInt,index, rayAngle) = case mInt of
-                                    Nothing -> Nothing
-                                    Just (intpos, intindex) -> let distanceToSlice = case projType of
-                                                                    FishEye -> norm $ intpos - (position p)
-                                                                    Permadi -> rayAngle * distance (position p) intpos
-
-                                                                   --TODO distance to the projection plane?
-                                                                   --TODO check if the screen is inverted
-                                                                   projectedWallHeight = wallHeight / distanceToSlice
-                                                                   wallTop = screenMiddle - projectedWallHeight
-                                                                   wallBottom = screenMiddle + projectedWallHeight
-                                                                   wallLeft = index * wallWidth
-                                                                   wallRight = (index + 1) * wallWidth in
-                                                               Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
-
-  let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
-  return walls

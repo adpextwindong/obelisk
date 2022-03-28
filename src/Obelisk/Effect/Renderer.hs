@@ -15,6 +15,7 @@ import Data.Bool
 import qualified Data.Set as S
 import qualified Data.Text as T
 
+import Control.Monad.State
 import Obelisk.Config
 import Obelisk.State
 import Obelisk.Types.Wall
@@ -25,41 +26,18 @@ import Obelisk.Math.Homogenous
 import Obelisk.Math.Hierarchy (M_World2PhysicalDevice, M_PhysicalDevice2World)
 import Data.Tagged
 import Data.Coerce
+import Data.Maybe
 
 import Obelisk.Wrapper.SDLRenderer
 import Obelisk.Wrapper.SDLInput
 import Obelisk.Wrapper.SDLFont
 
+import Obelisk.Graphics.DebugUI
 import Obelisk.Graphics.Primitives
 import qualified Obelisk.Graphics.DebugUI as DUI
 import Obelisk.Math.Homogenous (m22AffineIdD, dropHomoCoords, homoCoords)
-
---TODO this stuff is too low level for the renderer, we should move this shit out of here
---once we're done with the debug UI we can have a similar layer for the actual game
---COLORS
-white :: SDL.Color
-white = SDL.V4 maxBound maxBound maxBound maxBound
-red :: SDL.Color
-red = SDL.V4 maxBound 0 0 maxBound
-blue :: SDL.Color
-blue = SDL.V4 0 0 maxBound maxBound
-black :: SDL.Color
-black = SDL.V4 0 0 0 0
-yellow :: SDL.Color
-yellow = SDL.V4 255 255 0 maxBound
-
---GodBolt Colors
-backgroundColor :: SDL.Color
-backgroundColor = SDL.V4 34 34 34 maxBound
-filledTileColor :: SDL.Color
-filledTileColor = SDL.V4 51 51 102 maxBound
-doorTileColor :: SDL.Color
-doorTileColor = SDL.V4 102 51 102 maxBound
-
-wallTypeToColor :: WallType -> SDL.Color
-wallTypeToColor FW = filledTileColor
-wallTypeToColor EW = backgroundColor
-wallTypeToColor DW = doorTileColor
+import Obelisk.Graphics.ColorConstants
+import Obelisk.Engine.Ray
 
 class Monad m => Renderer m where
     clearScreen :: m ()
@@ -95,14 +73,16 @@ fillBackground' = do
     surface <- asks cSurface
     surfaceFillScreenRect surface backgroundColor
 
-drawGraphicDebug' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic Float -> m ()
+--TODO removem monad IO due to SDL.copy
+drawGraphicDebug' :: (MonadIO m, Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic Float -> m ()
 drawGraphicDebug' g = do
     -- Grid To Player as center Local to Screen Affine Transformation
     let gtp = centerScreenOnWorldGrid 10 640 480
 --dprint $ evalGraphic $ AffineT gtp g
     drawGraphic . evalGraphic $ AffineT gtp g
 
-drawGraphicDebugWithMatrix' :: (Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic Float -> M22Affine Float -> m ()
+--TODO removem monad IO due to SDL.copy
+drawGraphicDebugWithMatrix' :: (MonadIO m, Debug m, SDLCanDraw m, SDLFont m, SDLInput m) => Graphic Float -> M22Affine Float -> m ()
 drawGraphicDebugWithMatrix' g gtp = do
     drawGraphic . evalGraphic $ AffineT gtp g
 
@@ -182,13 +162,19 @@ rawPDtoWorldPos t (SDL.P pos) = dropHomoCoords . (inv33 t !*) . homoCoords $ pos
 --------------------------------------------------------------------------------
 
 -- | Maps eval'd primitives to their SDLCanDraw draw calls
-drawGraphic :: SDLCanDraw m => Graphic CInt -> m ()
+drawGraphic :: (MonadIO m, SDLCanDraw m) => Graphic CInt -> m ()
 drawGraphic (EvaldGP _ evald_xs) = mapM_ drawGraphic evald_xs
 drawGraphic (EvaldP (Line start end color))           = (\sr -> drawLine sr start end color) =<< asks cRenderer
 drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center radius color) =<< asks cRenderer
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillRectangle v0 v1 color))      = (\sr -> fillRectangle sr v0 v1 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
+drawGraphic (EvaldP (CopyRect texture txtsize s@(V2 srcX srcY) d@(V2 dstX dstY))) = do
+  let srcRect = SDL.Rectangle (SDL.P s) txtsize
+  let dstRect = SDL.Rectangle (SDL.P d) d
+  renderer <- asks cRenderer
+  SDL.copy renderer texture (Just srcRect) (Just dstRect)
+
 drawGraphic (AffineT _ _) = undefined --TODO figure out a way for this to be statically known that EvaldP contains no AffineT's
 --------------------------------------------------------------------------------
 
@@ -198,3 +184,153 @@ drawGraphic (AffineT _ _) = undefined --TODO figure out a way for this to be sta
 --New version using the Data.Tagged phantom typed version
 centerScreenOnWorldGrid :: CInt -> CInt -> CInt -> M_World2PhysicalDevice Float
 centerScreenOnWorldGrid = coerce . rawCenterScreenOnWorldGrid
+
+--TODO expose visibility set
+raycast :: (SDLCanDraw m, MonadState Vars m) => V2 Float -> m (Graphic Float)
+raycast lookingAtWorldPos = do
+  let rayCount = 320 -- TODO float out
+  let screenWidth = 640
+  let screenHeight = 480
+
+  pp <- player <$> get
+  p <- position . player <$> get
+  w <- world <$> get
+
+  let ws = worldSize w
+
+  let ray = normalize $ lookingAtWorldPos - p
+  let mousePlayer = pp {
+    direction = ray,
+    camera_plane = normalize $ ray *! rotation2 (pi / 2.0)
+  }
+
+  let fst3 (a,b,c) = a
+
+  let rayAnglePairs = rayHeads rayCount mousePlayer
+  let rays = fmap fst rayAnglePairs
+  let angles = fmap snd rayAnglePairs
+
+  let paths = fst3 . shootRay (fromIntegral ws) p <$> rays
+  let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
+
+  -- Screen Graphic
+  projType <- projectionType . config <$> get
+  textures <- asks cTextures
+
+  let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
+  let wallHeight = 64 --Wall Height 64, Player Height 32?
+  let screenMiddle = fromIntegral screenHeight / 2
+  let wallFromMaybe (mInt,index, rayAngle) = case mInt of
+                                    Nothing -> Nothing
+                                    Just (intpos, intindex) -> let distanceToSlice = case projType of
+                                                                    FishEye -> norm $ intpos - p
+                                                                    Permadi -> rayAngle * distance p intpos
+
+                                                                   --TODO distance to the projection plane?
+                                                                   --TODO check if the screen is inverted
+                                                                   projectedWallHeight = wallHeight / distanceToSlice
+                                                                   wallTop = screenMiddle - projectedWallHeight
+                                                                   wallBottom = screenMiddle + projectedWallHeight
+                                                                   wallLeft = index * wallWidth
+                                                                   wallRight = (index + 1) * wallWidth in
+                                                               Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
+
+  let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
+
+  return $ GroupPrim "PlayerPOV" walls
+
+
+--
+-- DEMOS
+--
+
+--raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
+mouseLookRaycastGraphicM :: (SDLCanDraw m, Debug m, MonadState Vars m) => V2 Float -> m (Graphic Float)
+mouseLookRaycastGraphicM  lookingAtWorldPos = do
+    screen <- raycast lookingAtWorldPos
+
+
+    p <- position . player <$> get
+    w <- world <$> get
+    let ws = worldSize w
+    camZoom <- camZoomScale <$> get
+
+    let ray = normalize $ lookingAtWorldPos - p
+
+    pp <- player <$> get
+    let mousePlayer = pp {
+      direction = ray,
+      camera_plane = normalize $ ray *! rotation2 (pi / 2.0)
+    }
+
+    let circleAt color c = Prim $ Circle c (floor camZoom) color --TODO Scale on camzoom
+    let fst3 (a,b,c) = a
+    --TODO scale this to 64x64 and benchmark
+    let tempRayCount = 320 :: Int
+    let rayAnglePairs = rayHeads tempRayCount mousePlayer :: [(V2 Float, Float)]
+    let rays = fmap fst rayAnglePairs
+    let rayAngles = fmap snd rayAnglePairs
+
+    let paths = fst3 . shootRay (fromIntegral ws) p <$> rays :: [[(V2 Float, V2 Int)]]
+    let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
+
+    let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
+
+    let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
+
+    --Single ray path and intersections
+    let (_singlePath, vints, hints) = shootRay (fromIntegral ws) p ray
+
+    -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
+    let triangleAt a b c = Prim $ FillTriangle a b c yellow
+    let rayIntersections = fmap fst . catMaybes $ wallPoints
+
+    --Field of View
+    let fieldOfViewTestTris = uncurry (triangleAt p) <$> zip rayIntersections (tail rayIntersections)
+
+    let playerCircle = Prim $ Circle p (floor camZoom) white
+
+
+    screenMode <- viewMode <$> get
+    -- screen <- oldScreenGraphic wallPoints rayAngles 640 480 tempRayCount
+
+
+    return $ case screenMode of
+      --WorldSpace
+      OverheadDebug -> GroupPrim "MouseLookScreenRayIntersections" $ [
+            worldGridTilesGraphic w visitedV,
+            worldGridGraphic ws,
+            playerCircle,
+            GroupPrim "Vertical Intersections" $ (red `circleAt`) <$> vints,
+            GroupPrim "Horizontal Intersections" $ (blue `circleAt`) <$> hints,
+            rayCastPointsG] -- ++ fieldOfViewTestTris
+      --ScreenSpace
+      PlayerPOV -> screen
+
+oldScreenGraphic :: (MonadState Vars m) => [Maybe (V2 Float, V2 Int)] -> [Float] -> Integer -> CInt -> Int -> m [Graphic Float]
+oldScreenGraphic wallPoints angles screenWidth screenHeight rayCount = do
+  w <- world <$> get
+  p <- player <$> get
+
+  projType <- projectionType . config <$> get
+
+  let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
+  let wallHeight = 64 --Wall Height 64, Player Height 32?
+  let screenMiddle = fromIntegral screenHeight / 2
+  let wallFromMaybe (mInt,index, rayAngle) = case mInt of
+                                    Nothing -> Nothing
+                                    Just (intpos, intindex) -> let distanceToSlice = case projType of
+                                                                    FishEye -> norm $ intpos - (position p)
+                                                                    Permadi -> rayAngle * distance (position p) intpos
+
+                                                                   --TODO distance to the projection plane?
+                                                                   --TODO check if the screen is inverted
+                                                                   projectedWallHeight = wallHeight / distanceToSlice
+                                                                   wallTop = screenMiddle - projectedWallHeight
+                                                                   wallBottom = screenMiddle + projectedWallHeight
+                                                                   wallLeft = index * wallWidth
+                                                                   wallRight = (index + 1) * wallWidth in
+                                                               Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
+
+  let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
+  return walls

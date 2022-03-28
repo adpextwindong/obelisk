@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall, raycast) where
+module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall) where
 
 import Linear
 import Debug.Trace
@@ -160,58 +160,3 @@ shootRay ws playerpos direction = (posAndInd <$> mergeIntersections playerpos vi
 --Returns the rays and its angles for the whole screen
 rayHeads :: Int -> PVars -> [(V2 Float, Float)]
 rayHeads screenWidth player = createRayHead (direction player) (camera_plane player) <$> cameraPlaneSweep screenWidth
-
---TODO expose visibility set
-raycast :: (MonadState Vars m) => V2 Float -> m (Graphic Float)
-raycast lookingAtWorldPos = do
-  let rayCount = 320 -- TODO float out
-  let screenWidth = 640
-  let screenHeight = 480
-
-  pp <- player <$> get
-  p <- position . player <$> get
-  w <- world <$> get
-
-  let ws = worldSize w
-
-  let ray = normalize $ lookingAtWorldPos - p
-  let mousePlayer = pp {
-    direction = ray,
-    camera_plane = normalize $ ray *! rotation2 (pi / 2.0)
-  }
-
-  let fst3 (a,b,c) = a
-
-  let rayAnglePairs = rayHeads rayCount mousePlayer
-  let rays = fmap fst rayAnglePairs
-  let angles = fmap snd rayAnglePairs
-
-  let paths = fst3 . shootRay (fromIntegral ws) p <$> rays
-  let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
-
-  -- Screen Graphic
-  projType <- projectionType . config <$> get
-
-  let filledTileColor = SDL.V4 51 51 102 maxBound -- TODO tile color/texture lookup
-
-  let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
-  let wallHeight = 64 --Wall Height 64, Player Height 32?
-  let screenMiddle = fromIntegral screenHeight / 2
-  let wallFromMaybe (mInt,index, rayAngle) = case mInt of
-                                    Nothing -> Nothing
-                                    Just (intpos, intindex) -> let distanceToSlice = case projType of
-                                                                    FishEye -> norm $ intpos - p
-                                                                    Permadi -> rayAngle * distance p intpos
-
-                                                                   --TODO distance to the projection plane?
-                                                                   --TODO check if the screen is inverted
-                                                                   projectedWallHeight = wallHeight / distanceToSlice
-                                                                   wallTop = screenMiddle - projectedWallHeight
-                                                                   wallBottom = screenMiddle + projectedWallHeight
-                                                                   wallLeft = index * wallWidth
-                                                                   wallRight = (index + 1) * wallWidth in
-                                                               Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
-
-  let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
-
-  return $ GroupPrim "PlayerPOV" walls
