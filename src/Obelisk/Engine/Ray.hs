@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (rayHeads, shootRay, stScreenWalkRaysForWall) where
+module Obelisk.Engine.Ray (Intersection, IntAxis(..), rayHeads, shootRay, stScreenWalkRaysForWall) where
 
 import Linear
 import Debug.Trace
@@ -75,13 +75,19 @@ deltaFirst px vx = if vx < 0
 
 epsilon = 0.00001
 
+verticalIntersection :: V2 Float -> Intersection
+verticalIntersection x = (uncurry Intersection (posAndInd x)) Vertical
+
+horizontalIntersection :: V2 Float -> Intersection
+horizontalIntersection x = (uncurry Intersection (posAndInd x)) Horizontal
+
 {-# INLINE mergeIntersections #-}
-mergeIntersections :: V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
-mergeIntersections playerpos (x:xs) (y:ys) = if qd playerpos x < qd playerpos y
-                                             then x : mergeIntersections playerpos xs (y:ys)
-                                             else y : mergeIntersections playerpos (x:xs) ys
-mergeIntersections _ [] ys = ys
-mergeIntersections _ xs [] = xs
+mergeIntersections :: V2 Float -> [V2 Float] -> [V2 Float] -> [Intersection]
+mergeIntersections playerpos v@(x:xs) h@(y:ys) = if qd playerpos x < qd playerpos y
+                                                 then (verticalIntersection x) : mergeIntersections playerpos xs (y:ys)
+                                                 else (horizontalIntersection y) : mergeIntersections playerpos (x:xs) ys
+mergeIntersections _ [] ys = fmap horizontalIntersection ys
+mergeIntersections _ xs [] = fmap verticalIntersection xs
 
 --Samples the raypath for the first wall intersection and returns its position in world space and tile indexes
 {-# INLINE sampleWalkRayPaths #-}
@@ -99,20 +105,20 @@ posAndInd result = (result, fmap truncate result)
 
 --Walks a lists of ray paths and collect their wall hits into a single array
 {-# INLINE stScreenWalkRaysForWall #-}
-stScreenWalkRaysForWall :: WorldTiles -> V2 Float -> [[(V2 Float, V2 Int)]] -> ([Maybe (V2 Float, V2 Int)], UArray (V2 Int) Bool)
+stScreenWalkRaysForWall :: WorldTiles -> V2 Float -> [[Intersection]] -> ([Maybe Intersection], UArray (V2 Int) Bool)
 stScreenWalkRaysForWall w p paths = runST aux
   where
-    aux :: ST s ([Maybe (V2 Float, V2 Int)], UArray (V2 Int) Bool)
+    aux :: ST s ([Maybe Intersection], UArray (V2 Int) Bool)
     aux = do
       let tileCount = fromIntegral $ worldSize w * worldSize w
 
       visited <- newArray (0, tileCount) False :: ST s (STUArray s (V2 Int) Bool)
 
-      let go (sPair@(step_position, step_inds) : path) = do
+      let go (sIntersection@(Intersection step_position step_inds _) : path) = do
            writeArray visited step_inds True
            if accessMapV w step_inds == FW
            then do
-            return $ Just sPair
+            return $ Just sIntersection
            else go path
           go [] = return Nothing
 
@@ -143,7 +149,7 @@ boundedHorizontal ws = takeWhile (\(V2 _ y) -> y > 0 && y < fromIntegral ws)
 boundedVertical ws = takeWhile (\(V2 x _) -> x > 0 && x < fromIntegral ws)
 
 --TODO pipe IntAxis to instruct wall texturing about which offset to use
-data Intersection = Intersection IntAxis (V2 Float) (V2 Int)
+data Intersection = Intersection (V2 Float) (V2 Int) IntAxis
   deriving Show
 
 data IntAxis = Vertical | Horizontal
@@ -151,9 +157,9 @@ data IntAxis = Vertical | Horizontal
 
 -- HASDEMO: mouseLookRayCastGraphicM
 -- Generates a bounded ray path, its vertical intersections with the grid, and horizontal intersections
--- (Path, Vertical Intersections, Horizontal Intersections)
-shootRay :: Int -> V2 Float -> V2 Float -> ([(V2 Float, V2 Int)], [V2 Float], [V2 Float])
-shootRay ws playerpos direction = (posAndInd <$> mergeIntersections playerpos vints hints, vints, hints)
+-- (Intersection Path, Vertical Intersections, Horizontal Intersections)
+shootRay :: Int -> V2 Float -> V2 Float -> ([Intersection], [V2 Float], [V2 Float])
+shootRay ws playerpos direction = (mergeIntersections playerpos vints hints, vints, hints)
     where
         stepsX = baseStepsBounded ws (playerpos ^._x) (direction ^._x)
         stepsY = baseStepsBounded ws (playerpos ^._y) (direction ^._y)

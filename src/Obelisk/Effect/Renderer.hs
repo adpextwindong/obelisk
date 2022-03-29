@@ -279,7 +279,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let rays = fmap fst rayAnglePairs
     let rayAngles = fmap snd rayAnglePairs
 
-    let paths = fst3 . shootRay (fromIntegral ws) p <$> rays :: [[(V2 Float, V2 Int)]]
+    let paths = fst3 . shootRay (fromIntegral ws) p <$> rays :: [[Intersection]]
     let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
 
     let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
