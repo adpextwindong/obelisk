@@ -25,7 +25,7 @@ instance (Show a) => Show (Shape a) where
   show (FillTriangle a b c color) = "FillTriangle " ++ show a ++ " " ++ show b ++ " " ++ show c ++ " " ++ show color
   show (FillCircle center r c) = "FillCircle " ++ show center ++ " " ++ show r ++ " " ++ show c
   show (FillRectangle a b color) = "FillRectangle " ++ show a ++ " " ++ show b ++ " " ++ show color
-  show (CopyRect _ size src dstStart dstEnd) = "CopyRect " ++ show size ++ show src ++ " " ++ show dstStart ++ " "  ++ show dstEnd
+  show (CopyRect _ srcStart srcEnd dstStart dstEnd) = "CopyRect " ++ show srcStart ++ show srcEnd ++ " " ++ show dstStart ++ " "  ++ show dstEnd
 
 applyAffineTransformFloor :: M22Affine Float -> Shape Float -> Shape CInt
 applyAffineTransformFloor t (Line start end color)           = Line (mapAft t start) (mapAft t end) color

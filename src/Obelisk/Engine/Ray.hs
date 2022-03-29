@@ -75,9 +75,11 @@ deltaFirst px vx = if vx < 0
 
 epsilon = 0.00001
 
+{-# INLINE verticalIntersection #-}
 verticalIntersection :: V2 Float -> Intersection
 verticalIntersection x = (uncurry Intersection (posAndInd x)) Vertical
 
+{-# INLINE horizontalIntersection #-}
 horizontalIntersection :: V2 Float -> Intersection
 horizontalIntersection x = (uncurry Intersection (posAndInd x)) Horizontal
 

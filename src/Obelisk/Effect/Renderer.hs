@@ -169,15 +169,12 @@ drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillRectangle v0 v1 color))      = (\sr -> fillRectangle sr v0 v1 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
-drawGraphic (EvaldP cr@(CopyRect texture txtsize s@(V2 srcX srcY) dstart dend)) = do
-  let srcRect = SDL.Rectangle (SDL.P s) txtsize
-  --TODO calculate which slice of the texture to copy based on part of the wall
-  --dprint $ show dstart ++ " " ++ show dend
+drawGraphic (EvaldP cr@(CopyRect texture srcStart srcEnd dstart dend)) = do
+  let srcRect = SDL.Rectangle (SDL.P srcStart) (V2 1 64)
   let dstRect = SDL.Rectangle (SDL.P dstart) (dend - dstart)
   renderer <- asks cRenderer
-  --dprint cr
   --TODO texture selection
-  SDL.copy renderer texture Nothing (Just dstRect)
+  SDL.copy renderer texture (Just srcRect) (Just dstRect)
 
 drawGraphic (AffineT _ _) = undefined --TODO figure out a way for this to be statically known that EvaldP contains no AffineT's
 --------------------------------------------------------------------------------
@@ -229,7 +226,7 @@ raycast lookingAtWorldPos = do
       wallFromMaybe (mInt,index, rayAngle) =
         case mInt of
           Nothing -> Nothing
-          Just ((Intersection intpos intindex intersecitonType)) ->
+          Just ((Intersection intpos@(V2 x y) intindex intersectionType)) ->
             let distanceToSlice = (case projType of
                                     FishEye -> norm $ intpos - p
                                     Permadi -> rayAngle * distance p intpos)
@@ -240,11 +237,15 @@ raycast lookingAtWorldPos = do
                 wallTop = screenMiddle - projectedWallHeight
                 wallBottom = screenMiddle + projectedWallHeight
                 wallLeft = index * wallWidth
-                wallRight = (index + 1) * wallWidth in
+                wallRight = (index + 1) * wallWidth
 
+                textureOffset x size = truncate $ size * (x - (fromIntegral . truncate $ x))
+                textureChunk = case intersectionType of
+                                  Vertical -> textureOffset y 64
+                                  Horizontal -> textureOffset x 64 in
              --TODO tweak CopyRect to contains SDL.Rectangles instead
              --TODO bitmap offset from intersection
-                Just $ Prim $ CopyRect (fromJust textures) (V2 0 0) (V2 64 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom)
+                Just $ Prim $ CopyRect (fromJust textures) (V2 textureChunk 0) (V2 textureChunk 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom)
              --Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
 
   let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
