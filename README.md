@@ -10,11 +10,18 @@ This project is meant to serve as a reference engine for teaching with as much o
 
 - [x] Get wall renderering working.
 
-- [x] Fix eye fix
+- [x] Fish eye fix
 
 https://user-images.githubusercontent.com/3671250/159427381-1f67245f-5bc1-4968-93ba-6950d17864f6.mp4
 
-- [ ] Wall Texturing
+- [x] Wall Texturing
+
+https://user-images.githubusercontent.com/3671250/160585571-89f21767-b303-42b2-bb90-cc9e78840af7.mp4
+
+- [ ] Multi Texture Selection
+
+
+
 
 ### DEV BUILD
 Nix and Nix-shell setup to make things more consistent
