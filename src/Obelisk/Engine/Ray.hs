@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE FlexibleContexts #-}
-module Obelisk.Engine.Ray (Intersection, IntAxis(..), rayHeads, shootRay, stScreenWalkRaysForWall) where
+module Obelisk.Engine.Ray (Intersection(..), IntAxis(..), rayHeads, shootRay, stScreenWalkRaysForWall) where
 
 import Linear
 import Debug.Trace

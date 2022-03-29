@@ -224,24 +224,28 @@ raycast lookingAtWorldPos = do
   let wallWidth = fromIntegral $ screenWidth `div` fromIntegral rayCount
   let wallHeight = 64 --Wall Height 64, Player Height 32?
   let screenMiddle = fromIntegral screenHeight / 2
-  let wallFromMaybe (mInt,index, rayAngle) = case mInt of
-                                    Nothing -> Nothing
-                                    Just (intpos, intindex) -> let distanceToSlice = case projType of
-                                                                    FishEye -> norm $ intpos - p
-                                                                    Permadi -> rayAngle * distance p intpos
 
-                                                                   --TODO distance to the projection plane?
-                                                                   --TODO check if the screen is inverted
-                                                                   projectedWallHeight = wallHeight / distanceToSlice
-                                                                   wallTop = screenMiddle - projectedWallHeight
-                                                                   wallBottom = screenMiddle + projectedWallHeight
-                                                                   wallLeft = index * wallWidth
-                                                                   wallRight = (index + 1) * wallWidth in
+  let wallFromMaybe :: ((Maybe Intersection), Float, Float) -> Maybe (Graphic Float)
+      wallFromMaybe (mInt,index, rayAngle) =
+        case mInt of
+          Nothing -> Nothing
+          Just ((Intersection intpos intindex intersecitonType)) ->
+            let distanceToSlice = (case projType of
+                                    FishEye -> norm $ intpos - p
+                                    Permadi -> rayAngle * distance p intpos)
 
-                                                               --TODO tweak CopyRect to contains SDL.Rectangles instead
-                                                               --TODO bitmap offset from intersection
-                                                               Just $ Prim $ CopyRect (fromJust textures) (V2 0 0) (V2 64 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom)
-                                                               --Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
+                 --TODO distance to the projection plane?
+                 --TODO check if the screen is inverted
+                projectedWallHeight = wallHeight / distanceToSlice
+                wallTop = screenMiddle - projectedWallHeight
+                wallBottom = screenMiddle + projectedWallHeight
+                wallLeft = index * wallWidth
+                wallRight = (index + 1) * wallWidth in
+
+             --TODO tweak CopyRect to contains SDL.Rectangles instead
+             --TODO bitmap offset from intersection
+                Just $ Prim $ CopyRect (fromJust textures) (V2 0 0) (V2 64 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom)
+             --Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
 
   let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
 
@@ -282,7 +286,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let paths = fst3 . shootRay (fromIntegral ws) p <$> rays :: [[Intersection]]
     let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
 
-    let rayCastPoints = fmap (circleAt yellow . fst) <$> wallPoints
+    let rayCastPoints = fmap ((\(Intersection c _ _) -> circleAt yellow c)) <$> wallPoints
 
     let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
 
@@ -291,7 +295,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
 
     -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
     let triangleAt a b c = Prim $ FillTriangle a b c yellow
-    let rayIntersections = fmap fst . catMaybes $ wallPoints
+    let rayIntersections = fmap (\(Intersection p _ _) -> p) . catMaybes $ wallPoints
 
     --Field of View
     let fieldOfViewTestTris = uncurry (triangleAt p) <$> zip rayIntersections (tail rayIntersections)
