@@ -190,8 +190,9 @@ grenderMouseLook g = do
     screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
 
     -- Load Textures
-    textureSurface <- SDL.loadBMP "resources/wolftextures.bmp"
-    textures <- SDL.createTexture screenRenderer SDL.RGB888 SDL.TextureAccessStatic (V2 512 64)
+    textureSurface <- SDL.loadBMP "resources/wolfWallTexture.bmp"
+    textures <- SDL.createTextureFromSurface screenRenderer textureSurface
+    --SDL.RGB888 SDL.TextureAccessStatic (V2 512 64)
 
     let hs = (window, screenSurface, screenRenderer)
 

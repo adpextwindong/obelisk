@@ -17,7 +17,7 @@ data Shape a = Line (V2 a) (V2 a) SDL.Color
              | FillTriangle (V2 a) (V2 a) (V2 a) SDL.Color
              | FillCircle (V2 a) SDL.Radius SDL.Color
              | FillRectangle (V2 a) (V2 a) SDL.Color
-             | CopyRect SDL.Texture (V2 CInt) (V2 CInt) (V2 a) --Textured Rect
+             | CopyRect SDL.Texture (V2 CInt) (V2 CInt) (V2 a) (V2 a) --Textured Rect
 
 instance (Show a) => Show (Shape a) where
   show (Line start end c) = "Line " ++ show start ++ " " ++ show end ++ " " ++ show c
@@ -25,7 +25,7 @@ instance (Show a) => Show (Shape a) where
   show (FillTriangle a b c color) = "FillTriangle " ++ show a ++ " " ++ show b ++ " " ++ show c ++ " " ++ show color
   show (FillCircle center r c) = "FillCircle " ++ show center ++ " " ++ show r ++ " " ++ show c
   show (FillRectangle a b color) = "FillRectangle " ++ show a ++ " " ++ show b ++ " " ++ show color
-  show (CopyRect _ size src dst) = "CopyRect " ++ show size ++ show src ++ " " ++ show dst
+  show (CopyRect _ size src dstStart dstEnd) = "CopyRect " ++ show size ++ show src ++ " " ++ show dstStart ++ " "  ++ show dstEnd
 
 applyAffineTransformFloor :: M22Affine Float -> Shape Float -> Shape CInt
 applyAffineTransformFloor t (Line start end color)           = Line (mapAft t start) (mapAft t end) color
@@ -33,7 +33,7 @@ applyAffineTransformFloor t (Circle center radius color)     = Circle (mapAft t 
 applyAffineTransformFloor t (FillTriangle v0 v1 v2 color)    = FillTriangle (mapAft t v0) (mapAft t v1) (mapAft t v2) color
 applyAffineTransformFloor t (FillRectangle v0 v1 color)      = FillRectangle (mapAft t v0) (mapAft t v1) color
 applyAffineTransformFloor t (FillCircle center radius color) = FillCircle (mapAft t center) radius color
-applyAffineTransformFloor t (CopyRect txt size src dst)           = CopyRect txt size src (mapAft t dst) --TODO make sure this is correct semantics
+applyAffineTransformFloor t (CopyRect txt size src dstTopLeft dstBottomRight)      = CopyRect txt size src (mapAft t dstTopLeft) (mapAft t dstBottomRight)--TODO make sure this is correct semantics
 
 -- Takes a regular vector, wraps into a homogeonous coordinate system for applying an affine transformation, floors it to an integer to be used in a draw call render
 mapAft :: M22Affine Float -> V2 Float -> V2 CInt

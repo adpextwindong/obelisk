@@ -162,18 +162,22 @@ rawPDtoWorldPos t (SDL.P pos) = dropHomoCoords . (inv33 t !*) . homoCoords $ pos
 --------------------------------------------------------------------------------
 
 -- | Maps eval'd primitives to their SDLCanDraw draw calls
-drawGraphic :: (MonadIO m, SDLCanDraw m) => Graphic CInt -> m ()
+drawGraphic :: (Debug m, MonadIO m, SDLCanDraw m) => Graphic CInt -> m ()
 drawGraphic (EvaldGP _ evald_xs) = mapM_ drawGraphic evald_xs
 drawGraphic (EvaldP (Line start end color))           = (\sr -> drawLine sr start end color) =<< asks cRenderer
 drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center radius color) =<< asks cRenderer
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillRectangle v0 v1 color))      = (\sr -> fillRectangle sr v0 v1 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
-drawGraphic (EvaldP (CopyRect texture txtsize s@(V2 srcX srcY) d@(V2 dstX dstY))) = do
+drawGraphic (EvaldP cr@(CopyRect texture txtsize s@(V2 srcX srcY) dstart dend)) = do
   let srcRect = SDL.Rectangle (SDL.P s) txtsize
-  let dstRect = SDL.Rectangle (SDL.P d) d
+  --TODO calculate which slice of the texture to copy based on part of the wall
+  --dprint $ show dstart ++ " " ++ show dend
+  let dstRect = SDL.Rectangle (SDL.P dstart) (dend - dstart)
   renderer <- asks cRenderer
-  SDL.copy renderer texture (Just srcRect) (Just dstRect)
+  --dprint cr
+  --TODO texture selection
+  SDL.copy renderer texture Nothing (Just dstRect)
 
 drawGraphic (AffineT _ _) = undefined --TODO figure out a way for this to be statically known that EvaldP contains no AffineT's
 --------------------------------------------------------------------------------
@@ -235,8 +239,9 @@ raycast lookingAtWorldPos = do
                                                                    wallRight = (index + 1) * wallWidth in
 
                                                                --TODO tweak CopyRect to contains SDL.Rectangles instead
-                                                               --Just $ Prim $ CopyRect (fromJust textures) (V2 0 0) (V2 64 64) (V2 wallLeft wallTop)
-                                                               Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
+                                                               --TODO bitmap offset from intersection
+                                                               Just $ Prim $ CopyRect (fromJust textures) (V2 0 0) (V2 64 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom)
+                                                               --Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
 
   let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
 
