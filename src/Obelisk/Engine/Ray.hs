@@ -142,6 +142,13 @@ boundedHorizontal ws = takeWhile (\(V2 _ y) -> y > 0 && y < fromIntegral ws)
 {-# INLINE boundedVertical #-}
 boundedVertical ws = takeWhile (\(V2 x _) -> x > 0 && x < fromIntegral ws)
 
+--TODO pipe IntAxis to instruct wall texturing about which offset to use
+data Intersection = Intersection IntAxis (V2 Float) (V2 Int)
+  deriving Show
+
+data IntAxis = Vertical | Horizontal
+  deriving Show
+
 -- HASDEMO: mouseLookRayCastGraphicM
 -- Generates a bounded ray path, its vertical intersections with the grid, and horizontal intersections
 -- (Path, Vertical Intersections, Horizontal Intersections)
