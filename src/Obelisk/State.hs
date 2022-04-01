@@ -67,11 +67,12 @@ inBounds gs (V2 x y) = x >= 0 && y >= 0 && x < limit && y < limit
     where limit = fromIntegral . worldSize . world $ gs
 
 rFW :: [WallType]
-rFW = repeat FW
+rFW = repeat $ FW 0
 rEW :: [WallType]
 rEW = repeat EW
 
 --ACCESSED godBoltMap !! y !! x style
+{-
 godboltMap :: WorldTiles
 godboltMap = WorldTiles map 10
     where map = listArray (0, 10*10 - 1) $ concat [take 10 rFW,
@@ -84,24 +85,26 @@ godboltMap = WorldTiles map 10
               FW : take 8 rEW ++ [FW],
               FW : take 8 rEW ++ [FW],
               take 10 rFW]
+-}
 
 boxMap :: WorldTiles
 boxMap = WorldTiles map 10
-    where map = listArray (0, 99) $ concat [take 10 rFW,
-                 FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
-                 FW : take 8 rEW ++ [FW],
+    where bt = FW 0
+          map = listArray (0, 99) $ concat [take 10 rFW,
+                 bt : take 8 rEW ++ [bt],
+                 bt : take 8 rEW ++ [bt],
+                 bt : take 8 rEW ++ [bt],
+                 bt : take 8 rEW ++ [bt],
+                 bt : take 8 rEW ++ [bt],
+                 bt : take 8 rEW ++ [bt],
+                 bt : take 8 rEW ++ [bt],
+                 bt : take 8 rEW ++ [bt],
                  take 10 rFW
                 ]
 
 boxMap64 :: WorldTiles
 boxMap64 = WorldTiles map 64
-    where map = listArray (0, 4095) $ take 64 rFW ++ concat (replicate 62 (FW : take 62 rEW ++ [FW])) ++ take 64 rFW
+    where map = listArray (0, 4095) $ take 64 rFW ++ concat (replicate 62 (FW 0 : take 62 rEW ++ [FW 0])) ++ take 64 rFW
 
 emptyMap = WorldTiles (listArray (0, 99) rEW) 10
 

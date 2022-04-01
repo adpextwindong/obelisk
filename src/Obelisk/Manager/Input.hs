@@ -4,6 +4,7 @@ module Obelisk.Manager.Input where
 import qualified SDL
 import qualified SDL.Raw.Types (Point)
 import Control.Monad.State
+import Control.Monad.Reader
 import Linear
 import Data.Array ((//))
 
@@ -14,6 +15,7 @@ import Obelisk.Effect.Renderer
 import Obelisk.Effect.Debug
 import Obelisk.State
 import Obelisk.Types.Wall
+import Obelisk.Config
 
 class Monad m => HasInput m where
     updateInput :: m ()
@@ -21,7 +23,7 @@ class Monad m => HasInput m where
     getInput :: m Input
     updateCamEvents :: [SDL.EventPayload] -> m ()
 
-updateInput' :: (MonadState Vars m, HasInput m, SDLInput m) => m ()
+updateInput' :: (SDLCanDraw m,MonadState Vars m, HasInput m, SDLInput m) => m ()
 updateInput' = do
     -- input <- getInput
     events <- pollEventPayloads
@@ -45,18 +47,20 @@ checkCamSwap (_:xs) = checkCamSwap xs
 checkCamSwap [] = return ()
 
 
-updateCamEvent :: (Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
-updateCamEvent (SDL.MouseButtonEvent e@(SDL.MouseButtonEventData _window _motion _which button clicks aLoc)) = modify (\v ->
-    if SDL.ButtonRight == button  && SDL.mouseButtonEventMotion e == SDL.Released
-    then
-      let gtp = worldGTP v
-          --TODO bounds check this
-          worldLoc = floor <$> rawPDtoWorldPos gtp (fmap fromIntegral aLoc) in
+updateCamEvent :: (SDLCanDraw m,Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
+updateCamEvent (SDL.MouseButtonEvent e@(SDL.MouseButtonEventData _window _motion _which button clicks aLoc)) = do
+    textureCount <- asks cTextureCount
+    modify (\v ->
+      if SDL.ButtonRight == button  && SDL.mouseButtonEventMotion e == SDL.Released
+      then
+        let gtp = worldGTP v
+            --TODO bounds check this
+            worldLoc = floor <$> rawPDtoWorldPos gtp (fmap fromIntegral aLoc) in
 
-          v {
-            world = toggleWall worldLoc (world v)
-          }
-    else v)
+            v {
+              world = incrementWall textureCount worldLoc (world v)
+            }
+      else v)
 
 updateCamEvent (SDL.MouseMotionEvent (SDL.MouseMotionEventData _window _device buttons position (V2 relmotionx relmotiony))) = modify (\v ->
     if SDL.ButtonLeft `elem` buttons
@@ -89,8 +93,10 @@ stepControl (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym =
 stepControl (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym = SDL.Keysym{SDL.keysymKeycode = SDL.KeycodeP }}:xs) (Input x y a _) = stepControl xs (Input x y a True)
 stepControl _ x = x
 
-toggleWall :: (V2 Int) -> WorldTiles -> WorldTiles
-toggleWall inds@(V2 x y) w@(WorldTiles tiles ws) =
+incrementWall :: Int -> V2 Int -> WorldTiles -> WorldTiles
+incrementWall textureCount inds@(V2 x y) w@(WorldTiles tiles ws) = (
   case accessMapV w inds of
-    FW -> w { mapTiles = tiles // [(accessIndex w x y, EW)] }
-    EW -> w { mapTiles = tiles // [(accessIndex w x y, FW)] }
+    EW -> w { mapTiles = tiles // [(accessIndex w x y, FW 0)] }
+    FW i -> if i + 1 < textureCount
+            then w { mapTiles = tiles // [(accessIndex w x y, FW (i + 1))] }
+            else w { mapTiles = tiles // [(accessIndex w x y, EW)] })

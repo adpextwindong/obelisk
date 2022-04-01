@@ -12,5 +12,6 @@ data Config = Config {
                 cScreenWidth :: CInt,
                 cScreenHeight :: CInt,
                 cFont :: SDL.Font.Font,
-                cTextures :: Maybe SDL.Texture
+                cTextures :: Maybe SDL.Texture,
+                cTextureCount :: Int
               }

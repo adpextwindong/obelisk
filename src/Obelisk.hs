@@ -92,7 +92,8 @@ zipperMain presentation = do
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
                 cFont = font,
-                cTextures = Nothing
+                cTextures = Nothing,
+                cTextureCount = 0
             }
 
     runObelisk cfg initVars (presentationRenderLoop presentation)
@@ -129,7 +130,8 @@ main = do
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
                 cFont = font,
-                cTextures = Nothing
+                cTextures = Nothing,
+                cTextureCount = 0
             }
 
     runObelisk cfg initVars mainLoop
@@ -163,7 +165,8 @@ grender g = do
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
                 cFont = font,
-                cTextures = Nothing
+                cTextures = Nothing,
+                cTextureCount = 0
             }
 
     runObelisk cfg initVars (grenderLoop g)
@@ -190,7 +193,10 @@ grenderMouseLook g = do
     screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
 
     -- Load Textures
-    textureSurface <- SDL.loadBMP "resources/wolfWallTexture.bmp"
+    -- TODO texture count handling
+    textureSurface <- SDL.loadBMP "resources/wolftextures.bmp"
+    let texCount = 8
+
     textures <- SDL.createTextureFromSurface screenRenderer textureSurface
     --SDL.RGB888 SDL.TextureAccessStatic (V2 512 64)
 
@@ -203,7 +209,8 @@ grenderMouseLook g = do
                 cScreenWidth = initialScreenWidth,
                 cScreenHeight = initialScreenHeight,
                 cFont = font,
-                cTextures = Just textures
+                cTextures = Just textures,
+                cTextureCount = texCount
             }
 
     runObelisk cfg initVars (gRenderMouseLookLoop g)

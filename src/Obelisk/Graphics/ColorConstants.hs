@@ -38,6 +38,6 @@ doorTileColor :: SDL.Color
 doorTileColor = SDL.V4 102 51 102 maxBound
 
 wallTypeToColor :: WallType -> SDL.Color
-wallTypeToColor FW = filledTileColor
+wallTypeToColor (FW _) = filledTileColor
 wallTypeToColor EW = backgroundColor
 wallTypeToColor DW = doorTileColor

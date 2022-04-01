@@ -222,8 +222,10 @@ raycast lookingAtWorldPos = do
   let wallHeight = 64 --Wall Height 64, Player Height 32?
   let screenMiddle = fromIntegral screenHeight / 2
 
-  let wallFromMaybe :: ((Maybe Intersection), Float, Float) -> Maybe (Graphic Float)
-      wallFromMaybe (mInt,index, rayAngle) =
+  let fwTextureInd (FW i) = i
+
+  let wallFromMaybe :: WorldTiles -> ((Maybe Intersection), Float, Float) -> Maybe (Graphic Float)
+      wallFromMaybe w (mInt,index, rayAngle) =
         case mInt of
           Nothing -> Nothing
           Just ((Intersection intpos@(V2 x y) intindex intersectionType)) ->
@@ -239,7 +241,11 @@ raycast lookingAtWorldPos = do
                 wallLeft = index * wallWidth
                 wallRight = (index + 1) * wallWidth
 
-                textureOffset x size = truncate $ size * (x - (fromIntegral . truncate $ x))
+                --TODO pipe this through intersection type to preserve safety
+                textureInd = fromIntegral $ fwTextureInd $ accessMapV w intindex
+
+                --Texture Chunk is the slice of the wall texture to be texture mapped correctly
+                textureOffset x size = truncate $ (64 * textureInd) + size * (x - (fromIntegral . truncate $ x))
                 textureChunk = case intersectionType of
                                   Vertical -> textureOffset y 64
                                   Horizontal -> textureOffset x 64 in
@@ -248,7 +254,7 @@ raycast lookingAtWorldPos = do
                 Just $ Prim $ CopyRect (fromJust textures) (V2 textureChunk 0) (V2 textureChunk 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom)
              --Just $ Prim $ FillRectangle (V2 wallLeft wallTop) (V2 wallRight wallBottom) filledTileColor
 
-  let walls = catMaybes $ wallFromMaybe <$> zip3 wallPoints [0..] angles
+  let walls = catMaybes $ wallFromMaybe w <$> zip3 wallPoints [0..] angles
 
   return $ GroupPrim "PlayerPOV" walls
 
