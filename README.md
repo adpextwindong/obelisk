@@ -18,10 +18,9 @@ https://user-images.githubusercontent.com/3671250/159427381-1f67245f-5bc1-4968-9
 
 https://user-images.githubusercontent.com/3671250/160585571-89f21767-b303-42b2-bb90-cc9e78840af7.mp4
 
-- [ ] Multi Texture Selection
+- [x] Multi Texture Selection
 
-
-
+https://user-images.githubusercontent.com/3671250/161190527-e937a291-cfcf-4b03-be63-0faaa40a0f25.mp4
 
 ### DEV BUILD
 Nix and Nix-shell setup to make things more consistent
