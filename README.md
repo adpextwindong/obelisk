@@ -4,7 +4,7 @@ Wolf3D style rayCasting engine in progress. Architecture modeled after [DinoRush
 
 This project is meant to serve as a reference engine for teaching with as much of the core raycasting code as pure as possible. This way you can play with the code in GHCI to use as a reference for your own raycasting engine in another language.
 
-## TODOS and Progress
+## Progress Demos
 
 ### Raycasting
 
@@ -43,6 +43,6 @@ TODO fprof-auto costcenters for Ray.hs
 
 ## Credits
 
-Thank you to [Andrew Durdin (adurdin)](https://moddingwiki.shikadi.net/wiki/GameMaps_Format) for file format information.
+Thank you to:
 
-[The Wolf3D Shareware](http://www.areyep.com/RIPandMCS-OriginalWolf.html)
+- [Fabien Sanglard](https://fabiensanglard.net/) for [Game Engine Black Book: Wolfenstein 3D](https://fabiensanglard.net/gebb/index.html)
