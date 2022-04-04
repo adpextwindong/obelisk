@@ -109,24 +109,11 @@ gRenderMouseLookLoop g = do
     let quitSignal = iQuit input
 
     absMouseLoc <- getMouseAbsoluteLoc
-    --Implicitly assumes world is size 10 for diagram.
-    --TODO fix this math
-    screenWidth <- asks cScreenWidth
-    screenHeight <- asks cScreenHeight
 
-    --TODO mousescroll zooming
-    --TODO translate with mouse
     gtp <- worldGTP <$> get
 
     --Transforms
     let worldLoc = rawPDtoWorldPos gtp (fromIntegral <$> absMouseLoc)
-
-    -- dprint "---"
-    -- dprint absMouseLoc
-    -- dprint worldLoc
-    -- dprint "---"
-
-    --TODO dump state
 
     startTime <- getUTCTime
     graphic <- g worldLoc
@@ -147,7 +134,6 @@ gRenderMouseLookLoop g = do
     blitSurfaceToWindowSurface elapsedSurface
 
     drawScreen
-    fillBackground
 
     unless quitSignal (gRenderMouseLookLoop g)
 
@@ -197,6 +183,6 @@ mainLoop = do
     drawDebug gs
     drawScreen
 
-    fillBackground
+    --fillBackground
 
     unless quitSignal mainLoop
