@@ -124,6 +124,7 @@ gRenderMouseLookLoop g = do
       --TODO we need keystate to make these buttons easier to use, right now this pops up on f1
 
     --FPS Counter
+    --TODO fix this for windows
     endTime <- getUTCTime
     let elapsed = 1000.0 * diffUTCTime endTime startTime
     let fps = 1000.0 / elapsed
