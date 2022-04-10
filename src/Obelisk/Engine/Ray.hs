@@ -71,7 +71,7 @@ yRayGridIntersections p nr bss = (p +) . (*^ nr) <$> stepScales
 deltaFirst :: Float -> Float -> Float
 deltaFirst px vx = if vx < 0
                    then fromIntegral (floor px) - px
-                   else fromIntegral (ceiling px) - px
+                   else fromIntegral ((floor px) + 1) - px
 
 epsilon = 0.00001
 
