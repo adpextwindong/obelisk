@@ -107,10 +107,10 @@ posAndInd result = (result, fmap truncate result)
 
 --Walks a lists of ray paths and collect their wall hits into a single array
 {-# INLINE stScreenWalkRaysForWall #-}
-stScreenWalkRaysForWall :: WorldTiles -> V2 Float -> [[Intersection]] -> ([Maybe Intersection], UArray (V2 Int) Bool)
+stScreenWalkRaysForWall :: WorldTiles -> V2 Float -> [[Intersection]] -> ([[(Intersection,Transparency)]], UArray (V2 Int) Bool)
 stScreenWalkRaysForWall w p paths = runST aux
   where
-    aux :: ST s ([Maybe Intersection], UArray (V2 Int) Bool)
+    aux :: ST s ([[(Intersection,Transparency)]], UArray (V2 Int) Bool)
     aux = do
       let tileCount = fromIntegral $ worldSize w * worldSize w
 
@@ -119,9 +119,12 @@ stScreenWalkRaysForWall w p paths = runST aux
       let go (sIntersection@(Intersection step_position step_inds _) : path) = do
            writeArray visited step_inds True
            case accessMapV w step_inds of
-            FW _ -> return $ Just sIntersection
+            FW _ -> return $ [(sIntersection,NoTransparency)]
+            (TransparentWall t) -> do
+              rest <- go path
+              return $ (sIntersection, t) : rest
             _ -> go path
-          go [] = return Nothing
+          go [] = return []
 
       results <- mapM go paths
       rv <- freeze visited

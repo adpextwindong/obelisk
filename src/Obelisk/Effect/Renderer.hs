@@ -180,11 +180,11 @@ raycast lookingAtWorldPos = do
   -- Screen Graphic
   walls <- mapM (drawWall rayCount p w) $ zip3 wallPoints [0..] angles
 
-  return $ GroupPrim "PlayerPOV" $ catMaybes walls
+  return $ GroupPrim "PlayerPOV" $ concat walls
 
-drawWall :: (SDLCanDraw m, MonadState Vars m) => Int -> V2 Float -> WorldTiles -> (Maybe Intersection, Float, Float) -> m (Maybe (Graphic Float))
-drawWall _ _ _ (Nothing, _, _) = return Nothing
-drawWall rayCount p w (Just (Intersection intpos@(V2 x y) intindex intType), rayIndex, rayAngle) = do
+drawWall :: (SDLCanDraw m, MonadState Vars m) => Int -> V2 Float -> WorldTiles -> ([(Intersection, Transparency)], Float, Float) -> m [(Graphic Float)]
+drawWall _ _ _ ([], _, _) = return []
+drawWall rayCount p w ((((Intersection intpos@(V2 x y) intindex intType), transparency) :xs), rayIndex, rayAngle) = do
     projType <- projectionType . config <$> get
     t <- asks cTextures
     let screenWidth = 640
@@ -211,7 +211,13 @@ drawWall rayCount p w (Just (Intersection intpos@(V2 x y) intindex intType), ray
                           Vertical -> textureOffset y 64
                           Horizontal -> textureOffset x 64
 
-    return $ Just $ Prim $ CopyRect (fromJust t) (V2 textureChunk 0) (V2 textureChunk 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom)
+    rest <- drawWall rayCount p w (xs, rayIndex, rayAngle)
+
+    --TODO plumb transparency
+    let currWall = (Prim $ CopyRect (fromJust t) (V2 textureChunk 0) (V2 textureChunk 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom))
+
+    return $ currWall : rest
+
 
 
 --
@@ -223,6 +229,7 @@ mouseLookRaycastGraphicM :: (SDLCanDraw m, Debug m, MonadState Vars m) => V2 Flo
 mouseLookRaycastGraphicM  lookingAtWorldPos = do
     screen <- raycast lookingAtWorldPos
 
+    --TODO undisable after plumbing for transparent wall drawing is done
     p <- position . player <$> get
     w <- world <$> get
     let ws = worldSize w
@@ -246,16 +253,16 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let paths = fst3 . shootRay (fromIntegral ws) p <$> rays :: [[Intersection]]
     let (wallPoints, visitedV) = stScreenWalkRaysForWall w p paths
 
-    let rayCastPoints = fmap ((\(Intersection c _ _) -> circleAt yellow c)) <$> wallPoints
+    let rayCastPoints = fmap ((\((Intersection c _ _),_) -> circleAt yellow c)) <$> wallPoints
 
-    let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" . catMaybes $ rayCastPoints
+    let rayCastPointsG = GroupPrim "16 ScreenWidth Raycast Points" $ concat rayCastPoints
 
     --Single ray path and intersections
     let (_singlePath, vints, hints) = shootRay (fromIntegral ws) p ray
 
     -- Overhead field of view done with triangles of adjacent intersections and the player as tri verts
     let triangleAt a b c = Prim $ FillTriangle a b c yellow
-    let rayIntersections = fmap (\(Intersection p _ _) -> p) . catMaybes $ wallPoints
+    let rayIntersections = fmap (\((Intersection p _ _),_) -> p) $ concat wallPoints
 
     --Field of View
     let fieldOfViewTestTris = uncurry (triangleAt p) <$> zip rayIntersections (tail rayIntersections)
