@@ -25,6 +25,15 @@ https://user-images.githubusercontent.com/3671250/161190527-e937a291-cfcf-4b03-b
 ### DEV BUILD
 Nix and Nix-shell setup to make things more consistent
 
+### Windows Build
+
+Needed dlls
+
+- SDL2.dll
+- SDL2_ttf.dll
+- libfreetype-6.dll
+- zlib1.dll
+
 ### CODE PAGE
 
 Make sure [code page 65001](https://stackoverflow.com/a/25373117) is set. For some reason hPutChar in Criterion yakks cause codepage 437 is set. The .ghci file should handle it.
