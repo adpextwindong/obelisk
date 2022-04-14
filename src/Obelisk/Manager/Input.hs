@@ -46,20 +46,21 @@ checkCamSwap (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym 
 checkCamSwap (_:xs) = checkCamSwap xs
 checkCamSwap [] = return ()
 
-
+--TODO middle click to change transparency
 updateCamEvent :: (SDLCanDraw m,Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
 updateCamEvent (SDL.MouseButtonEvent e@(SDL.MouseButtonEventData _window _motion _which button clicks aLoc)) = do
     textureCount <- asks cTextureCount
     modify (\v ->
-      if SDL.ButtonRight == button  && SDL.mouseButtonEventMotion e == SDL.Released
+      if (SDL.ButtonRight == button || SDL.ButtonMiddle == button)  && SDL.mouseButtonEventMotion e == SDL.Released
       then
         let gtp = worldGTP v
             --TODO bounds check this
             worldLoc = floor <$> rawPDtoWorldPos gtp (fmap fromIntegral aLoc) in
 
-            v {
-              world = incrementWall textureCount worldLoc (world v)
-            }
+            case button of
+                SDL.ButtonRight -> v { world = incrementWall textureCount worldLoc (world v) }
+                SDL.ButtonMiddle -> v { world = incrementTransparency worldLoc (world v) }
+                _ -> v
       else v)
 
 updateCamEvent (SDL.MouseMotionEvent (SDL.MouseMotionEventData _window _device buttons position (V2 relmotionx relmotiony))) = modify (\v ->
@@ -100,3 +101,12 @@ incrementWall textureCount inds@(V2 x y) w@(WorldTiles tiles ws) = (
     FW i _ -> if i + 1 < textureCount
             then w { mapTiles = tiles // [(accessIndex w x y, FW (i + 1) NoTransparency)] }
             else w { mapTiles = tiles // [(accessIndex w x y, EW)] })
+
+incrementTransparency :: V2 Int -> WorldTiles -> WorldTiles
+incrementTransparency ind@(V2 x y) w@(WorldTiles tiles _)  =
+    case accessMapV w ind of
+        EW -> w
+        FW i AlphaBlend     -> w { mapTiles = tiles // [(accessIndex w x y, FW i AdditiveBlend)] }
+        FW i AdditiveBlend  -> w { mapTiles = tiles // [(accessIndex w x y, FW i ColorModulate)] }
+        FW i ColorModulate  -> w { mapTiles = tiles // [(accessIndex w x y, FW i NoTransparency)] }
+        FW i NoTransparency -> w { mapTiles = tiles // [(accessIndex w x y, FW i AlphaBlend)] }

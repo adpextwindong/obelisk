@@ -142,6 +142,8 @@ drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr 
 drawGraphic (EvaldP (FillRectangle v0 v1 color))      = (\sr -> fillRectangle sr v0 v1 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
 drawGraphic (EvaldP cr@(CopyRect texture srcStart dstart dend transparency)) = do
+  --TODO blend mode switching
+  --TODO ensure order of draws is correct
   let srcRect = SDL.Rectangle (SDL.P srcStart) (V2 1 64)
   let dstRect = SDL.Rectangle (SDL.P dstart) (dend - dstart)
   renderer <- asks cRenderer
