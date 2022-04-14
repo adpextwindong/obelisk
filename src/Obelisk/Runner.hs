@@ -125,6 +125,7 @@ gRenderMouseLookLoop g = do
 
     --FPS Counter
     --TODO fix this for windows
+    {-
     endTime <- getUTCTime
     let elapsed = 1000.0 * diffUTCTime endTime startTime
     let fps = 1000.0 / elapsed
@@ -133,6 +134,7 @@ gRenderMouseLookLoop g = do
     font <- asks cFont
     elapsedSurface <- renderSolidText font yellow fpsT
     blitSurfaceToWindowSurface elapsedSurface
+    -}
 
     drawScreen
 
