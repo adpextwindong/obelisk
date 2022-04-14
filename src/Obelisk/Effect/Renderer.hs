@@ -141,7 +141,7 @@ drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillRectangle v0 v1 color))      = (\sr -> fillRectangle sr v0 v1 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
-drawGraphic (EvaldP cr@(CopyRect texture srcStart srcEnd dstart dend)) = do
+drawGraphic (EvaldP cr@(CopyRect texture srcStart dstart dend transparency)) = do
   let srcRect = SDL.Rectangle (SDL.P srcStart) (V2 1 64)
   let dstRect = SDL.Rectangle (SDL.P dstart) (dend - dstart)
   renderer <- asks cRenderer
@@ -203,7 +203,7 @@ drawWall rayCount p w ((((Intersection intpos@(V2 x y) intindex intType), transp
         wallRight  = (rayIndex + 1) * fromIntegral wallWidth
 
         --Texture Index
-        fullWallTexInd (FW i) = i
+        fullWallTexInd (FW i _) = i
         textureIndex = fromIntegral $ fullWallTexInd $ accessMapV w intindex
         --Texutre Mapping
         textureOffset x size = truncate $ (64 * textureIndex) + size * (x - (fromIntegral . truncate $ x))
@@ -214,7 +214,7 @@ drawWall rayCount p w ((((Intersection intpos@(V2 x y) intindex intType), transp
     rest <- drawWall rayCount p w (xs, rayIndex, rayAngle)
 
     --TODO plumb transparency
-    let currWall = (Prim $ CopyRect (fromJust t) (V2 textureChunk 0) (V2 textureChunk 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom))
+    let currWall = Prim $ CopyRect (fromJust t) (V2 textureChunk 0) (V2 wallLeft wallTop) (V2 wallRight wallBottom) transparency
 
     return $ currWall : rest
 

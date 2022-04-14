@@ -11,7 +11,7 @@ import Data.Word
 
 --TODO rename
 --TODO add mechanism for SDL.Video.Renderer.copy use in memory textures
-data WallType = EW | FW Int | TransparentWall Transparency | DW --Empty Wall, Full Wall, Door Wall
+data WallType = EW | FW Int Transparency | DW --Empty Wall, Full Wall, Door Wall
     deriving (Show, Eq)
 
 data Transparency = AlphaBlend | AdditiveBlend | ColorModulate | NoTransparency

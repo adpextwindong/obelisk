@@ -96,7 +96,7 @@ stepControl _ x = x
 incrementWall :: Int -> V2 Int -> WorldTiles -> WorldTiles
 incrementWall textureCount inds@(V2 x y) w@(WorldTiles tiles ws) = (
   case accessMapV w inds of
-    EW -> w { mapTiles = tiles // [(accessIndex w x y, FW 0)] }
-    FW i -> if i + 1 < textureCount
-            then w { mapTiles = tiles // [(accessIndex w x y, FW (i + 1))] }
+    EW -> w { mapTiles = tiles // [(accessIndex w x y, FW 0 NoTransparency)] }
+    FW i _ -> if i + 1 < textureCount
+            then w { mapTiles = tiles // [(accessIndex w x y, FW (i + 1) NoTransparency)] }
             else w { mapTiles = tiles // [(accessIndex w x y, EW)] })

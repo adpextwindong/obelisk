@@ -96,7 +96,7 @@ mergeIntersections _ xs [] = fmap verticalIntersection xs
 sampleWalkRayPaths :: WorldTiles -> V2 Float -> V2 Float -> [V2 Float] -> Maybe (V2 Float, V2 Int)
 sampleWalkRayPaths _ _ _ [] = Nothing
 sampleWalkRayPaths world playerpos ray (step:path) = case accessMapV world checkInds of
-                                                      FW _ -> Just cPair
+                                                      (FW _ _) -> Just cPair
                                                       _ -> sampleWalkRayPaths world playerpos ray path
     where
         cPair@(_,checkInds) = posAndInd step
@@ -119,8 +119,8 @@ stScreenWalkRaysForWall w p paths = runST aux
       let go (sIntersection@(Intersection step_position step_inds _) : path) = do
            writeArray visited step_inds True
            case accessMapV w step_inds of
-            FW _ -> return $ [(sIntersection,NoTransparency)]
-            (TransparentWall t) -> do
+            FW _ NoTransparency -> return $ [(sIntersection,NoTransparency)]
+            (FW _ t) -> do
               rest <- go path
               return $ (sIntersection, t) : rest
             _ -> go path
