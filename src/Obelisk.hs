@@ -194,7 +194,7 @@ grenderMouseLook g = do
 
     -- Load Textures
     -- TODO texture count handling
-    textureSurface <- SDL.loadBMP "resources/wolftextures.bmp"
+    textureSurface <- SDL.loadBMP "resources/wolftexturesALPHABLENDTEST.bmp"
     let texCount = 8
 
     textures <- SDL.createTextureFromSurface screenRenderer textureSurface

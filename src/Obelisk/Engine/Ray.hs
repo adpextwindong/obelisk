@@ -122,7 +122,7 @@ stScreenWalkRaysForWall w p paths = runST aux
             FW _ SDL.BlendNone -> return $ [(sIntersection,SDL.BlendNone)]
             (FW _ t) -> do
               rest <- go path
-              return $ (sIntersection, t) : rest
+              return $ rest ++ [(sIntersection, t)]
             _ -> go path
           go [] = return []
 

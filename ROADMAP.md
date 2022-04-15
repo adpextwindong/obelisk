@@ -12,7 +12,7 @@ Initial roadmap to get the engine to a game design prototypable state.
 - [ ] Player UI
 
 ### EXTRA RENDERER
-- [ ] Semi-Transparent Walls (Glass/Grates would be nice to gman style hint things to players or put keys/secrets in view)
+- [x] Semi-Transparent Walls (Glass/Grates would be nice to gman style hint things to players or put keys/secrets in view)
 - [ ] [Floor Rendering](https://lodev.org/cgtutor/raycasting2.html)
 - [ ] [Sky Rendering](https://wynnliam.github.io/raycaster/news/tutorial/2019/04/09/raycaster-part-03.html)
 
