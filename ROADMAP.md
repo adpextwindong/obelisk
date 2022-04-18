@@ -22,6 +22,7 @@ Initial roadmap to get the engine to a game design prototypable state.
 - [ ] In-engine Cutscenes
 - [ ] Menu UI/UX
 - [ ] Console
+- [ ] Mouse Look
 - [ ] KBD + MOUSE Controls
 - [ ] NPC Entities
 
