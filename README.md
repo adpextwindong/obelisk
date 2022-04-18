@@ -22,6 +22,10 @@ https://user-images.githubusercontent.com/3671250/160585571-89f21767-b303-42b2-b
 
 https://user-images.githubusercontent.com/3671250/161190527-e937a291-cfcf-4b03-be63-0faaa40a0f25.mp4
 
+- [x] Transparent walls
+
+![](res/alphaBlendAFTER.png)
+
 ### DEV BUILD
 Nix and Nix-shell setup to make things more consistent
 

@@ -4,6 +4,7 @@
 module Obelisk.Graphics.Primitives where
 
 import qualified SDL
+import qualified SDL.Video.Renderer as SDL
 import qualified SDL.Primitive as SDL
 import Linear
 import Foreign.C.Types (CInt)
@@ -18,7 +19,7 @@ data Shape a = Line (V2 a) (V2 a) SDL.Color
              | FillTriangle (V2 a) (V2 a) (V2 a) SDL.Color
              | FillCircle (V2 a) SDL.Radius SDL.Color
              | FillRectangle (V2 a) (V2 a) SDL.Color
-             | CopyRect SDL.Texture (V2 CInt) (V2 a) (V2 a) Transparency --Textured Rect
+             | CopyRect SDL.Texture (V2 CInt) (V2 a) (V2 a) SDL.BlendMode --Textured Rect
 
 instance (Show a) => Show (Shape a) where
   show (Line start end c) = "Line " ++ show start ++ " " ++ show end ++ " " ++ show c

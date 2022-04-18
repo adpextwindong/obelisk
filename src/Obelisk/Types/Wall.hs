@@ -8,11 +8,9 @@ import Data.Vector.Generic.Base
 import Data.Vector.Generic.Mutable
 import Data.Vector.Unboxed.Deriving
 import Data.Word
+import qualified SDL
 
 --TODO rename
 --TODO add mechanism for SDL.Video.Renderer.copy use in memory textures
-data WallType = EW | FW Int Transparency | DW --Empty Wall, Full Wall, Door Wall
-    deriving (Show, Eq)
-
-data Transparency = AlphaBlend | AdditiveBlend | ColorModulate | NoTransparency
+data WallType = EW | FW Int SDL.BlendMode | DW --Empty Wall, Full Wall, Door Wall
     deriving (Show, Eq)

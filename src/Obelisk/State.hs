@@ -1,6 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Obelisk.State where
 
+import qualified SDL.Video.Renderer as SDL
 import Obelisk.Math.Homogenous
 import Obelisk.Engine.Input
 import Obelisk.Types.Wall
@@ -67,7 +68,7 @@ inBounds gs (V2 x y) = x >= 0 && y >= 0 && x < limit && y < limit
     where limit = fromIntegral . worldSize . world $ gs
 
 rFW :: [WallType]
-rFW = repeat $ FW 0 NoTransparency
+rFW = repeat $ FW 0 SDL.BlendNone
 rEW :: [WallType]
 rEW = repeat EW
 
@@ -89,7 +90,7 @@ godboltMap = WorldTiles map 10
 
 boxMap :: WorldTiles
 boxMap = WorldTiles map 10
-    where bt = FW 0 NoTransparency
+    where bt = FW 0 SDL.BlendNone
           map = listArray (0, 99) $ concat [take 10 rFW,
                  bt : take 8 rEW ++ [bt],
                  bt : take 8 rEW ++ [bt],
@@ -104,7 +105,7 @@ boxMap = WorldTiles map 10
 
 boxMap64 :: WorldTiles
 boxMap64 = WorldTiles map 64
-    where map = listArray (0, 4095) $ take 64 rFW ++ concat (replicate 62 (FW 0 NoTransparency : take 62 rEW ++ [FW 0 NoTransparency])) ++ take 64 rFW
+    where map = listArray (0, 4095) $ take 64 rFW ++ concat (replicate 62 (FW 0 SDL.BlendNone : take 62 rEW ++ [FW 0 SDL.BlendNone])) ++ take 64 rFW
 
 emptyMap = WorldTiles (listArray (0, 99) rEW) 10
 

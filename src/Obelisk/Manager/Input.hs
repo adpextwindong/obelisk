@@ -97,16 +97,16 @@ stepControl _ x = x
 incrementWall :: Int -> V2 Int -> WorldTiles -> WorldTiles
 incrementWall textureCount inds@(V2 x y) w@(WorldTiles tiles ws) = (
   case accessMapV w inds of
-    EW -> w { mapTiles = tiles // [(accessIndex w x y, FW 0 NoTransparency)] }
+    EW -> w { mapTiles = tiles // [(accessIndex w x y, FW 0 SDL.BlendNone)] }
     FW i _ -> if i + 1 < textureCount
-            then w { mapTiles = tiles // [(accessIndex w x y, FW (i + 1) NoTransparency)] }
+            then w { mapTiles = tiles // [(accessIndex w x y, FW (i + 1) SDL.BlendNone)] }
             else w { mapTiles = tiles // [(accessIndex w x y, EW)] })
 
 incrementTransparency :: V2 Int -> WorldTiles -> WorldTiles
 incrementTransparency ind@(V2 x y) w@(WorldTiles tiles _)  =
     case accessMapV w ind of
         EW -> w
-        FW i AlphaBlend     -> w { mapTiles = tiles // [(accessIndex w x y, FW i AdditiveBlend)] }
-        FW i AdditiveBlend  -> w { mapTiles = tiles // [(accessIndex w x y, FW i ColorModulate)] }
-        FW i ColorModulate  -> w { mapTiles = tiles // [(accessIndex w x y, FW i NoTransparency)] }
-        FW i NoTransparency -> w { mapTiles = tiles // [(accessIndex w x y, FW i AlphaBlend)] }
+        FW i SDL.BlendNone        -> w { mapTiles = tiles // [(accessIndex w x y, FW i SDL.BlendAlphaBlend)] }
+        FW i SDL.BlendAlphaBlend  -> w { mapTiles = tiles // [(accessIndex w x y, FW i SDL.BlendAdditive)] }
+        FW i SDL.BlendAdditive    -> w { mapTiles = tiles // [(accessIndex w x y, FW i SDL.BlendMod)] }
+        FW i SDL.BlendMod         -> w { mapTiles = tiles // [(accessIndex w x y, FW i SDL.BlendNone)] }
