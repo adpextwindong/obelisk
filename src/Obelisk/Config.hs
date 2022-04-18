@@ -13,5 +13,6 @@ data Config = Config {
                 cScreenHeight :: CInt,
                 cFont :: SDL.Font.Font,
                 cTextures :: Maybe SDL.Texture,
-                cTextureCount :: Int
+                cTextureCount :: Int, --TODO refactor
+                cSkyText :: SDL.Texture
               }

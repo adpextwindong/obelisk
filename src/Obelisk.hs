@@ -93,7 +93,8 @@ zipperMain presentation = do
                 cScreenHeight = initialScreenHeight,
                 cFont = font,
                 cTextures = Nothing,
-                cTextureCount = 0
+                cTextureCount = 0,
+                cSkyText = undefined --TODO better fix
             }
 
     runObelisk cfg initVars (presentationRenderLoop presentation)
@@ -103,43 +104,6 @@ zipperMain presentation = do
     SDL.destroyWindow window
     SDL.quit
     return ()
-
-main :: IO ()
-main = do
-    SDL.initialize [SDL.InitVideo]
-    SDL.Font.initialize
-    let title = "World Debug Window"
-
-    --TODO fetch system fonts later so we dont have to redistribute ttfs
-    font <- SDL.Font.load "resources/arial.ttf" 16
-
-    window <- SDL.createWindow title SDL.defaultWindow { SDL.windowInitialSize = V2 initialScreenWidth initialScreenHeight }
-    SDL.showWindow window
-
-    screenSurface <- SDL.getWindowSurface window
-    SDL.updateWindowSurface window
-
-    screenRenderer <- SDL.createSoftwareRenderer screenSurface :: IO SDL.Renderer
-
-    let hs = (window, screenSurface, screenRenderer)
-
-    let cfg = Config {
-                cWindow = window,
-                cRenderer = screenRenderer,
-                cSurface = screenSurface,
-                cScreenWidth = initialScreenWidth,
-                cScreenHeight = initialScreenHeight,
-                cFont = font,
-                cTextures = Nothing,
-                cTextureCount = 0
-            }
-
-    runObelisk cfg initVars mainLoop
-
-    SDL.Font.free font
-    SDL.freeSurface screenSurface
-    SDL.destroyWindow window
-    SDL.quit
 
 grender :: Graphic Float -> IO ()
 grender g = do
@@ -166,7 +130,8 @@ grender g = do
                 cScreenHeight = initialScreenHeight,
                 cFont = font,
                 cTextures = Nothing,
-                cTextureCount = 0
+                cTextureCount = 0,
+                cSkyText = undefined
             }
 
     runObelisk cfg initVars (grenderLoop g)
@@ -210,8 +175,8 @@ grenderMouseLook g = do
                 cScreenHeight = initialScreenHeight,
                 cFont = font,
                 cTextures = Just textures,
-                cTextureCount = texCount
-                cSkyTexture = skyText
+                cTextureCount = texCount,
+                cSkyText = skyText
             }
 
     runObelisk cfg initVars (gRenderMouseLookLoop g)
@@ -259,6 +224,7 @@ instance Renderer Obelisk where
     drawGraphicDebug = drawGraphicDebug'
     drawGraphicDebugWithMatrix = drawGraphicDebugWithMatrix'
     blitSurfaceToWindowSurface = blitSurfaceToWindowSurface'
+    renderSky = renderSky'
 
 instance Debug Obelisk where
     printGS = printGS'

@@ -120,7 +120,11 @@ gRenderMouseLookLoop g = do
     vmode <- viewMode <$> get
     case vmode of
       OverheadDebug -> drawGraphicDebugWithMatrix graphic gtp
-      PlayerPOV -> drawGraphicDebugWithMatrix graphic m22AffineIdD --Expects screen space graphic
+      PlayerPOV -> do
+        sky <- renderSky worldLoc
+        drawGraphicDebugWithMatrix sky m22AffineIdD
+        drawGraphicDebugWithMatrix graphic m22AffineIdD --Expects screen space graphic
+
       --TODO we need keystate to make these buttons easier to use, right now this pops up on f1
 
     --FPS Counter
@@ -136,6 +140,7 @@ gRenderMouseLookLoop g = do
     blitSurfaceToWindowSurface elapsedSurface
     -}
 
+    --TODO rename to presentScreen
     drawScreen
 
     unless quitSignal (gRenderMouseLookLoop g)

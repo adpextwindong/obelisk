@@ -43,6 +43,7 @@ import Obelisk.Engine.Ray
 
 class Monad m => Renderer m where
     clearScreen :: m ()
+    renderSky :: V2 Float -> m (Graphic Float)
     drawScreen :: m ()
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
@@ -64,6 +65,41 @@ blitSurfaceToWindowSurface' s = do
   surfaceBlit s Nothing windowSurface Nothing
   return ()
 
+quadrantAngle :: V2 Float -> Float
+quadrantAngle (V2 x y) | y > 0 = atan2 y x
+                       | otherwise = pi + (atan2 (-y) x)
+
+renderSky' :: (SDLCanDraw m, MonadState Vars m) => V2 Float -> m (Graphic Float)
+renderSky' lookingAtWorldPos = do
+    window <- asks cWindow
+
+    --TODO pipe real mouse look
+    p <- position . player <$> get
+    let ray = normalize $ lookingAtWorldPos - p
+
+    skyT <- asks cSkyText
+
+    let skyWidth = 640
+        skyHeight = 240
+
+    let index = quadrantAngle ray / (2 * pi)
+
+    let firstSkyIndex = index * skyWidth :: Float
+        secondSkyWidth = (1 - index) * skyWidth :: Float
+
+    --TODO fix seam split rendering
+    --TODO make sky texture 4x the screen width
+    if index > 0.5
+    then return $ GroupPrim  "Sky" [
+        Prim (CopyRect skyT (V2 (floor firstSkyIndex) 0) (V2 (floor $ 640 - firstSkyIndex) (floor skyHeight))
+                             (V2 0 0) (V2 skyWidth skyHeight)
+                             SDL.BlendNone)
+
+
+        ]
+    else return $ Prim $ CopyRect skyT (V2 (floor (firstSkyIndex)) 0) (V2 (floor skyWidth) (floor skyHeight))
+                                       (V2 0 0) (V2 skyWidth skyHeight)
+                                       SDL.BlendNone
 
 drawScreen' :: SDLCanDraw m => m ()
 drawScreen' = do
@@ -142,10 +178,8 @@ drawGraphic (EvaldP (Circle center radius color))     = (\sr -> circle sr center
 drawGraphic (EvaldP (FillTriangle v0 v1 v2 color))    = (\sr -> fillTriangle sr v0 v1 v2 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillRectangle v0 v1 color))      = (\sr -> fillRectangle sr v0 v1 color) =<< asks cRenderer
 drawGraphic (EvaldP (FillCircle center radius color)) = (\sr -> fillCircle sr center radius color) =<< asks cRenderer
-drawGraphic (EvaldP cr@(CopyRect texture srcStart dstart dend blendMode)) = do
-  --TODO blend mode switching
-  --TODO ensure order of draws is correct
-  let srcRect = SDL.Rectangle (SDL.P srcStart) (V2 1 64)
+drawGraphic (EvaldP cr@(CopyRect texture srcStart size dstart dend blendMode)) = do
+  let srcRect = SDL.Rectangle (SDL.P srcStart) size
   let dstRect = SDL.Rectangle (SDL.P dstart) (dend - dstart)
   renderer <- asks cRenderer
 
@@ -219,7 +253,7 @@ drawWall rayCount p w ((((Intersection intpos@(V2 x y) intindex intType), transp
     rest <- drawWall rayCount p w (xs, rayIndex, rayAngle)
 
     --TODO plumb transparency
-    let currWall = Prim $ CopyRect (fromJust t) (V2 textureChunk 0) (V2 wallLeft wallTop) (V2 wallRight wallBottom) transparency
+    let currWall = Prim $ CopyRect (fromJust t) (V2 textureChunk 0) (V2 1 64) (V2 wallLeft wallTop) (V2 wallRight wallBottom) transparency
 
     return $ currWall : rest
 
