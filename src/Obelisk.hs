@@ -196,9 +196,9 @@ grenderMouseLook g = do
     -- TODO texture count handling
     textureSurface <- SDL.loadBMP "resources/wolftexturesALPHABLENDTEST.bmp"
     let texCount = 8
-
     textures <- SDL.createTextureFromSurface screenRenderer textureSurface
-    --SDL.RGB888 SDL.TextureAccessStatic (V2 512 64)
+
+    skyText <- SDL.createTextureFromSurface screenRenderer =<< SDL.loadBMP "resources/sky.bmp"
 
     let hs = (window, screenSurface, screenRenderer)
 
@@ -211,6 +211,7 @@ grenderMouseLook g = do
                 cFont = font,
                 cTextures = Just textures,
                 cTextureCount = texCount
+                cSkyTexture = skyText
             }
 
     runObelisk cfg initVars (gRenderMouseLookLoop g)

@@ -43,9 +43,9 @@ library
       , vector >= 0.12.3.1
       , vector-th-unbox >= 0.2.1.9
       , random >= 1.1.0
-      , sdl2 >= 2.5.3.0
+      , sdl2
       , text >= 1.2.4.1
-      , sdl2-gfx >= 0.2
+      , sdl2-gfx
       , sdl2-ttf >= 2.1.2
       , linear >= 1.21.6
       , lens
