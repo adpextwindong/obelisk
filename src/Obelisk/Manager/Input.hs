@@ -6,7 +6,9 @@ import qualified SDL.Raw.Types (Point)
 import Control.Monad.State
 import Control.Monad.Reader
 import Linear
+import Control.Lens
 import Data.Array ((//))
+import GHC.Int
 
 import Obelisk.Math.Homogenous
 import Obelisk.Engine.Input
@@ -45,6 +47,19 @@ checkCamSwap (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym 
   })
 checkCamSwap (_:xs) = checkCamSwap xs
 checkCamSwap [] = return ()
+
+rotatePlayer :: Vars -> GHC.Int.Int32 -> Vars
+rotatePlayer v rv =
+  let mouseMove = fromIntegral $ rv
+      sens = 0.001 --TUNE parameter
+      mouseTurn = rotation2 $ sens * mouseMove
+      rotatePlayer player = player {
+                              direction = direction player *! mouseTurn,
+                              camera_plane = camera_plane player *! mouseTurn
+                            } in
+
+      if(mouseMove == 0) then v else v { player = rotatePlayer $ player v }
+
 
 --TODO middle click to change transparency
 updateCamEvent :: (SDLCanDraw m,Debug m, SDLInput m, MonadState Vars m) => SDL.EventPayload -> m ()
