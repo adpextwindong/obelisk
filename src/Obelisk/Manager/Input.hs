@@ -52,7 +52,7 @@ rotatePlayer :: Vars -> GHC.Int.Int32 -> Vars
 rotatePlayer v rv =
   let mouseMove = fromIntegral $ rv
       sens = 0.001 --TUNE parameter
-      mouseTurn = rotation2 $ sens * mouseMove
+      mouseTurn = rotation2 $ -sens * mouseMove
       rotatePlayer player = player {
                               direction = direction player *! mouseTurn,
                               camera_plane = camera_plane player *! mouseTurn
@@ -79,9 +79,13 @@ updateCamEvent (SDL.MouseButtonEvent e@(SDL.MouseButtonEventData _window _motion
       else v)
 
 updateCamEvent (SDL.MouseMotionEvent (SDL.MouseMotionEventData _window _device buttons position (V2 relmotionx relmotiony))) = modify (\v ->
-    if SDL.ButtonLeft `elem` buttons
-    then v { worldGTP = translate (fromIntegral relmotionx) (fromIntegral relmotiony) !*! worldGTP v }
-    else v)
+    --TODO rotate player
+    case viewMode v of
+      OverheadDebug -> if SDL.ButtonLeft `elem` buttons
+                       then v { worldGTP = translate (fromIntegral relmotionx) (fromIntegral relmotiony) !*! worldGTP v }
+                       else v
+      PlayerPOV -> rotatePlayer v relmotionx)
+
 
 updateCamEvent (SDL.MouseWheelEvent (SDL.MouseWheelEventData _window _device (SDL.V2 scrollx scrolly) direction)) = do
     vars <- get

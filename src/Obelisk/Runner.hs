@@ -99,7 +99,7 @@ gRenderMouseLookLoop :: ( MonadReader Config m
             , SDLFont m
             , HasInput m
             , Debug m
-            , Renderer m ) => (V2 Float ->m (Graphic Float)) -> m ()
+            , Renderer m ) => m (Graphic Float) -> m ()
 gRenderMouseLookLoop g = do
     updateInput
     clearScreen
@@ -112,16 +112,13 @@ gRenderMouseLookLoop g = do
 
     gtp <- worldGTP <$> get
 
-    --Transforms
-    let worldLoc = rawPDtoWorldPos gtp (fromIntegral <$> absMouseLoc)
-
     startTime <- getUTCTime
-    graphic <- g worldLoc
+    graphic <- g
     vmode <- viewMode <$> get
     case vmode of
       OverheadDebug -> drawGraphicDebugWithMatrix graphic gtp
       PlayerPOV -> do
-        sky <- renderSky worldLoc
+        sky <- renderSky
         drawGraphicDebugWithMatrix sky m22AffineIdD
         drawGraphicDebugWithMatrix graphic m22AffineIdD --Expects screen space graphic
 

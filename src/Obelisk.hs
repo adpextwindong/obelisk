@@ -30,6 +30,7 @@ import qualified SDL.Vect as SDL
 import qualified SDL
 import qualified SDL.Event as SDL
 import qualified SDL.Video.Renderer as SDL
+import qualified SDL.Raw.Event as SDL.Raw
 
 import qualified SDL.Font
 
@@ -141,7 +142,7 @@ grender g = do
     SDL.destroyWindow window
     SDL.quit
 
-grenderMouseLook :: (m ~ Obelisk) => (V2 Float -> m (Graphic Float)) -> IO ()
+grenderMouseLook :: (m ~ Obelisk) => m (Graphic Float) -> IO ()
 grenderMouseLook g = do
     SDL.initialize [SDL.InitVideo]
     SDL.Font.initialize
@@ -164,6 +165,8 @@ grenderMouseLook g = do
     textures <- SDL.createTextureFromSurface screenRenderer textureSurface
 
     skyText <- SDL.createTextureFromSurface screenRenderer =<< SDL.loadBMP "resources/sky.bmp"
+
+    SDL.Raw.setRelativeMouseMode True
 
     let hs = (window, screenSurface, screenRenderer)
 

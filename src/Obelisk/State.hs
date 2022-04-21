@@ -112,22 +112,9 @@ emptyMap = WorldTiles (listArray (0, 99) rEW) 10
 initPVars :: PVars
 initPVars = PVars (V2 2.5 6.5) dir cam
     where
-        -- dir = normalize (V2 0.8 0.330)
-        -- cam = normalize $ dir *! rotation2 (-pi/2)
+        dir = normalize (V2 0.8 0.330)
+        cam = normalize $ dir *! rotation2 (pi/2)
 
-        -- dir = V2 0.8817506897247581 0.4717157207152668
-        -- cam = V2 (-0.4717157207152668) 0.8817506897247581
-
-        -- dir = V2 0.17859740053185252 0.9839222370305881
-        -- cam = V2 (-0.9839222370305881) 0.17859740053185252
-
-        --Boxmap
-        -- dir = V2 0.9304581537328835 (-0.36639817705888417)
-        -- cam = V2 0.36639817705888417 0.9304581537328835
-         dir = V2 9.551545757406914e-2 (-0.9954279468472328)
-         cam = V2 0.9954279468472328 9.551545757406914e-2
-
-initVars :: Vars
 initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale OverheadDebug defaultConfig
   where
     baseGTP = rawCenterScreenOnWorldGrid 10 640 480

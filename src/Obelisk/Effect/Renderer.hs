@@ -43,7 +43,7 @@ import Obelisk.Engine.Ray
 
 class Monad m => Renderer m where
     clearScreen :: m ()
-    renderSky :: V2 Float -> m (Graphic Float)
+    renderSky :: m (Graphic Float)
     drawScreen :: m ()
     fillBackground :: m ()
     drawDebug :: Vars -> m ()
@@ -69,13 +69,12 @@ quadrantAngle :: V2 Float -> Float
 quadrantAngle (V2 x y) | y > 0 = atan2 y x
                        | otherwise = pi + (atan2 (-y) x)
 
-renderSky' :: (SDLCanDraw m, MonadState Vars m) => V2 Float -> m (Graphic Float)
-renderSky' lookingAtWorldPos = do
+renderSky' :: (SDLCanDraw m, MonadState Vars m) => m (Graphic Float)
+renderSky' = do
     window <- asks cWindow
 
-    --TODO pipe real mouse look
-    p <- position . player <$> get
-    let ray = normalize $ lookingAtWorldPos - p
+    pdir <- direction . player <$> get
+    let ray = normalize pdir
 
     skyT <- asks cSkyText
 
@@ -203,13 +202,7 @@ raycast lookingAtWorldPos = do
   let fst3 (a,b,c) = a
 
   let ws = worldSize w
-      ray = normalize $ lookingAtWorldPos - p
-      mousePlayer = pp {
-        direction = ray,
-        camera_plane = normalize $ ray *! rotation2 (pi / 2.0)
-      }
-
-      rayAnglePairs = rayHeads rayCount mousePlayer
+      rayAnglePairs = rayHeads rayCount pp
       rays = fmap fst rayAnglePairs
       angles = fmap snd rayAnglePairs
 
@@ -264,9 +257,11 @@ drawWall rayCount p w ((((Intersection intpos@(V2 x y) intindex intType), transp
 --
 
 --raycast at mouse look demo : grenderMouseLook mouseLookRaycastGraphicM
-mouseLookRaycastGraphicM :: (SDLCanDraw m, Debug m, MonadState Vars m) => V2 Float -> m (Graphic Float)
-mouseLookRaycastGraphicM  lookingAtWorldPos = do
-    screen <- raycast lookingAtWorldPos
+mouseLookRaycastGraphicM :: (SDLCanDraw m, Debug m, MonadState Vars m) => m (Graphic Float)
+mouseLookRaycastGraphicM  = do
+    pdir <- fmap normalize $ direction . player <$> get
+    let ray = pdir
+    screen <- raycast pdir
 
     --TODO undisable after plumbing for transparent wall drawing is done
     p <- position . player <$> get
@@ -274,7 +269,7 @@ mouseLookRaycastGraphicM  lookingAtWorldPos = do
     let ws = worldSize w
     camZoom <- camZoomScale <$> get
 
-    let ray = normalize $ lookingAtWorldPos - p
+    --let ray = normalize $ lookingAtWorldPos - p
 
     pp <- player <$> get
     let mousePlayer = pp {
