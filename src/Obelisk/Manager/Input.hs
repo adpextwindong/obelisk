@@ -3,6 +3,7 @@ module Obelisk.Manager.Input where
 
 import qualified SDL
 import qualified SDL.Raw.Types (Point)
+import qualified SDL.Raw.Event as SDL.Raw
 import Control.Monad.State
 import Control.Monad.Reader
 import Linear
@@ -25,7 +26,7 @@ class Monad m => HasInput m where
     getInput :: m Input
     updateCamEvents :: [SDL.EventPayload] -> m ()
 
-updateInput' :: (SDLCanDraw m,MonadState Vars m, HasInput m, SDLInput m) => m ()
+updateInput' :: (SDLCanDraw m, MonadIO m,MonadState Vars m, HasInput m, SDLInput m) => m ()
 updateInput' = do
     -- input <- getInput
     events <- pollEventPayloads
@@ -39,8 +40,13 @@ getInput' = gets vInput
 setInput' :: MonadState Vars m => Input -> m ()
 setInput' input = modify (\v -> v { vInput = input })
 
-checkCamSwap :: (MonadState Vars m, HasInput m) => [SDL.EventPayload] -> m ()
+checkCamSwap :: (MonadState Vars m, MonadIO m, HasInput m) => [SDL.EventPayload] -> m ()
 checkCamSwap (SDL.KeyboardEvent SDL.KeyboardEventData { SDL.keyboardEventKeysym = SDL.Keysym{SDL.keysymKeycode = SDL.KeycodeF1 }}:xs) = do
+  s <- get
+  case viewMode s of
+    OverheadDebug -> SDL.Raw.setRelativeMouseMode True
+    PlayerPOV     -> SDL.Raw.setRelativeMouseMode False
+
   modify (\s -> s { viewMode = case viewMode s of
                                   OverheadDebug -> PlayerPOV
                                   PlayerPOV -> OverheadDebug
