@@ -4,3 +4,4 @@ dist-newstyle/
 *~
 .vscode/
 dist/
+SDL2.dll
