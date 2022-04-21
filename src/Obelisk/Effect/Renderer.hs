@@ -76,6 +76,11 @@ renderSky' = do
 
     pdir <- direction . player <$> get
     let ray = normalize pdir
+        --TODO utilize rayLeft rayRight for seam indexing
+        rayLeft = quadrantAngle (normalize (rotation2 (-pi/2) !* pdir)) / (2 * pi)
+        rayRight = quadrantAngle (normalize (rotation2 (pi/2) !* pdir)) / (2 * pi)
+
+    unless (rayLeft < rayRight) (dprint "seam")
 
     skyT <- asks cSkyText
 
@@ -89,7 +94,7 @@ renderSky' = do
     let firstSkyIndex = index * skyWidth :: Float
         secondSkyWidth = (1 - index) * skyWidth :: Float
 
-    dprint firstSkyIndex
+    --dprint firstSkyIndex
 
     --TODO fix seam split rendering
     --TODO make sky texture 4x the screen width
