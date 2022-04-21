@@ -65,11 +65,12 @@ blitSurfaceToWindowSurface' s = do
   surfaceBlit s Nothing windowSurface Nothing
   return ()
 
+--divide this by 2pi to get an index from 0 to 1
 quadrantAngle :: V2 Float -> Float
 quadrantAngle (V2 x y) | y > 0 = atan2 y x
-                       | otherwise = pi + (atan2 (-y) x)
+                       | otherwise = (2 * pi) + atan2 y x
 
-renderSky' :: (SDLCanDraw m, MonadState Vars m) => m (Graphic Float)
+renderSky' :: (Debug m, SDLCanDraw m, MonadState Vars m) => m (Graphic Float)
 renderSky' = do
     window <- asks cWindow
 
@@ -78,27 +79,31 @@ renderSky' = do
 
     skyT <- asks cSkyText
 
-    let skyWidth = 640
+    let textureWidth = 1280
+        skyWidth = 640
         skyHeight = 240
 
     let index = quadrantAngle ray / (2 * pi)
+    --dprint (show ray ++ " " ++ show index)
 
     let firstSkyIndex = index * skyWidth :: Float
         secondSkyWidth = (1 - index) * skyWidth :: Float
 
+    dprint firstSkyIndex
+
     --TODO fix seam split rendering
     --TODO make sky texture 4x the screen width
-    if index > 0.5
-    then return $ GroupPrim  "Sky" [
-        Prim (CopyRect skyT (V2 (floor firstSkyIndex) 0) (V2 (floor $ 640 - firstSkyIndex) (floor skyHeight))
-                             (V2 0 0) (V2 skyWidth skyHeight)
+    return $ GroupPrim  "Sky" [
+                              --src
+        Prim (CopyRect skyT (V2 (floor firstSkyIndex) 0) --Indexed start
+                            (V2 (floor skyWidth) (floor skyHeight)) --Size of sky chunk
+                              --Target
+                             (V2 0 0)
+                             (V2 skyWidth skyHeight)
                              SDL.BlendNone)
 
 
         ]
-    else return $ Prim $ CopyRect skyT (V2 (floor (firstSkyIndex)) 0) (V2 (floor skyWidth) (floor skyHeight))
-                                       (V2 0 0) (V2 skyWidth skyHeight)
-                                       SDL.BlendNone
 
 drawScreen' :: SDLCanDraw m => m ()
 drawScreen' = do
