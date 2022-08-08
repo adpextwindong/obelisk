@@ -70,29 +70,45 @@ quadrantAngle :: V2 Float -> Float
 quadrantAngle (V2 x y) | y > 0 = atan2 y x
                        | otherwise = (2 * pi) + atan2 y x
 
+testAngles = quadrantAngle . normalize <$>
+              [V2 1 0.01 -- 0
+              , V2 1 1   -- pi / 4
+              , V2 0.01 1   -- pi / 2
+              , V2 (-1) (1) -- pi
+              , V2 (-1) 0.01   -- 5pi/4
+              , V2 (-1) (-1) -- 1.5pi
+              , V2 0.01 (-1)    -- 3pi/2
+              , V2 1 (-1)]   -- 7 pi / 4
+
+--TODO fix sky rendering
 renderSky' :: (Debug m, SDLCanDraw m, MonadState Vars m) => m (Graphic Float)
 renderSky' = do
     window <- asks cWindow
 
     pdir <- direction . player <$> get
-    let ray = normalize pdir
-        --TODO utilize rayLeft rayRight for seam indexing
-        rayLeft = quadrantAngle (normalize (rotation2 (-pi/2) !* pdir)) / (2 * pi)
-        rayRight = quadrantAngle (normalize (rotation2 (pi/2) !* pdir)) / (2 * pi)
+    let ray = normalize pdir :: V2 Float
+        textureWidthNoRepeats = 2560 --Base texture without repeat is screenwidth * 4.
+        fov = pi / 4
+        --FOV is pi/4
+        --EAST indexes into 0 on th skybox, when the player rotates into a seam where the fov
+        --splits across EAST the skybox texture repeats the left to allow for a single draw.
+        --This allows for simple indexing into the texture without any logic for two paints.
+        --This forces the artist workflow to repeat the left end.
+        --Once the leftEdge of FOV is past East with no seam it goes back to index 0 in sky tex.
+        leftEdge = (2 * pi) - quadrantAngle (normalize (rotation2 (-pi/4) !* pdir)) :: Float
 
-    unless (rayLeft < rayRight) (dprint "seam")
+    --TODO index left edge into texture space 0(L) .. 360 RL 450
 
     skyT <- asks cSkyText
 
-    let textureWidth = 1280
-        skyWidth = 640
+    let skyWidth = 640
         skyHeight = 240
 
-    let index = quadrantAngle ray / (2 * pi)
+    let index = textureWidthNoRepeats * floor (leftEdge / (2 * pi))
     --dprint (show ray ++ " " ++ show index)
 
-    let firstSkyIndex = index * skyWidth :: Float
-        secondSkyWidth = (1 - index) * skyWidth :: Float
+    let firstSkyIndex = index
+        secondSkyIndex = index + skyWidth
 
     --dprint firstSkyIndex
 
@@ -100,8 +116,8 @@ renderSky' = do
     --TODO make sky texture 4x the screen width
     return $ GroupPrim  "Sky" [
                               --src
-        Prim (CopyRect skyT (V2 (floor firstSkyIndex) 0) --Indexed start
-                            (V2 (floor skyWidth) (floor skyHeight)) --Size of sky chunk
+        Prim (CopyRect skyT (V2 firstSkyIndex 0.0) --Indexed start
+                            (V2 secondSkyIndex skyHeight) --Size of sky chunk
                               --Target
                              (V2 0 0)
                              (V2 skyWidth skyHeight)

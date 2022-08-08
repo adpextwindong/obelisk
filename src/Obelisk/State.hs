@@ -115,7 +115,7 @@ initPVars = PVars (V2 2.5 6.5) dir cam
         dir = normalize (V2 0.8 0.330)
         cam = normalize $ dir *! rotation2 (pi/2)
 
-initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale OverheadDebug defaultConfig
+initVars = Vars initPVars boxMap False initInput baseGTP baseZoomScale PlayerPOV defaultConfig
   where
     baseGTP = rawCenterScreenOnWorldGrid 10 640 480
     baseZoomScale = 1.0
